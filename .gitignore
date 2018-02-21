@@ -1,0 +1,15 @@
+.DS_Store
+
+# Dependencies
+node_modules
+
+# Build artifacts
+dist
+
+# Log files
+log
+*.log
+
+# Temp files
+tmp
+*.tmp
