@@ -26,11 +26,11 @@ export function getValueForKey<T>(key: string, obj: any): T | null {
             const sub: any = obj[head]
 
             if (!isPrimitive(sub)) {
-            return getValueForKey<T>(tail.join('.'), sub)
+                return getValueForKey<T>(tail.join('.'), sub)
 
-        } else {
-            return null
-        }
+            } else {
+                return null
+            }
 
         } else if (obj[parts[0]] !== undefined) {
             return obj[parts[0]]

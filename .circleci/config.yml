@@ -4,6 +4,7 @@ defaults: &defaults
     - image: circleci/node:6.10.3
 
 version: 2
+executorType: machine
 jobs:
   test:
     <<: *defaults

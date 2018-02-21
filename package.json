@@ -30,7 +30,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/creditkarma/thrift-server/tree/master/packages/dynamic-config"
+    "url": "https://github.com/creditkarma/dynamic-config"
   },
   "devDependencies": {
     "@types/code": "^4.0.3",
