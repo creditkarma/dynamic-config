@@ -656,7 +656,7 @@ The configuration for Vault needs to be available somewhere in the config path, 
 
 If Vault is not configured all calls to get secret config values with error out.
 
-The configuration must conform to what is expected from [@creditkarma/vault-client](https://github.com/creditkarma/thrift-server/tree/dynamic-config/packages/vault-client).
+The configuration must conform to what is expected from [@creditkarma/vault-client](https://github.com/creditkarma/vault-client).
 
 ```json
 "hashicorp-vault": {
