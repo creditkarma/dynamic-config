@@ -56,9 +56,11 @@ async function loadFileWithName(loaders: Array<IFileLoader>, configPath: string,
 
             return fileExists(filePath).then(() => {
                 return loader.load(filePath)
+
             }).catch((err: any) => {
                 return {}
             })
+
         })).then((val: Array<any>) => {
             return val.reduce((acc: any, next: any) => {
                 return ObjectUtils.overlayObjects(acc, next)

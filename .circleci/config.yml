@@ -16,10 +16,6 @@ jobs:
       - run:
           name: Run Test Suite
           command: npm test
-      - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
 
   publish:
     <<: *defaults
