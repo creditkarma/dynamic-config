@@ -1,7 +1,7 @@
 export default {
-  project: {
-    health: {
-      control: '/test',
+    project: {
+        health: {
+            control: '/test',
+        },
     },
-  },
 }

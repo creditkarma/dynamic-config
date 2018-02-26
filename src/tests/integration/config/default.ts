@@ -1,6 +1,6 @@
 export interface IProjectConfig {
-  health: {
-    control: string
-    response: string,
-  }
+    health: {
+        control: string
+        response: string,
+    }
 }

@@ -6,12 +6,39 @@ import {
     setValueForKey,
 } from './object'
 
+function executePromises(index: number, promises: Array<Promise<any>>, values: Array<any>): Promise<Array<any>> {
+    return promises[index].then((val: any) => {
+        values.push(val)
+        if (index >= promises.length - 1) {
+            return values
+        } else {
+            return executePromises((index += 1), promises, values)
+        }
+    }, (err: any) => {
+        if (index >= promises.length - 1) {
+            return values
+        } else {
+            return executePromises((index += 1), promises, values)
+        }
+    })
+}
+
+export function some(promises: Array<Promise<any>>): Promise<Array<any>> {
+    return executePromises(0, promises, []).then((result: Array<any>) => {
+        if (result.length > 0) {
+            return Promise.resolve(result)
+        } else {
+            return Promise.reject(new Error('All promises failed'))
+        }
+    })
+}
+
 /**
  * Given an array of Promises return a new Promise that resolves with the value
  * of the first of the array to resolve, ignoring rejections. The resulting Promise
  * only rejects if all of the Promises reject.
  */
-export async function race(promises: Array<Promise<any>>): Promise<any> {
+export function race(promises: Array<Promise<any>>): Promise<any> {
     const count: number = promises.length
     let current: number = 0
     let resolved: boolean = false

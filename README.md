@@ -4,9 +4,9 @@ A dynamic configuration library for Node.js written in TypeScript.
 
 ### Plugable
 
-Dynamic Config has plugable support for remote config sources and local file types. The library ships with plugins for some common use cases. The supported file types are `.js`, `.ts` and `.json`. It also ships with resolvers for pulling configs from environment variables, command line arguments and remote config values stored in Hashicorp Consul and Vault.
+Dynamic Config has plugable support for remote config sources and local file types. The library ships with plugins for some common use cases. The supported file types are `.js`, `.yml`, `.ts` and `.json`. It also ships with resolvers for pulling configs from environment variables, command line arguments and remote config values stored in Hashicorp Consul and Vault.
 
-The use of remote configuration is optional. At least one local configuration file (`default.(json|js|ts...)`) is required.
+The use of remote configuration is optional. At least one local configuration file (`default.(json|yml|js|ts...)`) is required.
 
 ## Install
 
@@ -24,7 +24,7 @@ When requesting a value from Dynamic Config a Promise of the expected result is 
 
 #### Singleton
 
-The singleton instance registers resolvers for Consul and Vault. It also registers file support for `json`, `js` and `ts` files. We'll see more documentation for these default implementations below.
+The singleton instance registers resolvers for Consul and Vault. It also registers file support for `json`, `yml`, `js` and `ts` files. We'll see more documentation for these default implementations below.
 
 ```typescript
 import { config } from '@creditkarma/dynamic-config'
@@ -175,15 +175,15 @@ const jsLoader: IFileLoader = {
 
 By the time a loader is called with a `filePath` the path is gauranteed to exist. The `filePath` is absolute.
 
-Loaders are given priority in the order in which they are added. Meaning the most recently added loader has the highest priority. With the config singleton this order is json, js then ts. Therefore, TypeScript files have the highest priority. If there is both a `default.json` file and a `default.ts` file the values from the `default.ts` file will have presidence.
+Loaders are given priority in the order in which they are added. Meaning the most recently added loader has the highest priority. With the config singleton this order is json, yaml, js then ts. Therefore, TypeScript files have the highest priority. If there is both a `default.json` file and a `default.ts` file the values from the `default.ts` file will have presidence.
 
 ### Default Configuration
 
-The default config for your app is loaded from the `config/default.(json|js|ts...)` file. The default configuration is required. The default configuration is the contract between you and your application.
+The default config for your app is loaded from the `config/default.(json|yml|js|ts...)` file. The default configuration is required. The default configuration is the contract between you and your application.
 
 ### File Types
 
-The three different file types are loaded in a predictable order. This means that if you have multiple files with the same base name but different extensions (`default.json` vs `default.ts`) the two files have different presidence based on their extension. JSON files are merged first, then JS and finally TS. This means that `ts` files have the highest presidence as their values are merged last.
+The four different file types are loaded in a predictable order. This means that if you have multiple files with the same base name but different extensions (`default.json` vs `default.ts`) the two files have different presidence based on their extension. JSON files are merged first, then YAML file, then JS and finally TS. This means that `ts` files have the highest presidence as their values are merged last.
 
 #### TypeScript
 
@@ -273,7 +273,7 @@ At runtime a schema (a subset of [JSON Schema](http://json-schema.org/)) is buil
 
 ### Local Overrides
 
-You can override the values from the default config in a variety of ways, but they must follow the schema set by your default configuration file. Overwriting the default values is done by adding additional files corresponding to the value of `NODE_ENV`. For example if `NODE_ENV = 'development'` then the default configuration will be merged with a file named `config/development.(json|js|ts...)`. Using this you could have different configuration files for `NODE_ENV = 'test'` or `NODE_ENV = 'production'`.
+You can override the values from the default config in a variety of ways, but they must follow the schema set by your default configuration file. Overwriting the default values is done by adding additional files corresponding to the value of `NODE_ENV`. For example if `NODE_ENV = 'development'` then the default configuration will be merged with a file named `config/development.(json|yml|js|ts...)`. Using this you could have different configuration files for `NODE_ENV = 'test'` or `NODE_ENV = 'production'`.
 
 ### Configuration Path
 

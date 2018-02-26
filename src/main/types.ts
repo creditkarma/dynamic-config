@@ -33,7 +33,7 @@ export interface IDynamicConfig {
 // FILE LOADER TYPES
 
 export interface IFileLoader {
-    type: string
+    type: string | Array<string>
     load(filePath: string): Promise<object>
 }
 
