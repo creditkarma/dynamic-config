@@ -15,6 +15,7 @@ import {
     jsLoader,
     jsonLoader,
     tsLoader,
+    ymlLoader,
 } from './loaders'
 
 import * as logger from './logger'
@@ -44,6 +45,7 @@ export function config(options: IConfigOptions = {}): DynamicConfig {
             ]),
             loaders: (options.loaders || []).concat([
                 jsonLoader,
+                ymlLoader,
                 jsLoader,
                 tsLoader,
             ]),

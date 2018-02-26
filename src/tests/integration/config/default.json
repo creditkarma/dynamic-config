@@ -1,12 +1,16 @@
 {
-  "project": {
-    "health": {
-      "control": "/check",
-      "response": "GOOD"
+    "project": {
+        "id": {
+            "name": "test-project",
+            "ref": 987860
+        },
+        "health": {
+            "control": "/check",
+            "response": "GOOD"
+        }
+    },
+    "database": {
+        "username": "root",
+        "password": "root"
     }
-  },
-  "database": {
-    "username": "root",
-    "password": "root"
-  }
 }

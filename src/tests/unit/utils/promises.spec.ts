@@ -11,6 +11,18 @@ const describe = lab.describe
 const it = lab.it
 
 describe('PromiseUtils', () => {
+    describe('some', () => {
+        it('should resolve to an array of all successful promises, in order', async () => {
+            return PromiseUtils.some([
+                Promise.reject('error 1'),
+                Promise.reject('error 2'),
+                Promise.resolve(6),
+                Promise.resolve(10),
+            ]).then((actual: any) => {
+                expect(actual).to.equal([6, 10])
+            })
+        })
+    })
     describe('race', () => {
         it('should resolve to value of first successful Promise', async () => {
             return PromiseUtils.race([

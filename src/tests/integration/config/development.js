@@ -1,8 +1,8 @@
 module.exports = {
-  project: {
-    health: {
-      control: "/javascript",
-      response: 'BOOYA',
+    project: {
+        health: {
+            control: "/javascript",
+            response: 'BOOYA',
+        }
     }
-  }
 }

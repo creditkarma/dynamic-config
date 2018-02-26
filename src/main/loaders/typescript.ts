@@ -29,8 +29,8 @@ function loadTypeScript(filePath: string): any {
                     if (path.extname(resolvedFile) === '.ts') {
                         return loadTypeScript(resolvedFile)
 
-                    // Else use the default node system, resolving to absolute path to account for our
-                    // shenanigans
+                        // Else use the default node system, resolving to absolute path to account for our
+                        // shenanigans
                     } else {
                         return require(resolvedFile)
                     }
@@ -42,7 +42,7 @@ function loadTypeScript(filePath: string): any {
 
         vm.createContext(sandbox)
 
-        vm.runInContext(result.outputText, sandbox , {
+        vm.runInContext(result.outputText, sandbox, {
             displayErrors: true,
         })
 

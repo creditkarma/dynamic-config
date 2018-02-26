@@ -49,13 +49,22 @@ function getConfigPath(sourceDir: string): string {
 
 async function loadFileWithName(loaders: Array<IFileLoader>, configPath: string, name: string): Promise<IRootConfigValue> {
     const configs: Array<object> = await PromiseUtils.valuesForPromises(loaders.map((loader: IFileLoader) => {
-        const filePath: string = path.resolve(configPath, `${name}.${loader.type}`)
+        const types: Array<string> = (Array.isArray(loader.type)) ? loader.type : [ loader.type ]
 
-        return fileExists(filePath).then(() => {
-            return loader.load(filePath)
+        return PromiseUtils.some(types.map((ext: string) => {
+            const filePath: string = path.resolve(configPath, `${name}.${ext}`)
 
-        }).catch((err: any) => {
-            return {}
+            return fileExists(filePath).then(() => {
+                return loader.load(filePath)
+
+            }).catch((err: any) => {
+                return {}
+            })
+
+        })).then((val: Array<any>) => {
+            return val.reduce((acc: any, next: any) => {
+                return ObjectUtils.overlayObjects(acc, next)
+            }, {})
         })
     }))
 

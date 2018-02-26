@@ -1,0 +1,18 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "editor.tabSize": 4,
+    "editor.rulers": [110],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.wordWrapColumn": 110,
+    "editor.detectIndentation": false,
+    "prettier.tabWidth": 4,
+    "files.exclude": {
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/node_modules/": true,
+      "**/dist/": true,
+      "coverage": true,
+      "coverage.lcov": true
+    },
+    "typescript.tsdk": "node_modules/typescript/lib"
