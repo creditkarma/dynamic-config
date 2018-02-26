@@ -580,7 +580,7 @@ const config = new DynamicConfig({
 
 ### Consul Configs
 
-Dynamic Config ships with support for Consul. Now we're going to explore some of the specifics of using the included Consul resolver. The underlying Consul client comes from: [@creditkarma/consul-client](https://github.com/creditkarma/thrift-server/tree/dynamic-config/packages/consul-client).
+Dynamic Config ships with support for Consul. Now we're going to explore some of the specifics of using the included Consul resolver. The underlying Consul client comes from: [@creditkarma/consul-client](https://github.com/creditkarma/consul-client).
 
 Values stored in Consul are assumed to be JSON structures that can be deeply merged with local configuration files. As such configuration from Consul is merged on top of local configuration, overwriting local configuration in the resulting config object.
 
@@ -656,7 +656,7 @@ The configuration for Vault needs to be available somewhere in the config path, 
 
 If Vault is not configured all calls to get secret config values with error out.
 
-The configuration must conform to what is expected from [@creditkarma/vault-client](https://github.com/creditkarma/thrift-server/tree/dynamic-config/packages/vault-client).
+The configuration must conform to what is expected from [@creditkarma/vault-client](https://github.com/creditkarma/vault-client).
 
 ```json
 "hashicorp-vault": {
