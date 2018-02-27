@@ -213,11 +213,11 @@ Now we're ready to add some values to our Consul data store. There is an HTTP AP
 
 You should see something like this:
 
-![](ui_homescreen.png)
+![](./images/ui_homescreen.png)
 
 Click on the tab `KEY/VALUE`:
 
-![](key_value.png)
+![](./images/key_value.png)
 
 This will work our `development` override. We are going to add a JSON structure that will overlay our local config values. In the top text input we will add the key name `consul-config`. In the larger text box we include a blob of valid JSON (You will notice the built-in JSON validator).
 
@@ -230,9 +230,11 @@ This will work our `development` override. We are going to add a JSON structure 
 }
 ```
 
-![](create_key.png)
+![](./images/create_key.png)
 
 Click `CREATE` and we are ready to go.
+
+![](./images/key_added.png)
 
 #### Configuring Our Application to Use Consul
 
