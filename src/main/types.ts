@@ -8,6 +8,7 @@ export interface IConfigOptions {
     remoteOptions?: IRemoteOptions
     resolvers?: Array<ConfigResolver>
     loaders?: Array<IFileLoader>
+    translators?: Array<IConfigTranslator>
 }
 
 export interface IConsulOptions {
@@ -30,6 +31,12 @@ export interface IDynamicConfig {
     getSecretValue<T>(key: string): Promise<T>
 }
 
+// CONFIG TRANSLATOR TYPES
+
+export interface IConfigTranslator {
+    translate(configValue: any): any
+}
+
 // FILE LOADER TYPES
 
 export interface IFileLoader {
@@ -47,19 +54,19 @@ export interface IResolverMap {
 export type ConfigResolver =
     IRemoteResolver | ISecretResolver
 
-export type IRemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions?: IRemoteOptions) => Promise<any>
+export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions?: IRemoteOptions) => Promise<any>
 
 export interface IRemoteResolver {
     type: 'remote'
     name: string
-    init: IRemoteInitializer
+    init: RemoteInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
 }
 
 export interface ISecretResolver {
     type: 'secret'
     name: string
-    init: IRemoteInitializer
+    init: RemoteInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
 }
 

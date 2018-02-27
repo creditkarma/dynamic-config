@@ -14,6 +14,38 @@ import {
     ISchema,
 } from '../types'
 
+/**
+ * Map over all keyed elements in an object, running over leafs first and recursing up.
+ *
+ * @param obj
+ * @param mapping
+ */
+export function deepMap(obj: object, mapping: (val: any, key: string) => any): any {
+    if (isNothing(obj) || isPrimitive(obj)) {
+        return obj
+
+    } else {
+        const newObj: any = {}
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const value = (obj as any)[key]
+                if (isNothing(value)) {
+                    newObj[key] = value
+
+                } else if (isPrimitive(value)) {
+                    newObj[key] = mapping(value, key)
+
+                } else {
+                    newObj[key] = deepMap(value, mapping)
+                    newObj[key] = mapping(newObj[key], key)
+                }
+            }
+        }
+
+        return newObj
+    }
+}
+
 export function getValueForKey<T>(key: string, obj: any): T | null {
     if (isPrimitive(obj) || isNothing(obj)) {
         return null

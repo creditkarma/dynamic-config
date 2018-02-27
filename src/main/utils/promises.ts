@@ -6,30 +6,33 @@ import {
     setValueForKey,
 } from './object'
 
-function executePromises(index: number, promises: Array<Promise<any>>, values: Array<any>): Promise<Array<any>> {
-    return promises[index].then((val: any) => {
-        values.push(val)
-        if (index >= promises.length - 1) {
-            return values
-        } else {
-            return executePromises((index += 1), promises, values)
-        }
-    }, (err: any) => {
-        if (index >= promises.length - 1) {
-            return values
-        } else {
-            return executePromises((index += 1), promises, values)
-        }
+function executePromiseAtIndex(index: number, promise: Promise<any>): Promise<[number, any]> {
+    return promise.then((val: any): [number, any] => {
+        return [ index, val ]
+
+    }, (err: any): [number, null] => {
+        return [ index, null ]
     })
 }
 
 export function some(promises: Array<Promise<any>>): Promise<Array<any>> {
-    return executePromises(0, promises, []).then((result: Array<any>) => {
-        if (result.length > 0) {
-            return Promise.resolve(result)
-        } else {
-            return Promise.reject(new Error('All promises failed'))
-        }
+    return new Promise((resolve, reject) => {
+        const temp: Array<any> = []
+        let count: number = 0
+        promises.forEach((next: Promise<any>, index: number) => {
+            executePromiseAtIndex(index, next).then((tuple: [number, any]) => {
+                count++
+                temp[tuple[0]] = tuple[1]
+                if (count === promises.length) {
+                    const result = temp.filter((val: any) => val !== null)
+                    if (result.length > 0) {
+                        resolve(result)
+                    } else {
+                        reject(new Error('All promises completed without success'))
+                    }
+                }
+            })
+        })
     })
 }
 
@@ -50,6 +53,7 @@ export function race(promises: Array<Promise<any>>): Promise<any> {
                     resolved = true
                     resolve(val)
                 }
+
             }, (err: any) => {
                 current++
                 if (!resolved && current === count) {
@@ -74,6 +78,7 @@ type PromiseUpdate = [object, number]
 export async function valuesForPromises(promises: Array<Promise<object>>): Promise<Array<object>> {
     return Promise.all(promises.map((next: Promise<object>, index: number) => {
         return resolveAtIndex(next, index)
+
     })).then((values: Array<[object, number]>) => {
         return processValues(values)
     })
@@ -83,6 +88,7 @@ function processValues(values: Array<PromiseUpdate>): Array<object> {
     return values.sort((a: PromiseUpdate, b: PromiseUpdate) => {
         if (a[1] < b[1]) {
             return -1
+
         } else {
             return 1
         }

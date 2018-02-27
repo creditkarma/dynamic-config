@@ -8,19 +8,21 @@ Dynamic Config has plugable support for remote config sources and local file typ
 
 The use of remote configuration is optional. At least one local configuration file (`default.(json|yml|js|ts...)`) is required.
 
+### Promise-based
+
+When requesting a value from Dynamic Config a Promise of the expected result is returned. If the value is found the Promise is resolved. If the value is not found, either because it is missing or some other error, the Promise is rejected.
+
 ## Install
 
 ```sh
 $ npm install @creditkarma/dynamic-config
 ```
 
+## Basic Usage
+
 ## Usage
 
 The most common usage of Dynamic Config is through a singleton instance. The singleton instance is lazily created through the exported function `config`. Subsequent calls to this function will return the same instance. Configuration can be passed to the function or set on environment variables. We'll see more of that below.
-
-### Promise-based
-
-When requesting a value from Dynamic Config a Promise of the expected result is returned. If the value is found the Promise is resolved. If the value is not found, either because it is missing or some other error, the Promise is rejected.
 
 #### Singleton
 

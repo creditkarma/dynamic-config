@@ -7,12 +7,13 @@
     "editor.wordWrapColumn": 110,
     "editor.detectIndentation": false,
     "prettier.tabWidth": 4,
+    "prettier.singleQuote": true,
+    "prettier.trailingComma": "all",
+    "prettier.semi": false,
     "files.exclude": {
-      "**/.git": true,
       "**/.DS_Store": true,
-      "**/node_modules/": true,
-      "**/dist/": true,
       "coverage": true,
       "coverage.lcov": true
     },
     "typescript.tsdk": "node_modules/typescript/lib"
+}

@@ -20,16 +20,15 @@ export function vaultResolver(): ISecretResolver {
             return vaultClient
         } else {
             vaultClient = dynamicConfig
-                .get<IHVConfig>(HVAULT_CONFIG_KEY)
-                .then(
-                (vaultConfig: IHVConfig) => {
-                    return Promise.resolve(new Just(new VaultClient(vaultConfig)))
-                },
-                (err: any) => {
-                    logger.log(`Unable to find valid configuration for Vault`)
-                    return Promise.resolve(new Nothing<VaultClient>())
-                },
-            )
+                .get<IHVConfig>(HVAULT_CONFIG_KEY).then(
+                    (vaultConfig: IHVConfig) => {
+                        return Promise.resolve(new Just(new VaultClient(vaultConfig)))
+                    },
+                    (err: any) => {
+                        logger.log(`Unable to find valid configuration for Vault`)
+                        return Promise.resolve(new Nothing<VaultClient>())
+                    },
+                )
                 .catch((err: any) => {
                     logger.error(`Error creating VaultClient: `, err)
                     return Promise.reject(new Error('Unable to create VaultClient'))

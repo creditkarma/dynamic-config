@@ -12,10 +12,7 @@ export function processResolver(): IRemoteResolver {
     return {
         type: 'remote',
         name: 'process',
-        init(
-            configInstance: DynamicConfig,
-            remoteOptions: IConsulOptions = {},
-        ): Promise<any> {
+        init(configInstance: DynamicConfig, remoteOptions: IConsulOptions = {}): Promise<any> {
             return Promise.resolve({})
         },
         get<T = any>(key: string, type?: ObjectType): Promise<T> {

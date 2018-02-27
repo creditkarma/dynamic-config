@@ -14,108 +14,122 @@ import { ObjectUtils, Utils } from '../utils'
 import * as logger from '../logger'
 
 export function toRemoteOptionMap(str: string): IRemoteOverrides {
-  const [key, ...tail] = str.split('?')
-  const result: IRemoteOverrides = { key }
+    const [key, ...tail] = str.split('?')
+    const result: IRemoteOverrides = { key }
 
-  if (tail.length > 0) {
-    const params = tail[0]
-    const options = params.split('&')
-    for (const option of options) {
-      const [name, value] = option.split('=')
-      result[name] = value
+    if (tail.length > 0) {
+        const params = tail[0]
+        const options = params.split('&')
+        for (const option of options) {
+            const [name, value] = option.split('=')
+            if (value !== undefined) {
+                result[name] = value
+            }
+        }
     }
-  }
 
-  return result
+    return result
 }
 
 export function consulResolver(): IRemoteResolver {
-  let consulClient: Maybe<KvStore>
-  let consulAddress: Maybe<string> = new Nothing()
-  let consulKvDc: Maybe<string> = new Nothing()
-  let consulKeys: Maybe<string> = new Nothing()
+    let consulClient: Maybe<KvStore>
+    let consulAddress: Maybe<string> = new Nothing()
+    let consulKvDc: Maybe<string> = new Nothing()
+    let consulKeys: Maybe<string> = new Nothing()
 
-  function getConsulClient(): Maybe<KvStore> {
-    if (consulClient !== undefined) {
-      return consulClient
-    } else {
-      if (consulAddress.isNothing()) {
-        logger.warn(
-          'Could not create a Consul client: Consul Address (CONSUL_ADDRESS) is not defined',
-        )
-        consulClient = new Nothing<KvStore>()
-      } else if (consulKvDc.isNothing()) {
-        logger.warn(
-          'Could not create a Consul client: Consul Data Center (CONSUL_KV_DC) is not defined',
-        )
-        consulClient = new Nothing<KvStore>()
-      } else {
-        consulClient = new Just(new KvStore(consulAddress.get()))
-      }
+    function getConsulClient(): Maybe<KvStore> {
+        if (consulClient !== undefined) {
+            return consulClient
 
-      return consulClient
+        } else {
+            if (consulAddress.isNothing()) {
+                logger.warn(
+                    'Could not create a Consul client: Consul Address (CONSUL_ADDRESS) is not defined',
+                )
+                consulClient = new Nothing<KvStore>()
+
+            } else if (consulKvDc.isNothing()) {
+                logger.warn(
+                    'Could not create a Consul client: Consul Data Center (CONSUL_KV_DC) is not defined',
+                )
+                consulClient = new Nothing<KvStore>()
+
+            } else {
+                consulClient = new Just(new KvStore(consulAddress.get()))
+            }
+
+            return consulClient
+        }
     }
-  }
 
-  return {
-    type: 'remote',
-    name: 'consul',
-    init(
-      configInstance: DynamicConfig,
-      remoteOptions: IConsulOptions = {},
-    ): Promise<any> {
-      consulAddress = Maybe.fromNullable(
-        remoteOptions.consulAddress || Utils.readFirstMatch(CONSUL_ADDRESS),
-      )
-      consulKvDc = Maybe.fromNullable(
-        remoteOptions.consulKvDc || Utils.readFirstMatch(CONSUL_KV_DC),
-      )
-      consulKeys = Maybe.fromNullable(
-        remoteOptions.consulKeys || Utils.readFirstMatch(CONSUL_KEYS),
-      )
+    return {
+        type: 'remote',
+        name: 'consul',
+        init(
+            configInstance: DynamicConfig,
+            remoteOptions: IConsulOptions = {},
+        ): Promise<any> {
+            consulAddress = Maybe.fromNullable(
+                remoteOptions.consulAddress ||
+                    Utils.readFirstMatch(CONSUL_ADDRESS),
+            )
+            consulKvDc = Maybe.fromNullable(
+                remoteOptions.consulKvDc || Utils.readFirstMatch(CONSUL_KV_DC),
+            )
+            consulKeys = Maybe.fromNullable(
+                remoteOptions.consulKeys || Utils.readFirstMatch(CONSUL_KEYS),
+            )
 
-      return Maybe.all(consulKeys, getConsulClient(), consulKvDc).fork(
-        ([keys, client, dc]) => {
-          const rawConfigs: Promise<Array<any>> = Promise.all(
-            keys.split(',').map((key: string) => {
-              return client.get({ path: key, dc })
-            }),
-          )
+            return Maybe.all(consulKeys, getConsulClient(), consulKvDc).fork(
+                ([keys, client, dc]) => {
+                    const rawConfigs: Promise<Array<any>> = Promise.all(
+                        keys.split(',').map((key: string) => {
+                            return client.get({ path: key, dc })
+                        }),
+                    )
 
-          const resolvedConfigs: Promise<any> = rawConfigs.then(
-            (configs: Array<any>): any => {
-              return ObjectUtils.overlayObjects(...configs) as any
-            },
-          )
+                    const resolvedConfigs: Promise<any> = rawConfigs.then(
+                        (configs: Array<any>): any => {
+                            return ObjectUtils.overlayObjects(...configs) as any
+                        },
+                    )
 
-          return resolvedConfigs
-        },
-        () => {
-          return Promise.resolve({})
-        },
-      )
-    },
-
-    get<T = any>(key: string): Promise<T> {
-      return getConsulClient().fork(
-        (client: KvStore) => {
-          const remoteOptions: IRemoteOverrides = toRemoteOptionMap(key)
-          return client
-            .get({ path: remoteOptions.key, dc: remoteOptions.dc })
-            .then(
-              (val: any) => {
-                return val
-              },
-              (err: any) => {
-                logger.error(`Error retrieving key[${key}] from Consul: `, err)
-                return Promise.reject(new ConsulFailed(err.message))
-              },
+                    return resolvedConfigs
+                },
+                () => {
+                    logger.log('Consul is not configured')
+                    return Promise.resolve({})
+                },
             )
         },
-        () => {
-          return Promise.reject(new ConsulNotConfigured(key))
+
+        get<T = any>(key: string): Promise<T> {
+            return getConsulClient().fork(
+                (client: KvStore) => {
+                    const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
+                        key,
+                    )
+                    return client
+                        .get({ path: remoteOptions.key, dc: remoteOptions.dc })
+                        .then(
+                            (val: any) => {
+                                return val
+                            },
+                            (err: any) => {
+                                logger.error(
+                                    `Error retrieving key[${key}] from Consul: `,
+                                    err,
+                                )
+                                return Promise.reject(
+                                    new ConsulFailed(err.message),
+                                )
+                            },
+                        )
+                },
+                () => {
+                    return Promise.reject(new ConsulNotConfigured(key))
+                },
+            )
         },
-      )
-    },
-  }
+    }
 }
