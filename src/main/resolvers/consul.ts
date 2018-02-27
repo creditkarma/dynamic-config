@@ -84,7 +84,13 @@ export function consulResolver(): IRemoteResolver {
                 ([keys, client, dc]) => {
                     const rawConfigs: Promise<Array<any>> = Promise.all(
                         keys.split(',').map((key: string) => {
-                            return client.get({ path: key, dc })
+                            return client.get({ path: key, dc }).then((val: any) => {
+                                if (val === null) {
+                                    throw new Error(`Unable to find key[${key}] in Consul`)
+                                } else {
+                                    return val
+                                }
+                            })
                         }),
                     )
 
