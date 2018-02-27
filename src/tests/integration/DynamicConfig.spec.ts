@@ -51,6 +51,10 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get().then((actual: any) => {
                     expect(actual).to.equal({
+                        server: {
+                            port: 8000,
+                            host: 'localhost',
+                        },
                         database: {
                             username: 'testUser',
                             password: 'K1ndaS3cr3t',
@@ -179,6 +183,10 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        server: {
+                            port: 8000,
+                            host: 'localhost',
+                        },
                         database: {
                             username: 'testUser',
                             password: 'Sup3rS3cr3t',
@@ -212,6 +220,10 @@ describe('DynamicConfig', () => {
             it('should mutate config after getting new data from Consul', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        server: {
+                            port: 8000,
+                            host: 'localhost',
+                        },
                         database: {
                             username: 'testUser',
                             password: 'Sup3rS3cr3t',
@@ -286,6 +298,10 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        server: {
+                            port: 8000,
+                            host: 'localhost',
+                        },
                         database: {
                             username: 'fakeUser',
                             password: 'NotSoSecret',

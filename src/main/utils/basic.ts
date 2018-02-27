@@ -3,6 +3,7 @@ const MALFORMED_ARGUMENT = '<Error[malformed argument]>'
 export function readValueFromArgs(key: string, args: Array<string>): string | undefined {
     return args.filter((next: string) => {
         return next.startsWith(key)
+
     }).map((match: string) => {
         const parts = match.split('=')
         if (parts.length === 2) {
@@ -11,23 +12,36 @@ export function readValueFromArgs(key: string, args: Array<string>): string | un
         } else {
             return MALFORMED_ARGUMENT
         }
+
     }).filter((next: string) => {
         return next !== MALFORMED_ARGUMENT
     })[0]
 }
 
+export function readFromEnv(key: string): string | undefined {
+    const value: string | undefined = process.env[key]
+    if (value === undefined || value === 'undefined') {
+        return undefined
+    } else {
+        return value
+    }
+}
+
 export function readFromEnvOrProcess(key: string): string | undefined {
-    return readValueFromArgs(key, process.argv) || process.env[key]
+    return readValueFromArgs(key, process.argv) || readFromEnv(key)
 }
 
 export function readFirstMatch(...keys: Array<string>): string | undefined {
     if (keys.length === 0) {
         return undefined
+
     } else {
         const [ head, ...tail ] = keys
         const value: string | undefined = readFromEnvOrProcess(head)
+
         if (value === undefined) {
             return readFirstMatch(...tail)
+
         } else {
             return value
         }
@@ -51,6 +65,10 @@ export function isNothing(obj: any): boolean {
         obj === null ||
         obj === undefined
     )
+}
+
+export function isSomething(obj: any): boolean {
+    return !isNothing(obj)
 }
 
 export function isObject(obj: any): boolean {

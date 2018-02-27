@@ -47,6 +47,34 @@ describe('ConfigLoader', () => {
             const expected: IRootConfigValue = {
                 type: 'root',
                 properties: {
+                    server: {
+                        source: {
+                            type: 'local',
+                            name: 'default',
+                        },
+                        type: 'object',
+                        properties: {
+                            port: {
+                                source: {
+                                    type: 'local',
+                                    name: 'default',
+                                },
+                                type: 'number',
+                                value: 8000,
+                                watchers: [],
+                            },
+                            host: {
+                                source: {
+                                    type: 'local',
+                                    name: 'default',
+                                },
+                                type: 'string',
+                                value: 'localhost',
+                                watchers: [],
+                            },
+                        },
+                        watchers: [],
+                    },
                     project: {
                         source: {
                             type: 'local',
@@ -162,6 +190,34 @@ describe('ConfigLoader', () => {
             const expected: IRootConfigValue = {
                 type: 'root',
                 properties: {
+                    server: {
+                        source: {
+                            type: 'local',
+                            name: 'production',
+                        },
+                        type: 'object',
+                        properties: {
+                            port: {
+                                source: {
+                                    type: 'local',
+                                    name: 'production',
+                                },
+                                type: 'number',
+                                value: 9000,
+                                watchers: [],
+                            },
+                            host: {
+                                source: {
+                                    type: 'local',
+                                    name: 'production',
+                                },
+                                type: 'string',
+                                value: 'localhost',
+                                watchers: [],
+                            },
+                        },
+                        watchers: [],
+                    },
                     project: {
                         source: {
                             type: 'local',
@@ -285,6 +341,34 @@ describe('ConfigLoader', () => {
             const expected: IRootConfigValue = {
                 type: 'root',
                 properties: {
+                    server: {
+                        source: {
+                            type: 'local',
+                            name: 'default',
+                        },
+                        type: 'object',
+                        properties: {
+                            port: {
+                                source: {
+                                    type: 'local',
+                                    name: 'default',
+                                },
+                                type: 'number',
+                                value: 8000,
+                                watchers: [],
+                            },
+                            host: {
+                                source: {
+                                    type: 'local',
+                                    name: 'default',
+                                },
+                                type: 'string',
+                                value: 'localhost',
+                                watchers: [],
+                            },
+                        },
+                        watchers: [],
+                    },
                     project: {
                         source: {
                             type: 'local',
@@ -400,6 +484,34 @@ describe('ConfigLoader', () => {
             const expected: IRootConfigValue = {
                 type: 'root',
                 properties: {
+                    server: {
+                        source: {
+                            type: 'local',
+                            name: 'default',
+                        },
+                        type: 'object',
+                        properties: {
+                            port: {
+                                source: {
+                                    type: 'local',
+                                    name: 'default',
+                                },
+                                type: 'number',
+                                value: 8000,
+                                watchers: [],
+                            },
+                            host: {
+                                source: {
+                                    type: 'local',
+                                    name: 'default',
+                                },
+                                type: 'string',
+                                value: 'localhost',
+                                watchers: [],
+                            },
+                        },
+                        watchers: [],
+                    },
                     project: {
                         source: {
                             type: 'local',
@@ -515,6 +627,34 @@ describe('ConfigLoader', () => {
             const expected: IRootConfigValue = {
                 type: 'root',
                 properties: {
+                    server: {
+                        source: {
+                            type: 'local',
+                            name: 'default',
+                        },
+                        type: 'object',
+                        properties: {
+                            port: {
+                                source: {
+                                    type: 'local',
+                                    name: 'default',
+                                },
+                                type: 'number',
+                                value: 8000,
+                                watchers: [],
+                            },
+                            host: {
+                                source: {
+                                    type: 'local',
+                                    name: 'default',
+                                },
+                                type: 'string',
+                                value: 'localhost',
+                                watchers: [],
+                            },
+                        },
+                        watchers: [],
+                    },
                     project: {
                         source: {
                             type: 'local',

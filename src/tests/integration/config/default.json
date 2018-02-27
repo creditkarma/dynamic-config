@@ -9,6 +9,10 @@
             "response": "GOOD"
         }
     },
+    "server": {
+        "port": 8000,
+        "host": "localhost"
+    },
     "database": {
         "username": "root",
         "password": "root"
