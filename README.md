@@ -18,13 +18,11 @@ When requesting a value from Dynamic Config a Promise of the expected result is 
 $ npm install @creditkarma/dynamic-config
 ```
 
-## Basic Usage
-
 ## Usage
 
 The most common usage of Dynamic Config is through a singleton instance. The singleton instance is lazily created through the exported function `config`. Subsequent calls to this function will return the same instance. Configuration can be passed to the function or set on environment variables. We'll see more of that below.
 
-#### Singleton
+### Singleton
 
 The singleton instance registers resolvers for Consul and Vault. It also registers file support for `json`, `yml`, `js` and `ts` files. We'll see more documentation for these default implementations below.
 
@@ -38,7 +36,7 @@ export async function createHttpClient(): Promise<Client> {
 }
 ```
 
-#### Class Constructor
+### Class Constructor
 
 You can also construct your own instance by importing the underlying `DynamicConfig` class.
 
@@ -60,7 +58,7 @@ export async function createHttpClient(): Promise<Client> {
 }
 ```
 
-#### Options
+### Options
 
 Available options are:
 
@@ -94,11 +92,11 @@ export async function createHttpClient(): Promise<Client> {
 }
 ```
 
-#### Methods
+### Methods
 
 The availabe methods on a config instance are as follows:
 
-##### `get`
+#### `get`
 
 Gets the value for a specified key. If the key cannot be found the Promise is rejected with an `Error` describing what went wrong.
 
@@ -112,7 +110,7 @@ export async function createHttpClient(): Promise<Client> {
 }
 ```
 
-##### `getWithDefault`
+#### `getWithDefault`
 
 You can also assign a default value in the event that the key cannot be found.
 
@@ -126,7 +124,7 @@ export async function createHttpClient(): Promise<Client> {
 }
 ```
 
-##### `getAll`
+#### `getAll`
 
 Additionally, you can batch get config values. The promise here will only resolve if all of the keys can be retrieved.
 
