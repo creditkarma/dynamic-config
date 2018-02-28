@@ -4,8 +4,10 @@ import * as path from 'path'
 
 import {
     consulResolver,
+    consulTranslator,
     DynamicConfig,
     environmentResolver,
+    envTranslator,
     jsLoader,
     jsonLoader,
     tsLoader,
@@ -44,6 +46,10 @@ describe('DynamicConfig', () => {
                 ymlLoader,
                 jsLoader,
                 tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
             ],
         })
 
@@ -177,6 +183,10 @@ describe('DynamicConfig', () => {
                 jsLoader,
                 tsLoader,
             ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
         })
 
         describe('get', () => {
@@ -292,6 +302,10 @@ describe('DynamicConfig', () => {
                 jsLoader,
                 tsLoader,
             ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
         })
 
         describe('get', () => {
@@ -337,6 +351,10 @@ describe('DynamicConfig', () => {
                 ymlLoader,
                 jsLoader,
                 tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
             ],
         })
 
@@ -386,6 +404,10 @@ describe('DynamicConfig', () => {
                 ymlLoader,
                 jsLoader,
                 tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
             ],
         })
 

@@ -37,6 +37,8 @@ export interface IConfigTranslator {
     translate(configValue: any): any
 }
 
+export type ITranslator = (obj: any) => any
+
 // FILE LOADER TYPES
 
 export interface IFileLoader {

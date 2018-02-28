@@ -2,6 +2,8 @@
 
 A dynamic configuration library for Node.js written in TypeScript.
 
+Application configuration can be an unnecessarily complicated problem when working in large distributed systems across multiple runtimes.
+
 ### Plugable
 
 Dynamic Config has plugable support for remote config sources and local file types. The library ships with plugins for some common use cases. The supported file types are `.js`, `.yml`, `.ts` and `.json`. It also ships with resolvers for pulling configs from environment variables, command line arguments and remote config values stored in Hashicorp Consul and Vault.

@@ -8,11 +8,7 @@ export const server = {
 }
 
 export const database = {
-    username: {
-        _source: 'env',
-        _key: 'TEST_USERNAME',
-        _default: 'default-user',
-    },
+    username: '$TEST_USERNAME',
     password: {
         _source: 'env',
         _key: 'TEST_PASSWORD',

@@ -20,7 +20,7 @@ import {
  * @param obj
  * @param mapping
  */
-export function deepMap(obj: object, mapping: (val: any, key: string) => any): any {
+export function deepMap(mapping: (val: any, key: string) => any, obj: object): any {
     if (isNothing(obj) || isPrimitive(obj)) {
         return obj
 
@@ -36,7 +36,8 @@ export function deepMap(obj: object, mapping: (val: any, key: string) => any): a
                     newObj[key] = mapping(value, key)
 
                 } else {
-                    newObj[key] = deepMap(value, mapping)
+                    newObj[key] = mapping(newObj[key], key)
+                    newObj[key] = deepMap(mapping, value)
                     newObj[key] = mapping(newObj[key], key)
                 }
             }
@@ -111,6 +112,7 @@ function max(...nums: Array<number>): number {
     return nums.reduce((acc: number, next: number): number => {
         if (next > acc) {
             return next
+
         } else {
             return acc
         }

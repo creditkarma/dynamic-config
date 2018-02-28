@@ -15,9 +15,9 @@ describe('ObjectUtils', () => {
                 one: 1,
                 two: 2,
             }
-            const actual = ObjectUtils.deepMap(mockObj, (val: any) => {
+            const actual = ObjectUtils.deepMap((val: any) => {
                 return val + 1
-            })
+            }, mockObj)
             const expected = {
                 one: 2,
                 two: 3,
@@ -36,7 +36,6 @@ describe('ObjectUtils', () => {
                 },
             }
             const actual = ObjectUtils.deepMap(
-                mockObj,
                 (val: any, key: string) => {
                     if (
                         typeof val === 'object' &&
@@ -50,6 +49,7 @@ describe('ObjectUtils', () => {
                         return val
                     }
                 },
+                mockObj,
             )
             const expected = {
                 one: {
