@@ -60,8 +60,9 @@ export function config(options: IConfigOptions = {}): DynamicConfig {
                 consulTranslator,
             ]),
         })
+
     } else if (Object.keys(options).length > 0) {
-        logger.warn(`Options passed to config after instantiation. Config behavior may be off.`)
+        logger.warn(`Options passed to config after instantiation. These values are being ignored[${Object.keys(options).join(',')}].`)
     }
 
     return configInstance

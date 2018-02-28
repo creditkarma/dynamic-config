@@ -46,6 +46,11 @@ export interface IFileLoader {
     load(filePath: string): Promise<object>
 }
 
+export interface ILoadedFile {
+    name: string
+    config: object
+}
+
 // RESOLVER TYPES
 
 export interface IResolverMap {
