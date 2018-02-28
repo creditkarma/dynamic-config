@@ -16,7 +16,12 @@ import {
 import {
     IFileLoader,
     IRootConfigValue,
+    ITranslator,
 } from './types'
+
+function identity(obj: any): any  {
+    return obj
+}
 
 function fileExists(filePath: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -47,7 +52,12 @@ function getConfigPath(sourceDir: string): string {
     throw new Error('No local config directory found')
 }
 
-async function loadFileWithName(loaders: Array<IFileLoader>, configPath: string, name: string): Promise<IRootConfigValue> {
+async function loadFileWithName(
+    loaders: Array<IFileLoader>,
+    translator: ITranslator,
+    configPath: string,
+    name: string,
+): Promise<IRootConfigValue> {
     const configs: Array<object> = await PromiseUtils.valuesForPromises(loaders.map((loader: IFileLoader) => {
         const types: Array<string> = (Array.isArray(loader.type)) ? loader.type : [ loader.type ]
 
@@ -69,40 +79,48 @@ async function loadFileWithName(loaders: Array<IFileLoader>, configPath: string,
     }))
 
     return (ObjectUtils.overlayObjects(...configs.map((next: any): IRootConfigValue => {
-        return ConfigBuilder.createConfigObject(name, 'local', next)
+        return ConfigBuilder.createConfigObject(name, 'local', translator(next))
     })) as IRootConfigValue)
 }
 
 export interface ILoaderConfig {
     loaders?: Array<IFileLoader>
+    translator?: ITranslator
     configPath?: string
     configEnv?: string
 }
 
 export class ConfigLoader {
     private loaders: Array<IFileLoader>
+    private translator: ITranslator
     private configPath: string
     private configEnv: string
     private savedConfig: IRootConfigValue | undefined
 
-    constructor({ loaders = [], configPath = DEFAULT_CONFIG_PATH, configEnv }: ILoaderConfig = {}) {
+    constructor({
+        loaders = [],
+        translator = identity,
+        configPath = DEFAULT_CONFIG_PATH,
+        configEnv = process.env.NODE_ENV || DEFAULT_ENVIRONMENT,
+    }: ILoaderConfig = {}) {
         this.loaders = loaders
+        this.translator = translator
         this.configPath = getConfigPath(configPath)
-        this.configEnv = configEnv || process.env.NODE_ENV || DEFAULT_ENVIRONMENT
+        this.configEnv = configEnv
     }
 
     /**
      * Loads default JSON config file. This is required.
      */
     public async loadDefault(): Promise<IRootConfigValue> {
-        return loadFileWithName(this.loaders, this.configPath, 'default')
+        return loadFileWithName(this.loaders, this.translator, this.configPath, 'default')
     }
 
     /**
      * Loads JSON config file based on NODE_ENV.
      */
     public async loadEnvironment(): Promise<IRootConfigValue> {
-        return loadFileWithName(this.loaders, this.configPath, this.configEnv)
+        return loadFileWithName(this.loaders, this.translator, this.configPath, this.configEnv)
     }
 
     /**

@@ -18,6 +18,11 @@ import {
     ymlLoader,
 } from './loaders'
 
+import {
+    consulTranslator,
+    envTranslator,
+} from './translators'
+
 import * as logger from './logger'
 
 export * from './ConfigLoader'
@@ -26,6 +31,7 @@ export * from './constants'
 export * from './types'
 export * from './resolvers'
 export * from './loaders'
+export * from './translators'
 
 // DEFAULT CONFIG CLIENT
 
@@ -48,6 +54,10 @@ export function config(options: IConfigOptions = {}): DynamicConfig {
                 ymlLoader,
                 jsLoader,
                 tsLoader,
+            ]),
+            translators: (options.translators || []).concat([
+                envTranslator,
+                consulTranslator,
             ]),
         })
     } else if (Object.keys(options).length > 0) {

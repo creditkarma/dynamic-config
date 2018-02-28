@@ -5,6 +5,10 @@ import {
 } from './basic'
 
 import {
+    deepMap,
+} from './object'
+
+import {
     objectMatchesSchema,
 } from './schema'
 
@@ -13,14 +17,26 @@ import {
     ConfigValue,
     IConfigPlaceholder,
     IConfigProperties,
+    IConfigTranslator,
     IObjectConfigValue,
     IResolvedPlaceholder,
     IResolverMap,
     IRootConfigValue,
+    ITranslator,
     ObjectType,
 } from '../types'
 
 import * as logger from '../logger'
+
+export function makeTranslator(translators: Array<IConfigTranslator>): ITranslator {
+    return function applyTranslators(obj: any): any {
+        return deepMap((val, key) => {
+            return translators.reduce((acc: any, next: IConfigTranslator) => {
+                return next.translate(acc)
+            }, val)
+        }, obj)
+    }
+}
 
 export function readValueForType(raw: string, type: ObjectType): Promise<any> {
     const rawType: string = typeof raw

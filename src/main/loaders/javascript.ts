@@ -1,5 +1,5 @@
-import { IFileLoader } from '../types'
 import * as logger from '../logger'
+import { IFileLoader } from '../types'
 
 export const jsLoader: IFileLoader = {
     type: 'js',

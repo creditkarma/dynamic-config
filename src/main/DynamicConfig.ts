@@ -1,6 +1,9 @@
 import { ConfigLoader } from './ConfigLoader'
 
-import { CONFIG_ENV, CONFIG_PATH } from './constants'
+import {
+    CONFIG_ENV,
+    CONFIG_PATH,
+} from './constants'
 
 import {
     ConfigBuilder,
@@ -24,13 +27,13 @@ import {
     ConfigResolver,
     ConfigValue,
     IConfigOptions,
-    IConfigTranslator,
     IDynamicConfig,
     IRemoteOptions,
     IResolvedPlaceholder,
     IResolverMap,
     IRootConfigValue,
     ISchema,
+    ITranslator,
     PromisedUpdate,
     ResolverType,
 } from './types'
@@ -48,7 +51,7 @@ export class DynamicConfig implements IDynamicConfig {
     private resolvedConfig: IRootConfigValue
 
     private resolvers: IResolverMap
-    private translators: Array<IConfigTranslator>
+    private translator: ITranslator
 
     constructor({
         configPath = Utils.readFromEnvOrProcess(CONFIG_PATH),
@@ -68,13 +71,18 @@ export class DynamicConfig implements IDynamicConfig {
             type: 'root',
             properties: {},
         }
-        this.configLoader = new ConfigLoader({ loaders, configPath, configEnv })
+        this.translator = ConfigUtils.makeTranslator(translators)
+        this.configLoader = new ConfigLoader({
+            loaders,
+            translator: this.translator,
+            configPath,
+            configEnv,
+        })
         this.remoteOptions = remoteOptions
         this.resolvers = {
             names: new Set<string>(),
             all: new Map(),
         }
-        this.translators = translators
         this.register(...resolvers)
     }
 
@@ -84,6 +92,7 @@ export class DynamicConfig implements IDynamicConfig {
                 this.resolvers.names.add(resolver.name)
                 this.resolvers.all.set(resolver.name, resolver)
             })
+
         } else {
             throw new Error(
                 `Resolvers cannot be registered once requests have been made`,
@@ -116,7 +125,7 @@ export class DynamicConfig implements IDynamicConfig {
                     },
                 )
 
-                // If the key is set we try to find it in the structure
+            // If the key is set we try to find it in the structure
             } else {
                 const value: ConfigValue | null = ConfigUtils.getConfigForKey(
                     key,
@@ -225,6 +234,7 @@ export class DynamicConfig implements IDynamicConfig {
                 return Promise.reject(
                     new MissingConfigPlaceholder(placeholder.key),
                 )
+
             } else {
                 return Promise.reject(err)
             }
@@ -244,10 +254,12 @@ export class DynamicConfig implements IDynamicConfig {
             (err: any) => {
                 if (placeholder.default !== undefined) {
                     return Promise.resolve(placeholder.default)
+
                 } else if (err instanceof DynamicConfigMissingKey) {
                     return Promise.reject(
                         new MissingConfigPlaceholder(placeholder.key),
                     )
+
                 } else {
                     return Promise.reject(err)
                 }
@@ -298,7 +310,7 @@ export class DynamicConfig implements IDynamicConfig {
                         return ConfigBuilder.buildBaseConfigValue(
                             resolvedPlaceholder.resolver.name,
                             resolvedPlaceholder.resolver.type,
-                            value,
+                            this.translator(value),
                         )
                     },
                 ),
@@ -346,7 +358,7 @@ export class DynamicConfig implements IDynamicConfig {
                     return ConfigBuilder.buildBaseConfigValue(
                         resolvedPlaceholder.resolver.name,
                         resolvedPlaceholder.resolver.type,
-                        value,
+                        this.translator(value),
                     )
                 },
             )
@@ -392,25 +404,16 @@ export class DynamicConfig implements IDynamicConfig {
             this.configState = 'init'
             const defaultConfig: IRootConfigValue = await this.configLoader.loadDefault()
             const envConfig: IRootConfigValue = await this.configLoader.loadEnvironment()
-            const remoteConfigs: Array<
-                IRootConfigValue
-            > = await this.initializeResolvers()
-            const resolvedConfig = await ObjectUtils.overlayObjects(
+            const remoteConfigs: Array<IRootConfigValue> = await this.initializeResolvers()
+            this.resolvedConfig = await ObjectUtils.overlayObjects(
                 defaultConfig,
                 envConfig,
                 ...remoteConfigs,
             )
             this.configSchema = SchemaUtils.objectAsSimpleSchema(defaultConfig)
-            this.resolvedConfig = this.applyTranslators(resolvedConfig)
         }
 
         return this.resolvedConfig
-    }
-
-    private applyTranslators(obj: any): any {
-        return this.translators.reduce((acc: any, next: IConfigTranslator) => {
-            return next.translate(acc)
-        }, obj)
     }
 
     /**
@@ -439,7 +442,7 @@ export class DynamicConfig implements IDynamicConfig {
                         return ConfigBuilder.createConfigObject(
                             next.name,
                             next.type,
-                            config,
+                            this.translator(config),
                         )
                     })
             }),

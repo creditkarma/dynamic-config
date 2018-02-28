@@ -2,12 +2,18 @@ import { expect } from 'code'
 import * as Lab from 'lab'
 import {
     ConfigLoader,
+    consulTranslator,
+    envTranslator,
     IRootConfigValue,
     jsLoader,
     jsonLoader,
     tsLoader,
     ymlLoader,
 } from '../../main/'
+
+import {
+    ConfigUtils,
+} from '../../main/utils'
 
 export const lab = Lab.script()
 
@@ -37,6 +43,10 @@ describe('ConfigLoader', () => {
         it('should return the correct config for development', async () => {
             process.env.NODE_ENV = 'development'
             const loader: ConfigLoader = new ConfigLoader({
+                translator: ConfigUtils.makeTranslator([
+                    envTranslator,
+                    consulTranslator,
+                ]),
                 loaders: [
                     jsonLoader,
                     ymlLoader,
@@ -180,6 +190,10 @@ describe('ConfigLoader', () => {
         it('should return the correct config for production', async () => {
             process.env.NODE_ENV = 'production'
             const loader: ConfigLoader = new ConfigLoader({
+                translator: ConfigUtils.makeTranslator([
+                    envTranslator,
+                    consulTranslator,
+                ]),
                 loaders: [
                     jsonLoader,
                     ymlLoader,
@@ -300,7 +314,6 @@ describe('ConfigLoader', () => {
                                 value: {
                                     _source: 'env',
                                     _key: 'TEST_USERNAME',
-                                    _default: 'default-user',
                                 },
                                 watchers: [],
                             },
@@ -331,6 +344,10 @@ describe('ConfigLoader', () => {
         it('should return the correct config for test', async () => {
             process.env.NODE_ENV = 'test'
             const loader: ConfigLoader = new ConfigLoader({
+                translator: ConfigUtils.makeTranslator([
+                    envTranslator,
+                    consulTranslator,
+                ]),
                 loaders: [
                     jsonLoader,
                     ymlLoader,
@@ -474,6 +491,10 @@ describe('ConfigLoader', () => {
         it('should only load default config if file for NODE_ENV does not exist', async () => {
             process.env.NODE_ENV = 'integration'
             const loader: ConfigLoader = new ConfigLoader({
+                translator: ConfigUtils.makeTranslator([
+                    envTranslator,
+                    consulTranslator,
+                ]),
                 loaders: [
                     jsonLoader,
                     ymlLoader,
@@ -617,6 +638,10 @@ describe('ConfigLoader', () => {
         it('should default to loading development config', async () => {
             process.env.NODE_ENV = ''
             const loader: ConfigLoader = new ConfigLoader({
+                translator: ConfigUtils.makeTranslator([
+                    envTranslator,
+                    consulTranslator,
+                ]),
                 loaders: [
                     jsonLoader,
                     ymlLoader,
