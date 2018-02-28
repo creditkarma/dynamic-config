@@ -28,6 +28,7 @@ import {
     ConfigValue,
     IConfigOptions,
     IDynamicConfig,
+    ILoadedFile,
     IRemoteOptions,
     IResolvedPlaceholder,
     IResolverMap,
@@ -74,7 +75,6 @@ export class DynamicConfig implements IDynamicConfig {
         this.translator = ConfigUtils.makeTranslator(translators)
         this.configLoader = new ConfigLoader({
             loaders,
-            translator: this.translator,
             configPath,
             configEnv,
         })
@@ -215,12 +215,12 @@ export class DynamicConfig implements IDynamicConfig {
         )
     }
 
-    public async getRemoteValue<T>(key: string): Promise<T> {
-        return this.getValueFromResolver<T>(key, 'remote')
+    public async getRemoteValue<T>(key: string, remoteName?: string): Promise<T> {
+        return this.getValueFromResolver<T>(key, 'remote', remoteName)
     }
 
-    public async getSecretValue<T>(key: string): Promise<T> {
-        return this.getValueFromResolver<T>(key, 'secret')
+    public async getSecretValue<T>(key: string, remoteName?: string): Promise<T> {
+        return this.getValueFromResolver<T>(key, 'secret', remoteName)
     }
 
     /**
@@ -229,7 +229,7 @@ export class DynamicConfig implements IDynamicConfig {
     private async getSecretPlaceholder(
         placeholder: IResolvedPlaceholder,
     ): Promise<any> {
-        return this.getSecretValue(placeholder.key).catch((err: any) => {
+        return this.getSecretValue(placeholder.key, placeholder.resolver.name).catch((err: any) => {
             if (err instanceof DynamicConfigMissingKey) {
                 return Promise.reject(
                     new MissingConfigPlaceholder(placeholder.key),
@@ -247,7 +247,7 @@ export class DynamicConfig implements IDynamicConfig {
     private async getRemotePlaceholder(
         placeholder: IResolvedPlaceholder,
     ): Promise<any> {
-        return this.getRemoteValue(placeholder.key).then(
+        return this.getRemoteValue(placeholder.key, placeholder.resolver.name).then(
             (remoteValue: any) => {
                 return Promise.resolve(remoteValue)
             },
@@ -366,9 +366,7 @@ export class DynamicConfig implements IDynamicConfig {
             configValue.type === 'object' ||
             configValue.type === 'root'
         ) {
-            const unresolved: Array<
-                PromisedUpdate
-            > = this.collectConfigPlaceholders(configValue, [], [])
+            const unresolved: Array<PromisedUpdate> = this.collectConfigPlaceholders(configValue, [], [])
             const paths: Array<string> = unresolved.map(
                 (next: PromisedUpdate) => next[0].join('.'),
             )
@@ -402,12 +400,12 @@ export class DynamicConfig implements IDynamicConfig {
     private async getConfig(): Promise<IRootConfigValue> {
         if (Object.keys(this.resolvedConfig.properties).length === 0) {
             this.configState = 'init'
-            const defaultConfig: IRootConfigValue = await this.configLoader.loadDefault()
-            const envConfig: IRootConfigValue = await this.configLoader.loadEnvironment()
+            const defaultConfig: ILoadedFile = await this.configLoader.loadDefault()
+            const envConfig: ILoadedFile = await this.configLoader.loadEnvironment()
             const remoteConfigs: Array<IRootConfigValue> = await this.initializeResolvers()
             this.resolvedConfig = await ObjectUtils.overlayObjects(
-                defaultConfig,
-                envConfig,
+                ConfigBuilder.createConfigObject('default', 'local', this.translator(defaultConfig.config)),
+                ConfigBuilder.createConfigObject(envConfig.name, 'local', this.translator(envConfig.config)),
                 ...remoteConfigs,
             )
             this.configSchema = SchemaUtils.objectAsSimpleSchema(defaultConfig)
@@ -452,10 +450,14 @@ export class DynamicConfig implements IDynamicConfig {
     private getValueFromResolver<T>(
         key: string,
         type: ResolverType,
+        remoteName?: string,
     ): Promise<T> {
         const resolvers = [...this.resolvers.all.values()].filter(
             (next: ConfigResolver) => {
-                return next.type === type
+                return (
+                    next.type === type &&
+                    (remoteName === undefined || remoteName === next.name)
+                )
             },
         )
 

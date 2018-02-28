@@ -1,3 +1,3 @@
-export * from './consul'
-export * from './debug'
-export * from './env'
+export { consulTranslator } from './consul'
+export { debugTranslator } from './debug'
+export { envTranslator } from './env'
