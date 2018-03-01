@@ -24,7 +24,11 @@
     "test:unit": "lab --timeout 10000 --verbose -l -S -P spec dist/tests/unit",
     "pretest:integration": "rimraf dist/tests/integration/config && cp -r src/tests/integration/config dist/tests/integration/config && npm run docker",
     "test:integration": "wait-on --timeout 20000 http://localhost:8510 http://localhost:8211 && node dist/tests/integration/bootstrap.js && lab --timeout 15000 --verbose -l -S -P spec dist/tests/integration",
-    "posttest:integration": "npm run docker:kill"
+    "posttest:integration": "npm run docker:kill",
+    "release:patch": "npm version patch && npm run release:publish",
+    "release:minor": "npm version minor && npm run release:publish",
+    "release:major": "npm version major && npm run release:publish",
+    "release:publish": "git push --follow-tags"
   },
   "author": "Credit Karma",
   "license": "Apache-2.0",
