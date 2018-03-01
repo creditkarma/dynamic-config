@@ -30,8 +30,8 @@ When requesting a value from Dynamic Config a Promise of the expected result is 
 - [API Overview](#api-overview)
 - [Customizing Your Config Instance](#customizing-your-config-instance)
 - [Local Configuration](#local-configuration)
-- [Remote Configuration](#remote-configuration)
-- [Translators](#translators-2)
+- [Remote Configuration](#remote-configuration-1)
+- [Translators](#translators-1)
 - [Plugin Support](#plugin-support)
 - [Roadmap](#roadmap)
 
