@@ -930,7 +930,7 @@ As a concrete example of this we will look at environment placeholders. A config
 }
 ```
 
-This form is specific to Dynamic Config. A very common way for envirnoment variables to appear is:
+This form is specific to Dynamic Config. A more familiar way for environment variables to appear is:
 
 ```json
 {
@@ -948,7 +948,7 @@ There are three kinds of plugins:
 - *Remote Resolvers* - For reading remote data sources
 - *Translators* - For transforming/validating raw data
 
-## File Loaders
+### File Loaders
 
 File loaders are plugins that allow Dynamic Config to read local configuration files.
 
@@ -982,61 +982,21 @@ const jsLoader: IFileLoader = {
 
 By the time a loader is called with a `filePath` the path is gauranteed to exist. The `filePath` is absolute.
 
-Loaders are given priority in the order in which they are added. Meaning the most recently added loader has the highest priority. With the config singleton this order is json, yaml, js then ts. Therefore, TypeScript files have the highest priority. If there is both a `default.json` file and a `default.ts` file the values from the `default.ts` file will have presidence.
+Loaders are given priority in the order in which they are added. Meaning the most recently added loader has the highest priority. With the default settings this order is json, yaml, js then ts. Therefore, TypeScript files have the highest priority. If there is both a `default.json` file and a `default.ts` file the values from the `default.ts` file will have presidence.
 
-## Remote Resolvers
+### Remote Resolvers
 
-Registering a remote resolver is fairly straight-forward. You use the `register` method on your config instance.
+Remote resolvers are plugins that know how to read data from data sources outside the filesystem.
 
-*Note: You can only register remote resolvers until your first call to `config.get()`. After this any attempt to register a resolver will raise an exception.*
-
-```typescript
-import { DynamicConfig, IRemoteOptions } from '@creditkarma/dynamic-config'
-
-const config: DynamicConfig = new DynamicConfig()
-
-config.register({
-    type: 'remote'
-    name: 'consul',
-    init(instance: DynamicConfig, options: IRemoteOptions): Promise<any> {
-        // Do set up and load any initial remote configuration
-    },
-    get<T>(key: string): Promise<T> {
-        // Fetch your key
-    }
-})
-```
-
-The `register` method will accept a comma-separated of resolver objects.
-
-For additional clarity, the resolver objects have the following TypeScript interface:
+They are defined by this interface:
 
 ```typescript
 interface IRemoteResolver {
     type: 'remote' | 'secret'
     name: string
-    init(dynamicConfig: DynamicConfig, remoteOptions?: IRemoteOptions): Promise<any>
+    init(configInstance: DynamicConfig, remoteOptions?: IRemoteOptions): Promise<any>
     get<T>(key: string): Promise<T>
 }
-```
-
-You can also pass resolvers on the options object passed directly to the constructor:
-
-```typescript
-import { DynamicConfig, IRemoteOptions } from '@creditkarma/dynamic-config'
-
-const config: DynamicConfig = new DynamicConfig({
-    resolvers: [{
-        type: 'remote'
-        name: 'consul',
-        init(instance: DynamicConfig, options: IRemoteOptions): Promise<any> {
-            // Do set up and load any initial remote configuration
-        },
-        get<T>(key: string): Promise<T> {
-            // Fetch your key
-        }
-    }]
-})
 ```
 
 #### `type`
@@ -1045,39 +1005,55 @@ The type parameter can be set to either `remote` or `secret`. The only differenc
 
 #### `name`
 
-The name for this remote. This is used to lookup config placeholders. We'll get to that in a bit.
+The name for this remote. This is used to lookup config placeholders, the `_source` property of a placeholder.
 
 #### `init`
 
-The init method is called and resolved before any request to `get` can be completed. The init method returns a Promise. The resolved value of this Promise is deeply merged with the local config files. This is where you load remote configuration that should be available on application startup.
+The init method is called and resolved before any request to `conifg().get` can be completed. The init method returns a Promise. The resolved value of this Promise is deeply merged with the local config. This is where you load remote configuration that should be available on application startup.
 
-The init method receives an instance of the `DynamicConfig` object it is being registered on and any optional parameters that we defined on the `DynamicConfig` instance.
+The init method receives an instance of the `DynamicConfig` object it is being registered on and any optional parameters that were defined with out config options (the `remoteOptions` piece of our config options).
 
-To define `IRemoteOptions` for a given remote resolver we use the `remoteOptions` parameter on the constructor config object:
+As a reminder, `remoteOptions` could be set in `config-settings.json` as such:
 
-```typescript
-const config: DynamicConfig = new DynamicConfig({
-    remoteOptions: {
-        consul: {
-            consulAddress: 'http://localhost:8500',
-            consulKvDc: 'dc1',
-            consulKeys: 'production-config',
+```json
+{
+    "remoteOptions": {
+        "consul": {
+            "consulAddress": "http://localhost:8500",
+            "consulKvDc": "dc1",
+            "consulKeys": "production-config",
         }
     }
-})
+}
 ```
 
 When a resolver with the name `'consul'` is registered this object will be passed to the init method. Therefore, the `remoteOptions` parameter is of the form:
 
 ```typescript
 interface IRemoteOptions {
-    [resolverName: string]: IResolverOptions
+    [resolverName: string]: any
 }
 ```
 
 #### `get`
 
 This is easy, given a string key return a value for it. This method is called when a value in the config needs to be resolved remotely. Usually this will be because of a config placeholder. Once this method resolves, the return value will be cached in the config object and this method will not be called for that same key again.
+
+### Registering Plugins
+
+Once you have created a plugin you need to register it with the `DynamicConfig` instance. To do this you need to pass them in to the `config` function the first time you call it.
+
+```typescript
+import { DynamicConfig, config, jsonLoader, consulResolver, envTranslator } from '@creditkarma/dynamic-config'
+
+const configInstance: DynamicConfig = config({
+    loaders: [ jsonLoader ],
+    resolvers: [ consulResolver() ],
+    translators: [ envTranslator ]
+})
+```
+
+*Note: Here `consulResolver` is a function that returns `IRemoteResolver` because there is state that needs to be initialized for this resolver.*
 
 [back to top](#back-to-top)
 
