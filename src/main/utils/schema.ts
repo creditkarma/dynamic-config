@@ -3,6 +3,8 @@ import {
     ISchema,
 } from '../types'
 
+import * as logger from '../logger'
+
 import {
     Just,
     Maybe,
@@ -13,10 +15,19 @@ export function findSchemaForKey(schema: ISchema, key: string): Maybe<ISchema> {
     const [ head, ...tail ]: Array<string> =
         key.split('.').filter((next: string) => next.trim() !== '')
 
-    if (tail.length > 0 && schema.type === 'object' && schema.properties[head] !== undefined) {
+    if (
+        tail.length > 0 &&
+        schema.type === 'object' &&
+        schema.properties !== undefined &&
+        schema.properties[head] !== undefined
+    ) {
         return findSchemaForKey(schema.properties[head], tail.join('.'))
 
-    } else if (schema.type === 'object' && schema.properties[head] !== undefined) {
+    } else if (
+        schema.type === 'object' &&
+        schema.properties !== undefined &&
+        schema.properties[head] !== undefined
+    ) {
         return new Just(schema.properties[head])
 
     } else {
@@ -45,10 +56,10 @@ export function objectAsSimpleSchema(obj: any): ISchema {
 
         if (obj !== null) {
             for (const key of Object.keys(obj)) {
-                schema.properties[key] = objectAsSimpleSchema(obj[key])
+                schema.properties![key] = objectAsSimpleSchema(obj[key])
                 if (
                     schema.required !== undefined &&
-                    schema.properties[key].type !== 'undefined'
+                    schema.properties![key].type !== 'undefined'
                 ) {
                     schema.required.push(key)
                 }
@@ -72,19 +83,49 @@ export function objectAsSimpleSchema(obj: any): ISchema {
 export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
     const objType: string = typeof obj
 
-    if (Array.isArray(obj) && schema.type === 'array') {
-        return objectMatchesSchema(schema.items, obj[0])
+    if (obj === null) {
+        return schema.type === 'undefined'
 
-    } else if (objType === 'object' && schema.type === 'object') {
-        const schemaKeys: Array<string> = Object.keys(schema.properties)
+    } else if (Array.isArray(obj) && schema.type === 'array') {
+        if (schema.items !== undefined && obj.length > 0) {
+            if (Array.isArray(schema.items)) {
+                const schemaLen: number = schema.items.length
+                const objLen: number = obj.length
+                if (schemaLen !== objLen) {
+                    logger.warn(`Tuple contains ${objLen}, but schema only allows ${schemaLen}`)
+                    return false
+                } else {
+                    for (let i = 0; i < objLen; i++) {
+                        if (!objectMatchesSchema(schema.items[i], obj[i])) {
+                            return false
+                        }
+                    }
 
-        if (obj === null) {
-            return schemaKeys.length === 0
+                    return true
+                }
+
+            } else {
+                for (const item of obj) {
+                    if (!objectMatchesSchema(schema.items, item)) {
+                        return false
+                    }
+                }
+
+                return true
+            }
 
         } else {
+            return true
+        }
+
+    } else if (objType === 'object' && schema.type === 'object') {
+        if (schema.properties !== undefined) {
+            const schemaKeys: Array<string> = Object.keys(schema.properties)
+
             const objKeys: Array<string> = Object.keys(obj)
             for (const key of objKeys) {
                 if (schemaKeys.indexOf(key) === -1) {
+                    logger.warn(`Object contains key[${key}] not in schema`)
                     return false
                 }
             }
@@ -94,6 +135,7 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
                 const nextObj: any = obj[key]
 
                 if (nextObj === undefined && schema.required !== undefined) {
+                    logger.warn(`Object is missing required key[${key}]`)
                     return schema.required.indexOf(key) === -1
 
                 } else if (!objectMatchesSchema(nextSchema, nextObj)) {
@@ -102,12 +144,15 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
             }
 
             return true
+        } else {
+            return true
         }
 
     } else if (schema.type === 'any' || schema.type === objType) {
         return true
 
     } else {
+        logger.warn(`Schema type[${schema.type}] does not match object type[${objType}]`)
         return false
     }
 }

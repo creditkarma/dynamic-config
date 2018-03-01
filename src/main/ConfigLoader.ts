@@ -1,4 +1,3 @@
-import * as fs from 'fs'
 import * as path from 'path'
 
 import {
@@ -8,6 +7,7 @@ import {
 } from './constants'
 
 import {
+    FileUtils,
     ObjectUtils,
     PromiseUtils,
 } from './utils'
@@ -17,33 +17,13 @@ import {
     ILoadedFile,
 } from './types'
 
-function fileExists(filePath: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-        fs.exists(filePath, (exists: boolean) => {
-            if (exists) {
-                resolve()
-            } else {
-                reject(new Error(`File[${filePath}] doesn't exists`))
-            }
-        })
-    })
-}
-
 function getConfigPath(sourceDir: string): string {
-    const firstPath: string = path.resolve(process.cwd(), sourceDir)
-    if (fs.existsSync(firstPath) && fs.statSync(firstPath).isDirectory) {
-        return firstPath
-
+    const configPath = FileUtils.findDir(sourceDir, CONFIG_SEARCH_PATHS)
+    if (configPath !== null) {
+        return configPath
     } else {
-        for (const next of CONFIG_SEARCH_PATHS) {
-            const nextPath: string = path.resolve(process.cwd(), next, sourceDir)
-            if (fs.existsSync(nextPath) && fs.statSync(nextPath).isDirectory) {
-                return nextPath
-            }
-        }
+        throw new Error('No local config directory found')
     }
-
-    throw new Error('No local config directory found')
 }
 
 async function loadFileWithName(
@@ -57,7 +37,7 @@ async function loadFileWithName(
         return PromiseUtils.some(types.map((ext: string) => {
             const filePath: string = path.resolve(configPath, `${name}.${ext}`)
 
-            return fileExists(filePath).then(() => {
+            return FileUtils.fileExists(filePath).then(() => {
                 return loader.load(filePath)
 
             }).catch((err: any) => {

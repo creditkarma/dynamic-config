@@ -22,6 +22,7 @@ function loadTypeScript(filePath: string): any {
         const sandbox = Object.assign({}, global, {
             exports: {},
             require(pathToRequire: string) {
+                // User files will start with one of these characters
                 if (pathToRequire.startsWith('.') || pathToRequire.startsWith('/')) {
                     const resolvedFile: string = locateFile(filePath, pathToRequire)
 
@@ -29,8 +30,8 @@ function loadTypeScript(filePath: string): any {
                     if (path.extname(resolvedFile) === '.ts') {
                         return loadTypeScript(resolvedFile)
 
-                        // Else use the default node system, resolving to absolute path to account for our
-                        // shenanigans
+                    // Else use the default node system, resolving to absolute path to account for our
+                    // shenanigans
                     } else {
                         return require(resolvedFile)
                     }

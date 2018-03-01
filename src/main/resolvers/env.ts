@@ -8,7 +8,7 @@ import { ConfigUtils } from '../utils'
 
 import * as logger from '../logger'
 
-export function environmentResolver(): IRemoteResolver {
+export function envResolver(): IRemoteResolver {
     return {
         type: 'remote',
         name: 'env',

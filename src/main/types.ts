@@ -209,12 +209,12 @@ export type ISchema =
 
 export interface IArraySchema {
     type: 'array'
-    items: ISchema
+    items?: ISchema
 }
 
 export interface IObjectSchema {
     type: 'object'
-    properties: ISchemaMap
+    properties?: ISchemaMap
     required?: Array<string>
 }
 
