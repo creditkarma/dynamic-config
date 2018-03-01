@@ -2,23 +2,46 @@
 
 A dynamic configuration library for Node.js written in TypeScript.
 
-Application configuration can be an unnecessarily complicated problem when working in large distributed systems across multiple runtimes.
+Application configuration can be an unnecessarily complicated problem when working in large distributed systems across multiple runtimes. Gaining consensus about what configuration needs to do, what it needs to look like and how it interfaces with a specific runtime can be nearly impossible. Dynamic Config is designed to be highly adaptable to a variety of requirements. It is built on a plugin architecture that allows it to be adapted further. Beyond this, it handles local configuration files in a way consistent with other popular Node config libraries.
 
 ### Plugable
 
-Dynamic Config has plugable support for remote config sources and local file types. The library ships with plugins for some common use cases. The supported file types are `.js`, `.yml`, `.ts` and `.json`. It also ships with resolvers for pulling configs from environment variables, command line arguments and remote config values stored in Hashicorp Consul and Vault.
+Plugins for Dynamic Config provide extensible support for loading local file types, talking to remote data stores and transforming/validating config structures.
 
-The use of remote configuration is optional. At least one local configuration file (`default.(json|yml|js|ts...)`) is required.
+#### File Types
+
+Support for config file types is added through plugins. Dynamic Config comes with plugins for `js`, `ts`, `json` and `yaml` files. It is easy to add support for additional file types.
+
+#### Remote Data Sources
+
+Dynamic Config also supports remote data sources through plugins. The included plugins include clients for pulling values from Hashicorp Consul and Vault. The plugin interface is also used for adding support for environment variables and command line arguments.
+
+#### Transformation and Validation
+
+The third kind of plugin is something we call a translator. When raw config values are loaded, either form local files or remote sources, you can use translators to transform or validate the structure of the raw data before it is added to the resolved config object.
 
 ### Promise-based
 
 When requesting a value from Dynamic Config a Promise of the expected result is returned. If the value is found the Promise is resolved. If the value is not found, either because it is missing or some other error, the Promise is rejected with an error describing why the value may be missing.
 
+## Table of Contents
+
+- [Getting Started](#getting-started)
+- [API Overview](#api-overview)
+- [Customizing Your Config Instance](#customizing-your-config-instance)
+- [Local Configuration](#default-configuration)
+- [Remote Configuration](#remote-configuration)
+- [Translators](#translators)
+- [Plugin Support](#plugin-support)
+- [Roadmap](#roadmap)
+
+---
+
 ## Getting Started
 
-Dynamic Config is highly flexible to a number of situations, but I think it's important to walk through a simple application of Dynamic Config.
+As mentioned, Dynamic Config can adapt to a number of different situations, but I think it's important to go through setting up a simple working application. Most use-cases will not require more than this.
 
-We're just going to standup an express server that returns a string, but we are going to configure this application for a number of different environments.
+We're just going to standup an express server with one route that returns a string, but we are going to configure this application for a number of different environments.
 
 ### Make a New Project
 
@@ -28,9 +51,11 @@ $ cd config-example
 $ npm init
 ```
 
+I'm also going to be using TypeScript, so we need to set that up.
+
 #### TSCONFIG
 
-My tsconfig.json looks like this:
+My `tsconfig.json` looks like this:
 
 ```json
 {
@@ -84,7 +109,7 @@ $ npm install --save @types/express
 
 ### Create the Default Config
 
-As mentioned, a default config file is required. If you're doing something simple this may be enough. I'm going to create a new directory at my project root called `config`. Inside of this directory I'm going to create one file `default.json`.
+A default config file is required. If you're doing something simple this may be enough. I'm going to create a new directory at my project root called `config`. Inside of this directory I'm going to create one file `default.json`.
 
 ```json
 {
@@ -98,6 +123,8 @@ As mentioned, a default config file is required. If you're doing something simpl
     }
 }
 ```
+
+[More Information](#local-configuration)
 
 ### Create an Express Server
 
@@ -178,7 +205,7 @@ Things get a little more complex when we talk about pulling in remote configurat
 
 #### Setting Up Consul with Docker
 
-I am going to use `docker-compose` to configure and run my Consul instance. If you don't have `docker` installed locally, you can check out install instructions [here](https://docs.docker.com/compose/install/).
+I am going to use `docker-compose` to configure and run my Consul container. If you don't have `docker` installed locally, you can check out install instructions [here](https://docs.docker.com/compose/install/).
 
 I add a new file at my project root `docker-compose.yml`:
 
@@ -240,7 +267,7 @@ Click `CREATE` and we are ready to go.
 
 #### Configuring Our Application to Use Consul
 
-In order for Dynamic Config to know about the values we added to Consul we must configure it to know about Consul. We can do this in a couple of ways. We can set configuration on environment variables or we can pass in command line arguments to our application. We are going to use command line arguments.
+In order for Dynamic Config to know about the values we added to Consul we must configure it to know about Consul. We can do this in a few ways. We can add static config in a file called `config-settings.json` at our project root, we can set configuration on environment variables or we can pass in command line arguments to our application. We are going to use command line arguments.
 
 ```sh
 $ node ./dist/index.js CONSUL_ADDRESS=http://localhost:8510 CONSUL_KV_DC=dc1 CONSUL_KEYS=consul-config
@@ -307,81 +334,23 @@ At this point our config resolution chain is doing quite a lot.
 
 This shows us one working flow, but how do we add additional remotes? How do we read envirnoment variables? How do we add file support? Wait, what is even the full API? We will be going through all of this and more in the rest of this document.
 
-## Options and API
+[back to top](#table-of-contents)
 
-The most common usage of Dynamic Config is through a singleton instance. The singleton instance is lazily created through the exported function `config`. Subsequent calls to this function will return the same instance. Configuration can be passed to the function or set on environment variables. We'll see more of that below.
+## API Overview
 
-### Singleton
-
-The singleton instance registers resolvers for Consul and Vault. It also registers file support for `json`, `yml`, `js` and `ts` files. We'll see more documentation for these default implementations below.
+As we saw in [Getting Started](#getting-started) our `DynamicConfig` object is accessed through a function called `config`. This function is used to lazily create a singleton instance of the underlying `DynamicConfig` class. Subsequent calls to this function return the same instance.
 
 ```typescript
 import { config } from '@creditkarma/dynamic-config'
 
 export async function createHttpClient(): Promise<Client> {
-  const host: string = await config().get<string>('hostName')
-  const port: number = await config().get<number>('port')
-  return new Client(host, port)
+    const host: string = await config().get<string>('hostName')
+    const port: number = await config().get<number>('port')
+    return new Client(host, port)
 }
 ```
 
-### Class Constructor
-
-You can also construct your own instance by importing the underlying `DynamicConfig` class.
-
-When using the class constructor you have a blank canvas. There are no remote resolvers and there are no file loaders included by default.
-
-In the example will will include the `jsonLoader`.
-
-```typescript
-import { DynamicConfig, jsonLoader } from '@creditkarma/dynamic-config'
-
-const config: DynamicConfig = new DynamicConfig({
-  loaders: [ jsonLoader ]
-})
-
-export async function createHttpClient(): Promise<Client> {
-  const host: string = await config.get<string>('hostName')
-  const port: number = await config.get<number>('port')
-  return new Client(host, port)
-}
-```
-
-### Options
-
-Available options are:
-
-```typescript
-interface IConfigOptions {
-  configPath?: string
-  configEnv?: string
-  remoteOptions?: IRemoteOptions
-  resolvers?: Array<ConfigResolver>
-  loaders?: Array<IFileLoader>
-}
-```
-
-* configPath - Path to local configuration files. Defaults to '.'.
-* configEnv - Override for `NODE_ENV`. Defaults to 'development'.
-* remoteOptions - Options to pass to remote resolvers (more on this later).
-* resolvers - Resolvers to register on this instance (more on this later).
-* loaders - Loaders to read local config files (more on this later).
-
-This options object can be passed to the `DynamicConfig` constructor or to your first call to get the singleton instace with `config`. When passing options to the singleton instance resolvers and loaders are appended to the ones loaded by default.
-
-```typescript
-import { DynamicConfig, config } from '@creditkarma/dynamic-config'
-
-const dynamicConfig: DynamicConfig = conifg({ configPath: 'src/main/config' })
-
-export async function createHttpClient(): Promise<Client> {
-  const host: string = await dynamicConfig.get<string>('hostName')
-  const port: number = await dynamicConfig.get<number>('port')
-  return new Client(host, port)
-}
-```
-
-### Methods
+### Instance Methods
 
 The availabe methods on a config instance are as follows:
 
@@ -393,9 +362,32 @@ Gets the value for a specified key. If the key cannot be found the Promise is re
 import { config } from '@creditkarma/dynamic-config'
 
 export async function createHttpClient(): Promise<Client> {
-  const host: string = await config().get<string>('hostName')
-  const port: number = await config().get<number>('port')
-  return new Client(host, port)
+    const host: string = await config().get<string>('host')
+    const port: number = await config().get<number>('port')
+    return new Client(host, port)
+}
+```
+
+The key you pass to `get` can reference a nested object. If, for instance, your config looked like this:
+
+```json
+{
+    "server": {
+        "host": "localhost",
+        "port": 8080
+    }
+}
+```
+
+You could access values like so:
+
+```typescript
+import { config } from '@creditkarma/dynamic-config'
+
+export async function createHttpClient(): Promise<Client> {
+    const host: string = await config().get<string>('server.host')
+    const port: number = await config().get<number>('server.port')
+    return new Client(host, port)
 }
 ```
 
@@ -407,9 +399,9 @@ You can also assign a default value in the event that the key cannot be found.
 import { config } from '@creditkarma/dynamic-config'
 
 export async function createHttpClient(): Promise<Client> {
-  const host: string = await config().getWithDefault<string>('hostName', 'localhost')
-  const port: number = await config().getWithDefault<number>('port', 8080)
-  return new Client(host, port)
+    const host: string = await config().getWithDefault<string>('host', 'localhost')
+    const port: number = await config().getWithDefault<number>('port', 8080)
+    return new Client(host, port)
 }
 ```
 
@@ -421,58 +413,188 @@ Additionally, you can batch get config values. The promise here will only resolv
 import { config } from '@creditkarma/dynamic-config'
 
 export async function createHttpClient(): Promise<Client> {
-  const [ host, port ] = await config().getAll('hostName', 'port')
-  return new Client(host, port)
+    const [ host, port ] = await config().getAll('host', 'port')
+    return new Client(host, port)
 }
 ```
 
-## Local Configs
+#### `getRemoteValue`
 
-Local configuration files are stored localally with your application source, typically at the project root in a directory named `config/`. By default the library will also look for configs in `src/config/`, `lib/config/`, `app/config/` and `dist/config/`. The config path can be set as an option if you do not wish to use the default resolution.
-
-### File Loaders
-
-File loaders are plugins that allow Dynamic Config to read local configuration files.
-
-They are defined by this interface:
+You can also request a value from one of the registered remotes.
 
 ```typescript
-interface IFileLoader {
-  type: string
-  load(filePath: string): Promise<object>
+import { config } from '@creditkarma/dynamic-config'
+
+export async function createHttpClient(): Promise<Client> {
+    const host = await config().get('host')
+    const port = await config().getRemoteValue('port', 'consul')
+    return new Client(host, port)
 }
 ```
 
-Here, `type` is the file extension handled by this loader and `load` is the function to load the file. The `load` function is expected to return a promise of the JavaScript Object loaded from the file.
+The `getRemoteValue` function takes two arguments, the first is the name of the key to fetch, the other is the name of the remote to fetch from. The second argument is optional, but if you have more than one remote registered it will search all remotes for the key and return the first successful result.
 
-The JavaScript loader is simple. Let's take a look at it as an example.
+#### `getSecretValue`
+
+Works just like `getRemoteValue` except it will only try to fetch from remotes that have been registered as secret config stores.
 
 ```typescript
-const jsLoader: IFileLoader = {
-  type: 'js',
-  async load(filePath: string): Promise<object> {
-    const configObj = require(filePath)
+import { config } from '@creditkarma/dynamic-config'
 
-    if (typeof configObj.default === 'object') {
-      return configObj.default
-    } else {
-      return configObj
-    }
-  },
+export async function createHttpClient(): Promise<Client> {
+    const host = await config().get('host')
+    const port = await config().get('port')
+    const password = await config().getSecretValue('password', 'vault')
+    return new Client(host, port, { password })
 }
 ```
 
-By the time a loader is called with a `filePath` the path is gauranteed to exist. The `filePath` is absolute.
+[back to top](#table-of-contents)
 
-Loaders are given priority in the order in which they are added. Meaning the most recently added loader has the highest priority. With the config singleton this order is json, yaml, js then ts. Therefore, TypeScript files have the highest priority. If there is both a `default.json` file and a `default.ts` file the values from the `default.ts` file will have presidence.
+## Customizing Your Config Instance
+
+There are three different ways to pass options to your config instance.
+
+1. Through a local file called `config-settings.json`
+2. Through environment variables
+3. Through command line arguments
+
+The most robust of these is `config-settings.json`.
+
+### Available Options
+
+All available options are optional.
+
+```typescript
+interface IConfigSettings {
+    configPath?: string
+    configEnv?: string
+    remoteOptions?: { [name: string]: any }
+    resolvers?: Array<string>
+    loaders?: Array<string>
+    translators?: Array<string>
+}
+```
+
+#### `configPath`
+
+`type: string`
+
+Path to local configuration files. By default `DynamicConfig` will look for a directory called `config` in your project. It will search in predictable places. It will first look at the project root. It will then search for the `config` directory in `src`, `lib`, `main`, `dist` and `app`.
+
+#### `configEnv`
+
+`type: string`
+
+By default `DynamicConfig` will check `NODE_ENV` to determine the current environment. This option will override that.
+
+#### `remoteOptions`
+
+`type: object`
+
+These are options that will be passed to [remote resolvers](#remote-configuration). The options are of the following form:
+
+```typescript
+interface IRemoteOptions {
+    [name: string]: any
+}
+```
+
+Here the key is the name of the resolver, then when the resolver is instantiated the value here is passed to the initialization of the resolver.
+
+#### `resolvers`
+
+`type: Array<string>`
+
+This is a list of the Resolvers to use (more on this later).
+
+The included Resolvers are:
+
+* `env` - Allows reading of environment variables
+* `process` - Allows reading of command line args
+* `consul` - Allows fetching of remote data from Consul
+* `vault` - Allows fetching of remote data from Vault
+
+#### `loaders`
+
+`type: Array<string>`
+
+This is a list of FileLoaders to use (more on this later).
+
+The included FileLoaders are:
+
+* `json` - Read JSON files ending with `.json`
+* `yaml` - Read YAML files ending with `.yml` or `.yaml`
+* `js` - Read JavaScript files ending with `.js`
+* `ts` - Read TypeScript files ending with `.ts`
+
+#### `translators`
+
+`type: Array<string>`
+
+List of Translators to user. Translators can finese data into a form expected by Dyanmic Config (more on this later).
+
+The included Translators are:
+
+* `env` - Allows usage of environment variables of the form `'$HOSTNAME'`
+* `consul` - Allos usage of `consul!` urls.
+
+### CONFIG-SETTINGS.JSON
+
+If for instance I wanted to change the path to my local config files I would add a new file `config-settings.json` and add something like this:
+
+```json
+{
+    "configPath": "./source/config"
+}
+```
+
+Additionally, if I wanted to only include the resolvers for `env` and `process` and support for only `json` files:
+
+```json
+{
+    "configPath": "./source/config",
+    "resolvers": [ "env", "process" ],
+    "loaders": [ "json" ]
+}
+```
+
+### Environment Variables
+
+Only `configPath`, under the name `CONFIG_PATH`, and `configEnv`, under the name `CONFIG_ENV`, can be set with environment variables.
+
+```sh
+$ export CONFIG_PATH=source/config
+$ export CONFIG_ENV=development
+```
+
+*Note: Some plugins, as is the case with the Consul Resolver, may support additional environment variables*
+
+### Command Line Arguments
+
+The command line supports the same subset of options as environemnt variables
+
+```sh
+$ node ./dist/index.js CONFIG_PATH=source/config CONFIG_ENV=development
+```
+
+*Note: Some plugins, as is the case with the Consul Resolver, may support additional command line arguments*
+
+[back to top](#table-of-contents)
+
+## Local Configuration
+
+Local configuration files are stored localally with your application source, typically at the project root in a directory named `config/`. The config path can be set as an option if you do not wish to use the default resolution.
 
 ### Default Configuration
 
-The default config for your app is loaded from the `config/default.(json|yml|js|ts...)` file. The default configuration is required. The default configuration is the contract between you and your application.
+The default config for your app is loaded from the `config/default.(json|yml|js|ts...)` file. The default configuration is required.
+
+The default configuration is the contract between you and your application. At runtime a schema is built from your default configuration. This schema is a simplified [JSON Schema](http://json-schema.org/). You can only use keys that you define in your default config and they must have the same shape. Config values should be predictable. If the form of your config is mutable this is very likely the source (or result of) a bug.
 
 ### File Types
 
-The four different file types are loaded in a predictable order. This means that if you have multiple files with the same base name but different extensions (`default.json` vs `default.ts`) the two files have different presidence based on their extension. JSON files are merged first, then YAML file, then JS and finally TS. This means that `ts` files have the highest presidence as their values are merged last.
+File types are loaded in a predictable order. They are loaded in the order in which their FileLoaders are registered with the config instance. By default this order is `json`, `yaml`, `js` and finally `ts`. This means that if you have multiple files with the same base name but different extensions (`default.json` vs `default.ts`) the two files have different presidence based on their extension. JSON files are merged first, then YAML file, then JS and finally TS. This means that `ts` files have the highest presidence as their values are merged last.
 
 #### TypeScript
 
@@ -486,13 +608,13 @@ Named exports:
 
 ```typescript
 export const server = {
-  hostName: 'localhost',
-  port: 8080,
+    hostName: 'localhost',
+    port: 8080,
 }
 
 export const database = {
-  username: 'root',
-  password: 'root',
+    username: 'root',
+    password: 'root',
 }
 ```
 
@@ -500,14 +622,14 @@ Default exports:
 
 ```typescript
 export default {
-  server: {
-    hostName: 'localhost',
-    port: 8080,
-  },
-  database: {
-    username: 'root',
-    password: 'root',
-  }
+    server: {
+        hostName: 'localhost',
+        port: 8080,
+    },
+    database: {
+        username: 'root',
+        password: 'root',
+    }
 }
 ```
 
@@ -519,22 +641,22 @@ You can get at these values as:
 import { config } from '@creditkarma/dynamic-config'
 
 export async function createHttpClient(): Promise<Client> {
-  const host: string = await config().get('server.hostName')
-  const port: number = await config().get('server.port')
-  return new Client(host, port)
+    const host: string = await config().get('server.hostName')
+    const port: number = await config().get('server.port')
+    return new Client(host, port)
 }
 ```
 
 #### Returning Promises
 
-Loaders can return objects that contain Promises as values. Dynamic Config will resolve all Promises while building the ultimate representation of your application config.
+FileLoaders can return objects that contain Promises as values. Dynamic Config will resolve all Promises while building the ultimate representation of your application config.
 
 As an example, this could be your local `js` config file:
 
 ```typescript
 export const server = Promise.resolve({
-  hostName: 'localhost',
-  port: 8080
+    hostName: 'localhost',
+    port: 8080
 })
 ```
 
@@ -544,9 +666,9 @@ Then when you fetch from Dynamic Config the Promise in your config is transparen
 import { config } from '@creditkarma/dynamic-config'
 
 export async function createHttpClient(): Promise<Client> {
-  const host: string = await config().get('server.hostName')
-  const port: number = await config().get('server.port')
-  return new Client(host, port)
+    const host: string = await config().get('server.hostName')
+    const port: number = await config().get('server.port')
+    return new Client(host, port)
 }
 ```
 
@@ -556,132 +678,19 @@ This API can be used for loading config values from sources that don't neatly fi
 
 *Note: If a nested Promise rejects the wrapping Promise also rejects and all values within the wrapping Promise are ignored.*
 
-### Config Schema
+### Local Environment Overrides
 
-At runtime a schema (a subset of [JSON Schema](http://json-schema.org/)) is built from this default config file. You can only use keys that you define in your default config and they must have the same shape. Config values should be predictable. If the form of your config is mutable this is very likely the source (or result of) a bug.
+You can override the values from the default config in a variety of ways, but they must follow the schema set by your default configuration file. Overwriting the default values is done by adding additional files corresponding to the value of `NODE_ENV`. For example if `NODE_ENV=development` then the default configuration will be merged with a file named `config/development.(json|yml|js|ts...)`. Using this you could have different configuration files for `NODE_ENV=test` or `NODE_ENV=production`.
 
-### Local Overrides
+### Config Path
 
-You can override the values from the default config in a variety of ways, but they must follow the schema set by your default configuration file. Overwriting the default values is done by adding additional files corresponding to the value of `NODE_ENV`. For example if `NODE_ENV = 'development'` then the default configuration will be merged with a file named `config/development.(json|yml|js|ts...)`. Using this you could have different configuration files for `NODE_ENV = 'test'` or `NODE_ENV = 'production'`.
+To override the path to your local config files check out [Customizing Your Config Instance](#customizing-your-config-instance).
 
-### Configuration Path
-
-The path to the config files is configurable when instantiating the `DynamicConfig` object. The option can either be an absolute path or a path relative to `process.cwd()`. The option can be defined both when constructing an instance or through an environment variable.
-
-In TypeScript:
-
-```typescript
-import { DynamicConfig } from '@creditkarma/dynamic-config'
-
-const dynamicConfig: DynamicConfig = new DynamicConfig({
-  configPath: './config',
-})
-```
-
-Through environment:
-
-```sh
-$ export CONFIG_PATH=config
-```
+[back to top](#table-of-contents)
 
 ## Remote Configs
 
 Remote configuration allows you to deploy configuration independent from your application source.
-
-### Remote Resolver
-
-Registering a remote resolver is fairly straight-forward. You use the `register` method on your config instance.
-
-*Note: You can only register remote resolvers until your first call to `config.get()`. After this any attempt to register a resolver will raise an exception.*
-
-```typescript
-import { DynamicConfig, IRemoteOptions } from '@creditkarma/dynamic-config'
-
-const config: DynamicConfig = new DynamicConfig()
-
-config.register({
-  type: 'remote'
-  name: 'consul',
-  init(instance: DynamicConfig, options: IRemoteOptions): Promise<any> {
-    // Do set up and load any initial remote configuration
-  },
-  get<T>(key: string): Promise<T> {
-    // Fetch your key
-  }
-})
-```
-
-The `register` method will accept a comma-separated of resolver objects.
-
-For additional clarity, the resolver objects have the following TypeScript interface:
-
-```typescript
-interface IRemoteResolver {
-  type: 'remote' | 'secret'
-  name: string
-  init(dynamicConfig: DynamicConfig, remoteOptions?: IRemoteOptions): Promise<any>
-  get<T>(key: string): Promise<T>
-}
-```
-
-You can also pass resolvers on the options object passed directly to the constructor:
-
-```typescript
-import { DynamicConfig, IRemoteOptions } from '@creditkarma/dynamic-config'
-
-const config: DynamicConfig = new DynamicConfig({
-  resolvers: [{
-    type: 'remote'
-    name: 'consul',
-    init(instance: DynamicConfig, options: IRemoteOptions): Promise<any> {
-      // Do set up and load any initial remote configuration
-    },
-    get<T>(key: string): Promise<T> {
-      // Fetch your key
-    }
-  }]
-})
-```
-
-#### `type`
-
-The type parameter can be set to either `remote` or `secret`. The only difference is that `remote` allows for default values.
-
-#### `name`
-
-The name for this remote. This is used to lookup config placeholders. We'll get to that in a bit.
-
-#### `init`
-
-The init method is called and resolved before any request to `get` can be completed. The init method returns a Promise. The resolved value of this Promise is deeply merged with the local config files. This is where you load remote configuration that should be available on application startup.
-
-The init method receives an instance of the `DynamicConfig` object it is being registered on and any optional parameters that we defined on the `DynamicConfig` instance.
-
-To define `IRemoteOptions` for a given remote resolver we use the `remoteOptions` parameter on the constructor config object:
-
-```typescript
-const config: DynamicConfig = new DynamicConfig({
-  remoteOptions: {
-    consul: {
-      consulAddress: 'http://localhost:8500',
-      consulKvDc: 'dc1',
-      consulKeys: 'production-config',
-    }
-  }
-})
-```
-
-When a resolver with the name `'consul'` is registered this object will be passed to the init method. Therefore, the `remoteOptions` parameter is of the form:
-
-```typescript
-interface IRemoteOptions {
-  [resolverName: string]: IResolverOptions
-}
-```
-
-#### `get`
-
-This is easy, given a string key return a value for it. This method is called when a value in the config needs to be resolved remotely. Usually this will be because of a config placeholder. Once this method resolves, the return value will be cached in the config object and this method will not be called for that same key again.
 
 ### Config Resolution
 
@@ -695,14 +704,14 @@ My local config files resolved to something like this:
 
 ```json
 {
-  "server": {
-    "host": "localhost",
-    "port": 8080
-  },
-  "database": {
-    "username": "root",
-    "password": "root"
-  }
+    "server": {
+        "host": "localhost",
+        "port": 8080
+    },
+    "database": {
+        "username": "root",
+        "password": "root"
+    }
 }
 ```
 
@@ -710,12 +719,12 @@ And the Consul init method returned an object like this:
 
 ```json
 {
-  "server": {
-    "port": 9000
-  },
-  "database": {
-    "password": "test"
-  }
+    "server": {
+        "port": 9000
+    },
+    "database": {
+        "password": "test"
+    }
 }
 ```
 
@@ -723,14 +732,14 @@ The resulting config my app would use is:
 
 ```json
 {
-  "server": {
-    "host": "localhost",
-    "port": 9000
-  },
-  "database": {
-    "username": "root",
-    "password": "test"
-  }
+    "server": {
+        "host": "localhost",
+        "port": 9000
+    },
+    "database": {
+        "username": "root",
+        "password": "test"
+    }
 }
 ```
 
@@ -742,11 +751,11 @@ A config placeholder is a place in the configuration that you call out that some
 
 ```json
 "database": {
-  "username": "root",
-  "password": {
-    "_source": "vault",
-    "_key": "my-service/password"
-  }
+    "username": "root",
+    "password": {
+        "_source": "vault",
+        "_key": "my-service/password"
+    }
 }
 ```
 
@@ -756,10 +765,10 @@ The interface:
 
 ```typescript
 interface IConfigPlaceholder {
-  _source: string
-  _key: string
-  _type?: 'string' | 'number' | 'object' | 'array' | 'boolean'
-  _default?: any
+    _source: string
+    _key: string
+    _type?: 'string' | 'number' | 'object' | 'array' | 'boolean'
+    _default?: any
 }
 ```
 
@@ -774,14 +783,14 @@ If we're looking for a key in a remote registered simply as type `remote` we can
 
 ```json
 {
-  "server": {
-    "host": {
-      "_source": "consul",
-      "_key": "my-service/host",
-      "_default": "localhost"
-    },
-    "port": 8080
-  }
+    "server": {
+        "host": {
+            "_source": "consul",
+            "_key": "my-service/host",
+            "_default": "localhost"
+        },
+        "port": 8080
+    }
 }
 ```
 
@@ -795,12 +804,12 @@ An envirnoment place holder is called out by having your placeholder `_source` p
 
 ```json
 "server": {
-  "host": {
-    "_source": "env",
-    "_key": "HOSTNAME",
-    "_default": "localhost"
-  },
-  "port": 8080
+    "host": {
+        "_source": "env",
+        "_key": "HOSTNAME",
+        "_default": "localhost"
+    },
+    "port": 8080
 }
 ```
 
@@ -814,12 +823,12 @@ A process place holder is called out by having your placeholder `_source` proper
 
 ```json
 "server": {
-  "host": {
-    "_source": "process",
-    "_key": "HOSTNAME",
-    "_default": "localhost"
-  },
-  "port": 8080
+    "host": {
+        "_source": "process",
+        "_key": "HOSTNAME",
+        "_default": "localhost"
+    },
+    "port": 8080
 }
 ```
 
@@ -850,20 +859,20 @@ When building your own instance of `DynamicConfig` you can pick and choose which
 
 ```typescript
 import {
-  environmentResolver,
-  processResolver,
-  consulResolver,
-  vaultResolver,
-  DynamicConfig,
+    environmentResolver,
+    processResolver,
+    consulResolver,
+    vaultResolver,
+    DynamicConfig,
 } from '@creditkarma/dynamic-config'
 
 const config = new DynamicConfig({
-  resolvers: [
-    consulResolver(),
-    vaultResolver(),
-    environmentResolver(),
-    processResolver(),
-  ]
+    resolvers: [
+        consulResolver(),
+        vaultResolver(),
+        environmentResolver(),
+        processResolver(),
+    ]
 })
 ```
 
@@ -879,11 +888,11 @@ In TypeScript:
 
 ```typescript
 const dynamicConfig: DynamicConfig = new DynamicConfig({
-  remoteOptions: {
-    consul: {
-      consulKeys: 'production-config,production-east-config',
+    remoteOptions: {
+        consul: {
+            consulKeys: 'production-config,production-east-config',
+        }
     }
-  }
 })
 ```
 
@@ -900,7 +909,6 @@ Here are the available options for DynamicConfig:
 * `CONSUL_ADDRESS` - Address to Consul agent.
 * `CONSUL_KV_DC` - Data center to receive requests.
 * `CONSUL_KEYS` - Comma-separated list of keys pointing to configs stored in Consul. They are merged in left -> right order, meaning the rightmost key has highest priority.
-* `CONFIG_PATH` - Path to local configuration files.
 
 #### Environment Variables
 
@@ -910,7 +918,6 @@ All options can be set through the environment.
 $ export CONSUL_ADDRESS=http://localhost:8500
 $ export CONSUL_KV_DC=dc1
 $ export CONSUL_KEYS=production-config,production-east-config
-$ export CONFIG_PATH=config
 ```
 
 #### Command Line Options
@@ -918,7 +925,7 @@ $ export CONFIG_PATH=config
 All of the above options can also be passed on the command line when starting your application:
 
 ```sh
-$ node my-app.js CONSUL_ADDRESS=http://localhost:8500 CONSUL_KV_DC=dc1 CONSUL_KEYS=production-config,production-east-config CONFIG_PATH=config
+$ node my-app.js CONSUL_ADDRESS=http://localhost:8500 CONSUL_KV_DC=dc1 CONSUL_KEYS=production-config,production-east-config
 ```
 
 #### Constructor Options
@@ -927,15 +934,15 @@ They can also be set on the DynamicConfig constructor.
 
 ```typescript
 const config: DynamicConfig = new DynamicConfig({
-  configPath: 'config',
-  configEnv: 'development',
-  remoteOptions: {
-    consul: {
-      consulAddress: 'http://localhost:8500',
-      consulKvDc: 'dc1',
-      consulKeys: 'production-config',
+    configPath: 'config',
+    configEnv: 'development',
+    remoteOptions: {
+        consul: {
+            consulAddress: 'http://localhost:8500',
+            consulKvDc: 'dc1',
+            consulKeys: 'production-config',
+        }
     }
-  }
 })
 ```
 
@@ -949,12 +956,12 @@ The configuration must conform to what is expected from [@creditkarma/vault-clie
 
 ```json
 "hashicorp-vault": {
-  "apiVersion": "v1",
-  "destination": "http://localhost:8200",
-  "mount": "secret",
-  "namespace": "",
-  "tokenPath": "./tmp/token",
-  "requestOptions": {}
+    "apiVersion": "v1",
+    "destination": "http://localhost:8200",
+    "mount": "secret",
+    "namespace": "",
+    "tokenPath": "./tmp/token",
+    "requestOptions": {}
 }
 ```
 
@@ -970,7 +977,7 @@ Based on the configuration the following code will try to load a secret from `ht
 
 ```typescript
 client.getSecretValue<string>('username').then((val: string) => {
-  // Do something with secret value
+    // Do something with secret value
 })
 ```
 
@@ -978,11 +985,15 @@ client.getSecretValue<string>('username').then((val: string) => {
 
 As mentioned config placeholders can also be used for `secret` stores. Review above for more information.
 
+[back to top](#table-of-contents)
+
 ## Roadmap
 
 * Add ability to watch a value for runtime changes
 * Pull K/V store functionality out into own module
 * Explore options for providing a synchronous API
+
+[back to top](#table-of-contents)
 
 ## Contributing
 
