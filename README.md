@@ -31,7 +31,7 @@ When requesting a value from Dynamic Config a Promise of the expected result is 
 - [Customizing Your Config Instance](#customizing-your-config-instance)
 - [Local Configuration](#local-configuration)
 - [Remote Configuration](#remote-configuration)
-- [Translators](#translators)
+- [Translators](#translators-2)
 - [Plugin Support](#plugin-support)
 - [Roadmap](#roadmap)
 
@@ -694,7 +694,9 @@ When we say remote configuration we mean any configuration that is not part of t
 
 Remote configuration allows you to deploy configuration independently of your application source, allowing for configuration per datacenter, per host or per cluster. Potentially it also allows for runtime changes for some config values (something on the roadmap for this library).
 
-In this section we are going to look at the resolvers that ship with `DefaultConfig`. If you are interested in adding your own plugin checkout the [Plugins](#plugins) section.
+In this section we are going to look at the resolvers that ship with `DefaultConfig`. These are: env, process, consul and vault.
+
+*Note: If you are interested in adding your own plugin checkout the [Plugins](#plugins) section.*
 
 There are two things a remote resolver can do:
 
@@ -710,19 +712,21 @@ When we overviewed the `DynamicConfig` API we saw methods called `getRemoteValue
 
 Before moving on it's important to discuss config placeholders. The dominate use-case for `DynamicConfig` is to think of the resolved config object as a piece of JSON that you use the library to query. However, there are instances where you need to call out that a value in your config needs to be resolved from some other source. This is a config placeholder.
 
-For instance, if you wanted to say that a value is going to be made available as an environment variable you would do something like this:
+For instance, if you wanted to say that a value was a secret and needed to be loaded from a secure source like Vault you would do something like this:
 
 ```json
 {
-    "server": {
-        "host": {
-            "_source": "env",
-            "_key": "HOSTNAME"
-        },
-        "port": 8080
+    "database": {
+        "username": "root",
+        "password": {
+            "_source": "vault",
+            "_key": "my-service/password"
+        }
     }
 }
 ```
+
+Using the default configuration for Vault, the database password will be requested from http://localhost:8200/secret/my-service/password.
 
 Okay, so a config place holder is an object with two required parameters `_source` and `_key` and two optional parameters `_type` and `_default`. When a resolver is registered with the library it is registered by name. This name is what the `_source` property points to.
 
@@ -739,7 +743,7 @@ interface IConfigPlaceholder {
 
 * `_source` - The name of the resolver to process the key.
 * `_key` - A string to ask the resolver for.
-* `_default` - A default value for the case that placeholder resolution fails.
+* `_default` - A default value for the case that placeholder resolution fails. Default values are ignored for resolvers that are registered as 'secret' stores.
 * `_type` - Indicates how to try to parse this value. If no type is provided then the raw value returned from the source is used (usually a string). This value is given to the underlying resolver to make decisions. Some resolvers (as is the case with included Consul and Vault resolvers) may choose to ignore the `_type` property.
 
 #### Evnironment Placeholders
@@ -790,7 +794,7 @@ Here `_key` is the name of the argument variable to look for. You can use `_defa
 
 ### Config Resolution
 
-Remote configuration is given a higher priority than local configuration. Local configuration is resolved, an initial configuration object it generated. Then the `init` method for each of the registered resolvers is called, in the order they were registered, and the return value is merged with the current configuration object.
+Remote configuration is given a higher priority than local configuration. Local configuration is resolved, an initial configuration object it generated. Then all registered resolvers, in the order they were registered, are given the opportunity to provide additional configuration to overlay what was available locally.
 
 #### Config Overlay
 
@@ -811,7 +815,7 @@ My local config files resolved to something like this:
 }
 ```
 
-And the Consul init method returned an object like this:
+And Consul returned an object like this:
 
 ```json
 {
@@ -841,77 +845,28 @@ The resulting config my app would use is:
 
 Config objects from all sources are deeply merged.
 
-## Supplied Resolvers
-
-As mentioned, config data sources are added as `IRemoteResolver` objects. These can be used to load full JSON config objects, partial objects or single values. The API for adding custom resolvers is hopefully straight-forward.
-
-This library includes a few resolvers, all of which are registered when using the singleton instance.
-
-Those are:
-
-- *Environment* - Reads values from environment variables.
-- *Process* - Reads values passed in on command line `process.argv`.
-- *Consul* - Reads remote configuration stored in Consul.
-- *Vault* - Reads remote configuration stored in Vault.
-
-When building your own instance of `DynamicConfig` you can pick and choose which of these to use.
-
-```typescript
-import {
-    environmentResolver,
-    processResolver,
-    consulResolver,
-    vaultResolver,
-    DynamicConfig,
-} from '@creditkarma/dynamic-config'
-
-const config = new DynamicConfig({
-    resolvers: [
-        consulResolver(),
-        vaultResolver(),
-        environmentResolver(),
-        processResolver(),
-    ]
-})
-```
-
-### Consul Configs
+### Consul Resolver
 
 Dynamic Config ships with support for Consul. Now we're going to explore some of the specifics of using the included Consul resolver. The underlying Consul client comes from: [@creditkarma/consul-client](https://github.com/creditkarma/consul-client).
 
-Values stored in Consul are assumed to be JSON structures that can be deeply merged with local configuration files. As such configuration from Consul is merged on top of local configuration, overwriting local configuration in the resulting config object.
+Values from Consul can be read in two ways:
 
-You define what configs to load from Consul through the `CONSUL_KEYS` option. This option can be set when constructing an instance or through an environment variable for the singleton instance. The values loaded with these keys are expected to be valid JSON objects.
+1. Consul can provide full config to overlay local config.
+2. Consul can provide values on a per-key basis.
 
-In TypeScript:
+#### Configuring Consul
 
-```typescript
-const dynamicConfig: DynamicConfig = new DynamicConfig({
-    remoteOptions: {
-        consul: {
-            consulKeys: 'production-config,production-east-config',
-        }
-    }
-})
-```
+Even though the resolver for Consul is included by default, it will not be used unless it is configured.
 
-Through environment:
-
-```sh
-$ export CONSUL_KEYS=production-config,production-east-config
-```
-
-#### Available Options
-
-Here are the available options for DynamicConfig:
+The available options are:
 
 * `CONSUL_ADDRESS` - Address to Consul agent.
 * `CONSUL_KV_DC` - Data center to receive requests.
 * `CONSUL_KEYS` - Comma-separated list of keys pointing to configs stored in Consul. They are merged in left -> right order, meaning the rightmost key has highest priority.
 
-#### Environment Variables
+`CONSUL_ADDRESS` and `CONSUL_KV_DC` are required are just about getting the connection to Consul up. `CONSUL_KEYS` is optional but more interesting. `CONSUL_KEYS` is a  comma-separated list of keys to pull from Consul. These keys should point to JSON structures that can overlay the local configs. These values will be pulled when the resolver is initialized.
 
-All options can be set through the environment.
+These options can be set as environment variables:
 
 ```sh
 $ export CONSUL_ADDRESS=http://localhost:8500
@@ -919,33 +874,27 @@ $ export CONSUL_KV_DC=dc1
 $ export CONSUL_KEYS=production-config,production-east-config
 ```
 
-#### Command Line Options
-
-All of the above options can also be passed on the command line when starting your application:
+You can also set these on the command line:
 
 ```sh
 $ node my-app.js CONSUL_ADDRESS=http://localhost:8500 CONSUL_KV_DC=dc1 CONSUL_KEYS=production-config,production-east-config
 ```
 
-#### Constructor Options
+Or, you can set them in `config-settings.json`:
 
-They can also be set on the DynamicConfig constructor.
-
-```typescript
-const config: DynamicConfig = new DynamicConfig({
-    configPath: 'config',
-    configEnv: 'development',
-    remoteOptions: {
-        consul: {
-            consulAddress: 'http://localhost:8500',
-            consulKvDc: 'dc1',
-            consulKeys: 'production-config',
+```json
+{
+    "remoteOptions": {
+        "consul": {
+            "consulAddress": "http://localhost:8500",
+            "consulKvDc": "dc1",
+            "consulKeys": "production-config,production-east-config"
         }
     }
-})
+}
 ```
 
-### Vault Configuration
+### Vault Resolver
 
 The configuration for Vault needs to be available somewhere in the config path, either in a local config or in Consul (or some other registered remote). This configuration mush be available under the key name `'hashicorp-vault'`.
 
@@ -964,35 +913,34 @@ The configuration must conform to what is expected from [@creditkarma/vault-clie
 }
 ```
 
-#### Getting a Secret from Vault
-
-Getting a secret from Vault is similar to getting a value from local config or Consul.
-
-##### `getSecretValue`
-
-Will try to get a key from whatever remote is registered as a `secret` store.
-
-Based on the configuration the following code will try to load a secret from `http://localhost:8200/secret/username`.
-
-```typescript
-client.getSecretValue<string>('username').then((val: string) => {
-    // Do something with secret value
-})
-```
-
-#### Config Placeholders
-
-As mentioned config placeholders can also be used for `secret` stores. Review above for more information.
-
 [back to top](#table-of-contents)
 
 ## Translators
 
-What are Translators?
+When data is loaded from a local file or remote source it is parsed, usually `JSON.parse`, and then added to the resolved config object that you request values from. Sometimes, particularly when dealing with remote sources, the data coming in may not be exactly the shape you want, or it may be somewhat unreliable. Translators allow you to rewrite this data before it is added to the resolved config.
+
+As a concrete example of this we will look at environment placeholders. A config placeholder is an object that looks something like this:
+
+```json
+{
+    "host": {
+        "_source": "env",
+        "_key": "HOSTNAME"
+    }
+}
+```
+
+This form is specific to Dynamic Config. A very common way for envirnoment variables to appear is:
+
+```json
+{
+    "host": "$HOSTNAME"
+}
+```
+
+There is a Translator bundled with Dyanmic Config that will rewrite this second form into the first. That way you can write environment variables in a more standard fashion, but Dynamic Config can still get the objects it is designed to work with.
 
 ## Plugin Support
-
-# Plugins
 
 There are three kinds of plugins:
 
@@ -1130,31 +1078,6 @@ interface IRemoteOptions {
 #### `get`
 
 This is easy, given a string key return a value for it. This method is called when a value in the config needs to be resolved remotely. Usually this will be because of a config placeholder. Once this method resolves, the return value will be cached in the config object and this method will not be called for that same key again.
-
-## Translators
-
-When data is loaded from a local file or remote source it is parsed, usually `JSON.parse`, and then added to the resolved config object that you request values from. Sometimes, particularly when dealing with remote sources, the data coming in may not be exactly the shape you want, or it may be somewhat unreliable. Translators allow you to rewrite this data before it is added to the resolved config.
-
-As a concrete example of this we will look at environment placeholders. A config placeholder is an object that looks something like this:
-
-```json
-{
-    "host": {
-        "_source": "env",
-        "_key": "HOSTNAME"
-    }
-}
-```
-
-This form is specific to Dynamic Config. A very common way for envirnoment variables to appear is:
-
-```json
-{
-    "host": "$HOSTNAME"
-}
-```
-
-There is a Translator bundled with Dyanmic Config that will rewrite this second form into the first. That way you can write environment variables in a more standard fashion, but Dynamic Config can still get the objects it is designed to work with.
 
 [back to top](#back-to-top)
 
