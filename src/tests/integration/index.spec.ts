@@ -1,5 +1,6 @@
 import { ChildProcess, exec } from 'child_process'
 import { expect } from 'code'
+import * as fs from 'fs'
 import * as Lab from 'lab'
 import * as path from 'path'
 import * as rp from 'request-promise-native'
@@ -23,8 +24,6 @@ const after = lab.after
 describe('DynamicConfig Singleton', () => {
     describe('Environment Variables', () => {
         before(async () => {
-            process.chdir(__dirname)
-
             // Set environment options for DynamicConfig
             process.env[CONFIG_PATH] = path.resolve(__dirname, './config')
             process.env[CONSUL_ADDRESS] = 'http://localhost:8510'
@@ -115,14 +114,36 @@ describe('DynamicConfig Singleton', () => {
                 console.log('err: ', data)
             })
 
+            const configValue: string = `
+            {
+                "configPath": "./config",
+                "configEnv": "development",
+                "remoteOptions": {},
+                "resolvers": [
+                    "env", "process", "consul", "vault"
+                ],
+                "loaders": [
+                    "json", "yml", "js", "ts"
+                ],
+                "translators": [
+                    "env", "consul"
+                ]
+            }
+            `
+
+            fs.writeFileSync('./config-settings.json', configValue)
+
             // Let server spin up
             setTimeout(done, 3000)
         })
 
         after((done) => {
+            fs.unlinkSync('./config-settings.json')
+
             server.on('exit', (data) => {
                 done()
             })
+
             server.kill()
         })
 

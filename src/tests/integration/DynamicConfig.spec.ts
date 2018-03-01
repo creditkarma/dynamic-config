@@ -6,7 +6,7 @@ import {
     consulResolver,
     consulTranslator,
     DynamicConfig,
-    environmentResolver,
+    envResolver,
     envTranslator,
     jsLoader,
     jsonLoader,
@@ -398,7 +398,9 @@ describe('DynamicConfig', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'production',
             configPath: path.resolve(__dirname, './config'),
-            resolvers: [environmentResolver()],
+            resolvers: [
+                envResolver(),
+            ],
             loaders: [
                 jsonLoader,
                 ymlLoader,

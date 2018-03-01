@@ -4,26 +4,9 @@ import {
     IConfigOptions,
 } from './types'
 
-import {
-    consulResolver,
-    environmentResolver,
-    processResolver,
-    vaultResolver,
-} from './resolvers'
-
-import {
-    jsLoader,
-    jsonLoader,
-    tsLoader,
-    ymlLoader,
-} from './loaders'
-
-import {
-    consulTranslator,
-    envTranslator,
-} from './translators'
-
 import * as logger from './logger'
+import * as SettingsLoader from './SettingsLoader'
+import { ObjectUtils } from './utils'
 
 export * from './ConfigLoader'
 export { DynamicConfig } from './DynamicConfig'
@@ -39,27 +22,10 @@ let configInstance: DynamicConfig
 
 export function config(options: IConfigOptions = {}): DynamicConfig {
     if (configInstance === undefined) {
-        configInstance = new DynamicConfig({
-            configPath: options.configPath,
-            configEnv: options.configEnv,
-            remoteOptions: options.remoteOptions,
-            resolvers: (options.resolvers || []).concat([
-                consulResolver(),
-                vaultResolver(),
-                environmentResolver(),
-                processResolver(),
-            ]),
-            loaders: (options.loaders || []).concat([
-                jsonLoader,
-                ymlLoader,
-                jsLoader,
-                tsLoader,
-            ]),
-            translators: (options.translators || []).concat([
-                envTranslator,
-                consulTranslator,
-            ]),
-        })
+        configInstance = new DynamicConfig(ObjectUtils.overlayObjects(
+            SettingsLoader.loadSettings(),
+            options,
+        ))
 
     } else if (Object.keys(options).length > 0) {
         logger.warn(`Options passed to config after instantiation. These values are being ignored[${Object.keys(options).join(',')}].`)
