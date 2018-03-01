@@ -940,6 +940,8 @@ This form is specific to Dynamic Config. A more familiar way for environment var
 
 There is a Translator bundled with Dyanmic Config that will rewrite this second form into the first. That way you can write environment variables in a more standard fashion, but Dynamic Config can still get the objects it is designed to work with.
 
+[back to top](#table-of-contents)
+
 ## Plugin Support
 
 There are three kinds of plugins:
