@@ -1041,6 +1041,27 @@ interface IRemoteOptions {
 
 This is easy, given a string key return a value for it. This method is called when a value in the config needs to be resolved remotely. Usually this will be because of a config placeholder. Once this method resolves, the return value will be cached in the config object and this method will not be called for that same key again.
 
+### Translators
+
+Translators are essentially mapping functions that can be used to transform raw values before they are added to the resolved config.
+
+They are defined by this interface:
+
+```typescript
+interface IConfigTranslator {
+    path?: string | Array<string>
+    translate(configValue: any): any
+}
+```
+
+#### `path`
+
+The path in the config to apply this translator to. By default the translator will be applied to every key in the config. This limits the paths to apply the translator to. Paths can be nested, such as `database.password`.
+
+#### `translate`
+
+The function to translate the value. A simple mapping function, though it should know how to ignore objects it doesn't apply to.
+
 ### Registering Plugins
 
 Once you have created a plugin you need to register it with the `DynamicConfig` instance. To do this you need to pass them in to the `config` function the first time you call it.
