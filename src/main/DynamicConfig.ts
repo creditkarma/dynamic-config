@@ -2,7 +2,6 @@ import { ConfigLoader } from './ConfigLoader'
 
 import {
     CONFIG_ENV,
-    CONFIG_PATH,
 } from './constants'
 
 import {
@@ -55,7 +54,7 @@ export class DynamicConfig implements IDynamicConfig {
     private translator: ITranslator
 
     constructor({
-        configPath = Utils.readFromEnvOrProcess(CONFIG_PATH),
+        configPath,
         configEnv = Utils.readFirstMatch(CONFIG_ENV, 'NODE_ENV'),
         remoteOptions = {},
         resolvers = [],

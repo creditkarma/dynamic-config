@@ -1,15 +1,18 @@
 import * as path from 'path'
 
 import {
+    CONFIG_PATH,
     CONFIG_SEARCH_PATHS,
     DEFAULT_CONFIG_PATH,
     DEFAULT_ENVIRONMENT,
+    NODE_CONFIG_DIR,
 } from './constants'
 
 import {
     FileUtils,
     ObjectUtils,
     PromiseUtils,
+    Utils,
 } from './utils'
 
 import {
@@ -70,7 +73,7 @@ export class ConfigLoader {
 
     constructor({
         loaders = [],
-        configPath = DEFAULT_CONFIG_PATH,
+        configPath = Utils.readFirstMatch(CONFIG_PATH, NODE_CONFIG_DIR) || DEFAULT_CONFIG_PATH,
         configEnv = process.env.NODE_ENV || DEFAULT_ENVIRONMENT,
     }: ILoaderConfig = {}) {
         this.loaders = loaders

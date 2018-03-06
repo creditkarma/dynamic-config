@@ -115,4 +115,66 @@ describe('ConfigLoader', () => {
             })
         })
     })
+
+    describe('NODE_CONFIG_DIR', () => {
+        let savedEnv: string | undefined
+
+        beforeEach(async () => {
+            savedEnv = process.env.NODE_ENV
+        })
+
+        afterEach(async () => {
+            process.env.NODE_ENV = savedEnv
+        })
+
+        it('should return config from the correct directory', async () => {
+            process.env.NODE_CONFIG_DIR = 'nested/config'
+            const loader: ConfigLoader = new ConfigLoader({
+                loaders: [
+                    jsonLoader,
+                ],
+            })
+            const expected: object = {
+                name: 'default',
+                config: {
+                    foo: 'nested-bar',
+                },
+            }
+
+            return loader.loadDefault().then((actual: any) => {
+                expect(actual).to.equal(expected)
+            })
+        })
+    })
+
+    describe('CONFIG_PATH', () => {
+        let savedEnv: string | undefined
+
+        beforeEach(async () => {
+            savedEnv = process.env.NODE_ENV
+        })
+
+        afterEach(async () => {
+            process.env.NODE_ENV = savedEnv
+        })
+
+        it('should return config from the correct directory', async () => {
+            process.env.CONFIG_PATH = 'nested/config'
+            const loader: ConfigLoader = new ConfigLoader({
+                loaders: [
+                    jsonLoader,
+                ],
+            })
+            const expected: object = {
+                name: 'default',
+                config: {
+                    foo: 'nested-bar',
+                },
+            }
+
+            return loader.loadDefault().then((actual: any) => {
+                expect(actual).to.equal(expected)
+            })
+        })
+    })
 })

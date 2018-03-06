@@ -18,6 +18,8 @@ export const CONSUL_KEYS: string = 'CONSUL_KEYS'
  */
 export const CONFIG_PATH: string = 'CONFIG_PATH'
 
+export const NODE_CONFIG_DIR: string = 'NODE_CONFIG_DIR'
+
 /**
  * Backup environment variable to use for config environment
  */
