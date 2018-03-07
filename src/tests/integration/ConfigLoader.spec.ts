@@ -64,6 +64,10 @@ describe('ConfigLoader', () => {
                         username: 'root',
                         password: 'root',
                     },
+                    names: {
+                        first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
+                        last: [ 'Smith', 'Warren', 'Malick' ],
+                    },
                 },
             }
 
