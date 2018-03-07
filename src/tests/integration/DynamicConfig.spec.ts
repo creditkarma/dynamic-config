@@ -75,6 +75,10 @@ describe('DynamicConfig', () => {
                                 response: 'BOOYA',
                             },
                         },
+                        names: {
+                            first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
+                            last: [ 'Smith', 'Warren', 'Malick' ],
+                        },
                         'hashicorp-vault': {
                             apiVersion: 'v1',
                             destination: 'http://localhost:8210',
@@ -211,6 +215,10 @@ describe('DynamicConfig', () => {
                                 response: 'BOOYA',
                             },
                         },
+                        names: {
+                            first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
+                            last: [ 'Smith', 'Warren', 'Malick' ],
+                        },
                     })
                 })
             })
@@ -247,6 +255,10 @@ describe('DynamicConfig', () => {
                                 control: '/javascript',
                                 response: 'BOOYA',
                             },
+                        },
+                        names: {
+                            first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
+                            last: [ 'Smith', 'Warren', 'Malick' ],
                         },
                     })
                 })
@@ -329,6 +341,10 @@ describe('DynamicConfig', () => {
                                 control: '/javascript',
                                 response: 'BOOYA',
                             },
+                        },
+                        names: {
+                            first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
+                            last: [ 'Smith', 'Warren', 'Malick' ],
                         },
                     })
                 })

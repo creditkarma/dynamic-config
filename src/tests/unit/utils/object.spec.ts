@@ -26,6 +26,18 @@ describe('ObjectUtils', () => {
             expect(actual).to.equal(expected)
         })
 
+        it('should correctly transform values of an array', async () => {
+            const mockObj = [ 1, 5, 8, 23 ]
+
+            const actual = ObjectUtils.deepMap((val: any) => {
+                return val + 1
+            }, mockObj)
+
+            const expected = [ 2, 6, 9, 24 ]
+
+            expect(actual).to.equal(expected)
+        })
+
         it('should map over leafs first', async () => {
             const mockObj = {
                 one: {
@@ -43,8 +55,10 @@ describe('ObjectUtils', () => {
                         val.four === 5
                     ) {
                         return 'success'
+
                     } else if (typeof val === 'number') {
                         return 5
+
                     } else {
                         return val
                     }

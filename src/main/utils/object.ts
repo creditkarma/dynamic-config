@@ -24,6 +24,25 @@ export function deepMap(mapping: (val: any, key: string) => any, obj: object): a
     if (isNothing(obj) || isPrimitive(obj)) {
         return obj
 
+    } else if (Array.isArray(obj)) {
+        const newObj: Array<any> = []
+        for (let i = 0; i < obj.length; i++) {
+            const value = obj[i]
+            if (isNothing(value)) {
+                newObj[i] = value
+
+            } else if (isPrimitive(value)) {
+                newObj[i] = mapping(value, `${i}`)
+
+            } else {
+                newObj[i] = mapping(value, `${i}`)
+                newObj[i] = deepMap(mapping, newObj[i])
+                newObj[i] = mapping(newObj[i], `${i}`)
+            }
+        }
+
+        return newObj
+
     } else {
         const newObj: any = {}
         for (const key in obj) {
@@ -36,8 +55,8 @@ export function deepMap(mapping: (val: any, key: string) => any, obj: object): a
                     newObj[key] = mapping(value, key)
 
                 } else {
-                    newObj[key] = mapping(newObj[key], key)
-                    newObj[key] = deepMap(mapping, value)
+                    newObj[key] = mapping(value, key)
+                    newObj[key] = deepMap(mapping, newObj[key])
                     newObj[key] = mapping(newObj[key], key)
                 }
             }
