@@ -142,41 +142,39 @@ export class DynamicConfig implements IDynamicConfig {
                             return SchemaUtils.findSchemaForKey(
                                 this.configSchema,
                                 key,
-                            ).fork(
-                                (schemaForKey: ISchema) => {
-                                    if (
-                                        SchemaUtils.objectMatchesSchema(
-                                            schemaForKey,
-                                            baseValue,
-                                        )
-                                    ) {
-                                        this.resolvedConfig = ConfigUtils.setRootConfigValueForKey(
-                                            key,
-                                            resolvedValue,
-                                            this.resolvedConfig,
-                                        )
-                                        return Promise.resolve(baseValue)
-                                    } else {
-                                        logger.error(
-                                            `Value for key[${key}] from remote[${resolvedValue}] does not match expected schema`,
-                                        )
-                                        return Promise.reject(
-                                            new DynamicConfigInvalidObject(key),
-                                        )
-                                    }
-                                },
-                                () => {
-                                    logger.warn(
-                                        `Unable to find schema for key[${key}]. Object may be invalid.`,
+                            ).fork((schemaForKey: ISchema) => {
+                                if (
+                                    SchemaUtils.objectMatchesSchema(
+                                        schemaForKey,
+                                        baseValue,
                                     )
+                                ) {
                                     this.resolvedConfig = ConfigUtils.setRootConfigValueForKey(
                                         key,
                                         resolvedValue,
                                         this.resolvedConfig,
                                     )
                                     return Promise.resolve(baseValue)
-                                },
-                            )
+                                } else {
+                                    logger.error(
+                                        `Value for key[${key}] from remote[${resolvedValue}] does not match expected schema`,
+                                    )
+                                    return Promise.reject(
+                                        new DynamicConfigInvalidObject(key),
+                                    )
+                                }
+                            },
+                            () => {
+                                logger.warn(
+                                    `Unable to find schema for key[${key}]. Object may be invalid.`,
+                                )
+                                this.resolvedConfig = ConfigUtils.setRootConfigValueForKey(
+                                    key,
+                                    resolvedValue,
+                                    this.resolvedConfig,
+                                )
+                                return Promise.resolve(baseValue)
+                            })
                         },
                     )
                 } else {
@@ -278,11 +276,7 @@ export class DynamicConfig implements IDynamicConfig {
 
             default:
                 return Promise.reject(
-                    new Error(
-                        `Unrecognized placeholder type[${
-                            placeholder.resolver.type
-                        }]`,
-                    ),
+                    new Error(`Unrecognized placeholder type[${placeholder.resolver.type}]`),
                 )
         }
     }
