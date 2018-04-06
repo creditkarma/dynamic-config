@@ -92,7 +92,10 @@ export function consulResolver(): IRemoteResolver {
                                 }
                             })
                         }),
-                    )
+                    ).catch((err: any) => {
+                        logger.error(`Unable to read keys[${keys}] from Consul: `, err)
+                        return []
+                    })
 
                     const resolvedConfigs: Promise<any> = rawConfigs.then(
                         (configs: Array<any>): any => {
@@ -122,13 +125,8 @@ export function consulResolver(): IRemoteResolver {
                                 return val
                             },
                             (err: any) => {
-                                logger.error(
-                                    `Error retrieving key[${key}] from Consul: `,
-                                    err,
-                                )
-                                return Promise.reject(
-                                    new ConsulFailed(err.message),
-                                )
+                                logger.error(`Error retrieving key[${key}] from Consul: `, err)
+                                return Promise.reject(new ConsulFailed(err.message))
                             },
                         )
                 },
