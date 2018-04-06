@@ -61,13 +61,16 @@ export interface IResolverMap {
 export type ConfigResolver =
     IRemoteResolver | ISecretResolver
 
-export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions?: IRemoteOptions) => Promise<any>
+export type SetFunction = (key: string, value: any) => void
+
+export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions?: IRemoteOptions, setValue?: SetFunction) => Promise<any>
 
 export interface IRemoteResolver {
     type: 'remote'
     name: string
     init: RemoteInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
+    watch(key: string, type?: ObjectType): void
 }
 
 export interface ISecretResolver {

@@ -1,3 +1,5 @@
+
+import { Observable } from '@creditkarma/consul-client'
 import { ConfigLoader } from './ConfigLoader'
 
 import {
@@ -143,6 +145,7 @@ export class DynamicConfig implements IDynamicConfig {
                                 this.configSchema,
                                 key,
                             ).fork((schemaForKey: ISchema) => {
+                                console.log(`schemaForKey[${key}]: `, JSON.stringify(schemaForKey, null, 4))
                                 if (
                                     SchemaUtils.objectMatchesSchema(
                                         schemaForKey,
@@ -181,6 +184,29 @@ export class DynamicConfig implements IDynamicConfig {
                     logger.error(`Value for key[${key}] not found in config`)
                     return Promise.reject(new DynamicConfigMissingKey(key))
                 }
+            }
+        })
+    }
+
+    public watch<T>(key: string): Observable<T> {
+        this.configState = 'running'
+        return new Observable()
+    }
+
+    public async source(key: string): Promise<string> {
+        this.configState = 'running'
+
+        return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
+            const value: BaseConfigValue | null = ConfigUtils.getConfigForKey(
+                key,
+                resolvedConfig,
+            )
+
+            if (value !== null) {
+                return value.source.name
+
+            } else {
+                throw new DynamicConfigMissingKey(key)
             }
         })
     }
@@ -401,7 +427,7 @@ export class DynamicConfig implements IDynamicConfig {
                 ConfigBuilder.createConfigObject(envConfig.name, 'local', this.translator(envConfig.config)),
                 ...remoteConfigs,
             )
-            this.configSchema = SchemaUtils.objectAsSimpleSchema(defaultConfig)
+            this.configSchema = SchemaUtils.objectAsSimpleSchema(defaultConfig.config)
         }
 
         return this.resolvedConfig
@@ -415,7 +441,7 @@ export class DynamicConfig implements IDynamicConfig {
         if (
             !SchemaUtils.objectMatchesSchema(
                 this.configSchema,
-                this.resolvedConfig,
+                ConfigUtils.readConfigValue(this.resolvedConfig),
             )
         ) {
             logger.warn(

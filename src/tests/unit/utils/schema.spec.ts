@@ -250,6 +250,7 @@ describe('SchemaUtils', () => {
                 ],
             },
         }
+
         const mockSchema: ISchema = SchemaUtils.objectAsSimpleSchema(mockData)
 
         it('should get schema for key', async () => {

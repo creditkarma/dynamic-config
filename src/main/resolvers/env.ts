@@ -12,12 +12,14 @@ export function envResolver(): IRemoteResolver {
     return {
         type: 'remote',
         name: 'env',
+
         init(
             configInstance: DynamicConfig,
             remoteOptions: IConsulOptions = {},
         ): Promise<any> {
             return Promise.resolve({})
         },
+
         get<T = any>(key: string, type?: ObjectType): Promise<T> {
             const value: string | undefined = process.env[key]
             if (value !== undefined) {
@@ -30,6 +32,10 @@ export function envResolver(): IRemoteResolver {
                 logger.error(`Error retrieving key[${key}] from environment`)
                 return Promise.reject(new MissingEnvironmentVariable(key))
             }
+        },
+
+        watch(key: string, type?: ObjectType): void {
+            // No-op
         },
     }
 }

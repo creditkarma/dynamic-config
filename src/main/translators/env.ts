@@ -1,9 +1,13 @@
 /**
- * Plugin that replaces $<variable-name> with an environment placeholder.
+ * Plugin that replaces ${<variable-name>} with an environment placeholder.
+ *
+ * http://${HOSTNAME}:9000
  */
 import {
     IConfigTranslator,
 } from '../types'
+
+type MatchingState = 'init' | 'matching'
 
 function isValidChar(char: string): boolean {
     return (
@@ -12,37 +16,64 @@ function isValidChar(char: string): boolean {
     )
 }
 
-function findEnvVariable(val: string): string | undefined {
-    let match = ''
-    let state = 'init'
-    const trimmed = val.trim()
-    const len: number = trimmed.length
+function interpolate(source: string): string {
+    const len: number = source.length
+    let index: number = 0
+    let result: string = ''
+    let match: string = ''
 
-    for (let i = 0; i < len; i++) {
-        const current = trimmed.charAt(i)
-        if (match.length === 0 && current === '$') {
-            state = 'matching'
+    while (index < len) {
+        const char = current()
 
-        } else if (state === 'matching' && isValidChar(current)) {
-            match += current
-
+        if (char === '$' && peek() === '{') {
+            advance() // advance past $
+            advance() // advance path {
+            while (!isAtEnd() && current() !== '}' && isValidChar(current())) {
+                match += current()
+                advance()
+                if (current() === '}' && process.env[match]) {
+                    // Match found
+                    advance() // advance past }
+                    result += process.env[match]
+                    match = ''
+                } else if (current() === '}') {
+                    throw new Error(`Environment variable '${result}' not set`)
+                } else if (isAtEnd()) {
+                    result += match
+                    match = ''
+                }
+            }
         } else {
-            return undefined
+            result += char
+            advance()
         }
     }
 
-    return match
+    function current(): string {
+        return source.charAt(index)
+    }
+
+    function isAtEnd(): boolean {
+        return index >= source.length
+    }
+
+    function peek(): string {
+        return source.charAt(index + 1)
+    }
+
+    function advance(): void {
+        index += 1
+    }
+
+    return result
 }
 
 export const envTranslator: IConfigTranslator = {
     translate(configValue: any): any {
         if (typeof configValue === 'string') {
-            const envVar: string | undefined = findEnvVariable(configValue)
+            const envVar: string | undefined = interpolate(configValue)
             if (envVar !== undefined) {
-                return {
-                    _source: 'env',
-                    _key: envVar,
-                }
+                return envVar
             }
         }
         return configValue
