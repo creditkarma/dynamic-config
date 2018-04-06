@@ -273,10 +273,10 @@ In order for Dynamic Config to know about the values we added to Consul we must 
 $ node ./dist/index.js CONSUL_ADDRESS=http://localhost:8510 CONSUL_KV_DC=dc1 CONSUL_KEYS=consul-config
 ```
 
-The three options we set are (all are required):
-* `CONSUL_ADDRESS` - This is the URL on which Consul is running
-* `CONSUL_KV_DC` - The Consul data center for the key/value store.
-* `CONSUL_KEYS` - These are keys in Consul that contain configs to overlay with our local configs. This can be a comma-separate list of multiple keys. You will notice I add the key we just created in Consul.
+The three options we set are:
+* `CONSUL_ADDRESS` - (required) This is the URL on which Consul is running
+* `CONSUL_KV_DC` - (required) The Consul data center for the key/value store.
+* `CONSUL_KEYS` - (optional) These are keys in Consul that contain configs to overlay with our local configs. This can be a comma-separate list of multiple keys. You will notice I add the key we just created in Consul.
 
 Now when we `curl` our running application we can not longer hit `/control` as we have overriden the path in Consul to `/status`.
 
@@ -860,11 +860,11 @@ Even though the resolver for Consul is included by default, it will not be used 
 
 The available options are:
 
-* `CONSUL_ADDRESS` - Address to Consul agent.
-* `CONSUL_KV_DC` - Data center to receive requests.
-* `CONSUL_KEYS` - Comma-separated list of keys pointing to configs stored in Consul. They are merged in left -> right order, meaning the rightmost key has highest priority.
+* `CONSUL_ADDRESS` - (required) Address to Consul agent.
+* `CONSUL_KV_DC` - (required) Data center to receive requests.
+* `CONSUL_KEYS` - (optional) Comma-separated list of keys pointing to configs stored in Consul. They are merged in left -> right order, meaning the rightmost key has highest priority.
 
-`CONSUL_ADDRESS` and `CONSUL_KV_DC` are required are just about getting the connection to Consul up. `CONSUL_KEYS` is optional but more interesting. `CONSUL_KEYS` is a  comma-separated list of keys to pull from Consul. These keys should point to JSON structures that can overlay the local configs. These values will be pulled when the resolver is initialized.
+`CONSUL_ADDRESS` and `CONSUL_KV_DC` are required and are just about getting the connection to Consul up. `CONSUL_KEYS` is optional but more interesting. `CONSUL_KEYS` is a  comma-separated list of keys to pull from Consul. These keys should point to JSON structures that can overlay the local configs. These values will be pulled when the resolver is initialized.
 
 These options can be set as environment variables:
 
