@@ -1,13 +1,23 @@
-import * as debug from 'debug'
+export const log = (msg: string, data?: any) => {
+    if (data !== undefined && process.env.CONSUL_DEBUG) {
+        console.log(`[dynamic-config:info]: ${msg}: `, data)
+    } else if (process.env.CONSUL_DEBUG) {
+        console.log(`[dynamic-config:info]: ${msg}`)
+    }
+}
 
-export const log = debug('dynamic-config:info')
-log.log = console.log.bind(console)
+export const warn = (msg: string, data?: any) => {
+    if (data !== undefined && process.env.CONSUL_DEBUG) {
+        console.warn(`[dynamic-config:warn]: ${msg}: `, data)
+    } else if (process.env.CONSUL_DEBUG) {
+        console.warn(`[dynamic-config:warn]: ${msg}`)
+    }
+}
 
-export const warn = debug('dynamic-config:warn')
-warn.log = console.warn.bind(console)
-
-export const error = debug('dynamic-config:error')
-
-debug.enable('dynamic-config:info')
-debug.enable('dynamic-config:warn')
-debug.enable('dynamic-config:error')
+export const error = (msg: string, data?: any) => {
+    if (data !== undefined) {
+        console.error(`[dynamic-config:error]: ${msg}: `, data)
+    } else {
+        console.error(`[dynamic-config:error]: ${msg}`)
+    }
+}
