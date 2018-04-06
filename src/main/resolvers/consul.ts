@@ -1,4 +1,4 @@
-import { KvStore } from '@creditkarma/consul-client'
+import { KvStore, Observable } from '@creditkarma/consul-client'
 
 import { DynamicConfig } from '../DynamicConfig'
 import { Just, Maybe, Nothing } from '../Maybe'
@@ -36,6 +36,7 @@ export function consulResolver(): IRemoteResolver {
     let consulAddress: Maybe<string> = new Nothing()
     let consulKvDc: Maybe<string> = new Nothing()
     let consulKeys: Maybe<string> = new Nothing()
+    const consulNamespace: string = ''
 
     function getConsulClient(): Maybe<KvStore> {
         if (consulClient !== undefined) {
@@ -119,7 +120,7 @@ export function consulResolver(): IRemoteResolver {
                         key,
                     )
                     return client
-                        .get({ path: remoteOptions.key, dc: remoteOptions.dc })
+                        .get({ path: `${consulNamespace}${remoteOptions.key}`, dc: remoteOptions.dc })
                         .then(
                             (val: any) => {
                                 return val
@@ -134,6 +135,10 @@ export function consulResolver(): IRemoteResolver {
                     return Promise.reject(new ConsulNotConfigured(key))
                 },
             )
+        },
+
+        watch<T = any>(key: string): Observable<T> {
+            return new Observable()
         },
     }
 }

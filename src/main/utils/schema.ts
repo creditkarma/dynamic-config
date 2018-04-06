@@ -125,7 +125,6 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
             const objKeys: Array<string> = Object.keys(obj)
             for (const key of objKeys) {
                 if (schemaKeys.indexOf(key) === -1) {
-                    logger.warn(`Object contains key[${key}] not in schema`)
                     return false
                 }
             }
@@ -135,7 +134,6 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
                 const nextObj: any = obj[key]
 
                 if (nextObj === undefined && schema.required !== undefined) {
-                    logger.warn(`Object is missing required key[${key}]`)
                     return schema.required.indexOf(key) === -1
 
                 } else if (!objectMatchesSchema(nextSchema, nextObj)) {
@@ -152,7 +150,6 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
         return true
 
     } else {
-        logger.warn(`Schema type[${schema.type}] does not match object type[${objType}]`)
         return false
     }
 }
