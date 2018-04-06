@@ -260,7 +260,7 @@ export function readConfigValue(obj: ConfigValue): any {
     }
 }
 
-function getValueFromConfigValue(key: string, obj: ConfigValue): ConfigValue | null {
+function getValueFromConfigValue(key: string, obj: ConfigValue): BaseConfigValue | null {
     if (isPrimitive(obj) || isNothing(obj)) {
         return null
 
@@ -288,7 +288,7 @@ function getValueFromConfigValue(key: string, obj: ConfigValue): ConfigValue | n
     }
 }
 
-export function getConfigForKey(key: string, obj: IRootConfigValue): ConfigValue | null {
+export function getConfigForKey(key: string, obj: IRootConfigValue): BaseConfigValue | null {
     if (isPrimitive(obj) || isNothing(obj)) {
         return null
 

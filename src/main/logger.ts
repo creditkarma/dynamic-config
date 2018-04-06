@@ -1,15 +1,15 @@
 export const log = (msg: string, data?: any) => {
-    if (data !== undefined && process.env.CONSUL_DEBUG) {
+    if (data !== undefined && process.env.CONFIG_DEBUG) {
         console.log(`[dynamic-config:info]: ${msg}: `, data)
-    } else if (process.env.CONSUL_DEBUG) {
+    } else if (process.env.CONFIG_DEBUG) {
         console.log(`[dynamic-config:info]: ${msg}`)
     }
 }
 
 export const warn = (msg: string, data?: any) => {
-    if (data !== undefined && process.env.CONSUL_DEBUG) {
+    if (data !== undefined && process.env.CONFIG_DEBUG) {
         console.warn(`[dynamic-config:warn]: ${msg}: `, data)
-    } else if (process.env.CONSUL_DEBUG) {
+    } else if (process.env.CONFIG_DEBUG) {
         console.warn(`[dynamic-config:warn]: ${msg}`)
     }
 }
