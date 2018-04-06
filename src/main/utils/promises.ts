@@ -79,7 +79,7 @@ export async function valuesForPromises(promises: Array<Promise<object>>): Promi
     return Promise.all(promises.map((next: Promise<object>, index: number) => {
         return resolveAtIndex(next, index)
 
-    })).then((values: Array<[object, number]>) => {
+    })).then((values: Array<PromiseUpdate>) => {
         return processValues(values)
     })
 }
@@ -92,7 +92,7 @@ function processValues(values: Array<PromiseUpdate>): Array<object> {
         } else {
             return 1
         }
-    }).map((next: [object, number]) => {
+    }).map((next: PromiseUpdate) => {
         return next[0]
     })
 }
