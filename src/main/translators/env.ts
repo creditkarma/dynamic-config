@@ -15,11 +15,10 @@ function isValidChar(char: string): boolean {
 function findEnvVariable(val: string): string | undefined {
     let match = ''
     let state = 'init'
-    let index: number = 0
     const trimmed = val.trim()
     const len: number = trimmed.length
 
-    for (let i = 0; i < trimmed.length; i++) {
+    for (let i = 0; i < len; i++) {
         const current = trimmed.charAt(i)
         if (match.length === 0 && current === '$') {
             state = 'matching'
