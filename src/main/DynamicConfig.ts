@@ -143,7 +143,6 @@ export class DynamicConfig implements IDynamicConfig {
                                 this.configSchema,
                                 key,
                             ).fork((schemaForKey: ISchema) => {
-                                console.log(`schemaForKey[${key}]: `, JSON.stringify(schemaForKey, null, 4))
                                 if (
                                     SchemaUtils.objectMatchesSchema(
                                         schemaForKey,
