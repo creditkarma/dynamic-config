@@ -539,7 +539,7 @@ List of Translators to user. Translators can finese data into a form expected by
 
 The included Translators are:
 
-* `env` - Allows usage of environment variables of the form `'$HOSTNAME'`
+* `env` - Allows usage of environment variables of the form `http://${HOSTNAME}:8080'`
 * `consul` - Allos usage of `consul!` urls.
 
 ### CONFIG-SETTINGS.JSON
