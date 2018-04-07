@@ -15,6 +15,7 @@ export interface IConsulOptions {
     consulAddress?: string
     consulKvDc?: string
     consulKeys?: string
+    consulNamespace?: string
 }
 
 export interface IRemoteOverrides {
@@ -70,7 +71,6 @@ export interface IRemoteResolver {
     name: string
     init: RemoteInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
-    watch(key: string, type?: ObjectType): void
 }
 
 export interface ISecretResolver {

@@ -278,6 +278,9 @@ The three options we set are:
 * `CONSUL_KV_DC` - (required) The Consul data center for the key/value store.
 * `CONSUL_KEYS` - (optional) These are keys in Consul that contain configs to overlay with our local configs. This can be a comma-separate list of multiple keys. You will notice I add the key we just created in Consul.
 
+There is a fourth option we're not using:
+* `CONSUL_NAMESPACE` - (optional) A string to prepend to all Consul look ups. If keys for your service are namespaced under `service-name` you could set this to your service name and then just use the unique key names when loading values, `service-name/<key>`.
+
 Now when we `curl` our running application we can not longer hit `/control` as we have overriden the path in Consul to `/status`.
 
 ```sh
@@ -863,6 +866,7 @@ The available options are:
 * `CONSUL_ADDRESS` - (required) Address to Consul agent.
 * `CONSUL_KV_DC` - (required) Data center to receive requests.
 * `CONSUL_KEYS` - (optional) Comma-separated list of keys pointing to configs stored in Consul. They are merged in left -> right order, meaning the rightmost key has highest priority.
+* `CONSUL_NAMESPACE` - (optional) A string to prepend to all Consul look ups.
 
 `CONSUL_ADDRESS` and `CONSUL_KV_DC` are required and are just about getting the connection to Consul up. `CONSUL_KEYS` is optional but more interesting. `CONSUL_KEYS` is a  comma-separated list of keys to pull from Consul. These keys should point to JSON structures that can overlay the local configs. These values will be pulled when the resolver is initialized.
 
@@ -872,12 +876,13 @@ These options can be set as environment variables:
 $ export CONSUL_ADDRESS=http://localhost:8500
 $ export CONSUL_KV_DC=dc1
 $ export CONSUL_KEYS=production-config,production-east-config
+$ export CONSUL_NAMESPACE=my-service-name
 ```
 
 You can also set these on the command line:
 
 ```sh
-$ node my-app.js CONSUL_ADDRESS=http://localhost:8500 CONSUL_KV_DC=dc1 CONSUL_KEYS=production-config,production-east-config
+$ node my-app.js CONSUL_ADDRESS=http://localhost:8500 CONSUL_KV_DC=dc1 CONSUL_KEYS=production-config,production-east-config CONSUL_NAMESPACE=my-service-name
 ```
 
 Or, you can set them in `config-settings.json`:
@@ -888,7 +893,8 @@ Or, you can set them in `config-settings.json`:
         "consul": {
             "consulAddress": "http://localhost:8500",
             "consulKvDc": "dc1",
-            "consulKeys": "production-config,production-east-config"
+            "consulKeys": "production-config,production-east-config",
+            "consulNamesapce": "my-service-name",
         }
     }
 }
@@ -919,7 +925,7 @@ The configuration must conform to what is expected from [@creditkarma/vault-clie
 
 When data is loaded from a local file or remote source it is parsed, usually `JSON.parse`, and then added to the resolved config object that you request values from. Sometimes, particularly when dealing with remote sources, the data coming in may not be exactly the shape you want, or it may be somewhat unreliable. Translators allow you to rewrite this data before it is added to the resolved config.
 
-As a concrete example of this we will look at environment placeholders. A config placeholder is an object that looks something like this:
+As a concrete example of this we will look at environment variables. A config placeholder, as we've seen earlier, is an object that looks something like this:
 
 ```json
 {
@@ -930,15 +936,15 @@ As a concrete example of this we will look at environment placeholders. A config
 }
 ```
 
-This form is specific to Dynamic Config. A more familiar way for environment variables to appear is:
+However, in your config, you will more often want to write something like this:
 
 ```json
 {
-    "host": "$HOSTNAME"
+    "destination": "http://${HOSTNAME}:9000"
 }
 ```
 
-There is a Translator bundled with Dyanmic Config that will rewrite this second form into the first. That way you can write environment variables in a more standard fashion, but Dynamic Config can still get the objects it is designed to work with.
+The `envTranslator` bundled with dynamic config will look at this and replace `${HOSTNAME}` with the environment variable `HOSTNAME` before inserting the value into the resolved config object.
 
 [back to top](#table-of-contents)
 
@@ -1024,6 +1030,7 @@ As a reminder, `remoteOptions` could be set in `config-settings.json` as such:
             "consulAddress": "http://localhost:8500",
             "consulKvDc": "dc1",
             "consulKeys": "production-config",
+            "consulNamespace": "my-service-name",
         }
     }
 }

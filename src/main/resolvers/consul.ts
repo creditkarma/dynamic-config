@@ -1,9 +1,9 @@
-import { KvStore, Observable } from '@creditkarma/consul-client'
+import { KvStore } from '@creditkarma/consul-client'
 
 import { DynamicConfig } from '../DynamicConfig'
 import { Just, Maybe, Nothing } from '../Maybe'
 
-import { CONSUL_ADDRESS, CONSUL_KEYS, CONSUL_KV_DC } from '../constants'
+import { CONSUL_ADDRESS, CONSUL_KEYS, CONSUL_KV_DC, CONSUL_NAMESPACE } from '../constants'
 
 import { ConsulFailed, ConsulNotConfigured } from '../errors'
 
@@ -31,12 +31,20 @@ export function toRemoteOptionMap(str: string): IRemoteOverrides {
     return result
 }
 
+function addTrailingSlash(str: string): string {
+    if (str.endsWith('/')) {
+        return str
+    } else {
+        return `${str}/`
+    }
+}
+
 export function consulResolver(): IRemoteResolver {
     let consulClient: Maybe<KvStore>
     let consulAddress: Maybe<string> = new Nothing()
     let consulKvDc: Maybe<string> = new Nothing()
     let consulKeys: Maybe<string> = new Nothing()
-    const consulNamespace: string = ''
+    let consulNamespace: Maybe<string> = new Nothing()
 
     function getConsulClient(): Maybe<KvStore> {
         if (consulClient !== undefined) {
@@ -80,6 +88,9 @@ export function consulResolver(): IRemoteResolver {
             consulKeys = Maybe.fromNullable(
                 remoteOptions.consulKeys || Utils.readFirstMatch(CONSUL_KEYS),
             )
+            consulNamespace = Maybe.fromNullable(
+                remoteOptions.consulNamespace || Utils.readFirstMatch(CONSUL_NAMESPACE),
+            )
 
             return Maybe.all(consulKeys, getConsulClient(), consulKvDc).fork(
                 ([keys, client, dc]) => {
@@ -120,7 +131,11 @@ export function consulResolver(): IRemoteResolver {
                         key,
                     )
                     return client
-                        .get({ path: `${consulNamespace}${remoteOptions.key}`, dc: remoteOptions.dc })
+                        .get({ path: consulNamespace.fork((val: string) => {
+                            return `${addTrailingSlash(val)}${remoteOptions.key}`
+                        }, () => {
+                            return `${remoteOptions.key}`
+                        }), dc: remoteOptions.dc })
                         .then(
                             (val: any) => {
                                 return val
@@ -135,10 +150,6 @@ export function consulResolver(): IRemoteResolver {
                     return Promise.reject(new ConsulNotConfigured(key))
                 },
             )
-        },
-
-        watch<T = any>(key: string): Observable<T> {
-            return new Observable()
         },
     }
 }

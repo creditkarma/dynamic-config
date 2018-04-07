@@ -7,8 +7,6 @@ import {
     IConfigTranslator,
 } from '../types'
 
-type MatchingState = 'init' | 'matching'
-
 function isValidChar(char: string): boolean {
     return (
         (char >= 'A' && char <= 'Z') ||

@@ -30,9 +30,5 @@ export function processResolver(): IRemoteResolver {
                 return Promise.reject(new MissingProcessVariable(key))
             }
         },
-
-        watch(key: string, type?: ObjectType): void {
-            // No-op
-        },
     }
 }
