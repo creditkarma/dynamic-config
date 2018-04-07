@@ -1,5 +1,3 @@
-
-import { Observable } from '@creditkarma/consul-client'
 import { ConfigLoader } from './ConfigLoader'
 
 import {
@@ -186,11 +184,6 @@ export class DynamicConfig implements IDynamicConfig {
                 }
             }
         })
-    }
-
-    public watch<T>(key: string): Observable<T> {
-        this.configState = 'running'
-        return new Observable()
     }
 
     public async source(key: string): Promise<string> {

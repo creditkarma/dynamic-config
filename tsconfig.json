@@ -10,7 +10,7 @@
         "noEmitOnError": true,
         "strict": true,
         "strictFunctionTypes": false,
-        "noUnusedLocals": false,
+        "noUnusedLocals": true,
         "pretty": true,
         "removeComments": true
     },

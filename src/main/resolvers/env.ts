@@ -33,9 +33,5 @@ export function envResolver(): IRemoteResolver {
                 return Promise.reject(new MissingEnvironmentVariable(key))
             }
         },
-
-        watch(key: string, type?: ObjectType): void {
-            // No-op
-        },
     }
 }

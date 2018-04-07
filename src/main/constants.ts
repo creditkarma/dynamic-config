@@ -14,6 +14,11 @@ export const CONSUL_KV_DC: string = 'CONSUL_KV_DC'
 export const CONSUL_KEYS: string = 'CONSUL_KEYS'
 
 /**
+ * Namespace to prepend to all Consul searches
+ */
+export const CONSUL_NAMESPACE: string = 'CONSUL_NAMESPACE'
+
+/**
  * Path to local config files
  */
 export const CONFIG_PATH: string = 'CONFIG_PATH'
