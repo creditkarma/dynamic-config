@@ -440,6 +440,7 @@ describe('DynamicConfig', () => {
 
             it('should return the default for value missing in environment', async () => {
                 return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                    console.log('val: ', actual)
                     expect(actual).to.equal('monkey')
                 })
             })
