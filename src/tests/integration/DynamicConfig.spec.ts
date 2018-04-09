@@ -440,7 +440,6 @@ describe('DynamicConfig', () => {
 
             it('should return the default for value missing in environment', async () => {
                 return dynamicConfig.get<string>('database.password').then((actual: string) => {
-                    console.log('val: ', actual)
                     expect(actual).to.equal('monkey')
                 })
             })
@@ -459,6 +458,53 @@ describe('DynamicConfig', () => {
                     throw new Error('Should reject for missing key')
                 }, (err: any) => {
                     expect(err.message).to.equal('Unable to find value for key[fake.path]')
+                })
+            })
+        })
+
+        describe('getSecretValue', () => {
+            it('should reject when Vault not configured', async () => {
+                return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
+                    throw new Error(`Unable to retrieve key[test-secret]. Should reject when Vault not configured`)
+                }, (err: any) => {
+                    expect(err.message).to.equal('Unable to retrieve key[test-secret]. No resolver found.')
+                })
+            })
+        })
+    })
+
+    describe('When Using Environment Variables with default config', () => {
+        const dynamicConfig: DynamicConfig = new DynamicConfig({
+            configEnv: 'default',
+            configPath: path.resolve(__dirname, './config'),
+            resolvers: [
+                envResolver(),
+            ],
+            loaders: [
+                jsonLoader,
+                ymlLoader,
+                jsLoader,
+                tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
+        })
+
+        process.env.HEALTH_RESPONSE = 'WHAM BAM!'
+        process.env.TEST_USERNAME = 'foobarwilly'
+
+        describe('get', () => {
+            it('should return value stored in environment variable', async () => {
+                return dynamicConfig.get<string>('project.health.response').then((actual: string) => {
+                    expect(actual).to.equal('WHAM BAM!')
+                })
+            })
+
+            it('should fetch value from default config', async () => {
+                return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                    expect(actual).to.equal('root')
                 })
             })
         })
