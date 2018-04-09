@@ -15,7 +15,7 @@ import {
 } from './utils'
 
 import {
-    DynamicConfigInvalidObject,
+    // DynamicConfigInvalidObject,
     DynamicConfigMissingKey,
     MissingConfigPlaceholder,
     ResolverUnavailable,
@@ -139,42 +139,13 @@ export class DynamicConfig implements IDynamicConfig {
                                 resolvedValue,
                             )
 
-                            return SchemaUtils.findSchemaForKey(
-                                this.configSchema,
+                            this.resolvedConfig = ConfigUtils.setRootConfigValueForKey(
                                 key,
-                            ).fork((schemaForKey: ISchema) => {
-                                if (
-                                    SchemaUtils.objectMatchesSchema(
-                                        schemaForKey,
-                                        baseValue,
-                                    )
-                                ) {
-                                    this.resolvedConfig = ConfigUtils.setRootConfigValueForKey(
-                                        key,
-                                        resolvedValue,
-                                        this.resolvedConfig,
-                                    )
-                                    return Promise.resolve(baseValue)
-                                } else {
-                                    logger.error(
-                                        `Value for key[${key}] from remote[${resolvedValue}] does not match expected schema`,
-                                    )
-                                    return Promise.reject(
-                                        new DynamicConfigInvalidObject(key),
-                                    )
-                                }
-                            },
-                            () => {
-                                logger.warn(
-                                    `Unable to find schema for key[${key}]. Object may be invalid.`,
-                                )
-                                this.resolvedConfig = ConfigUtils.setRootConfigValueForKey(
-                                    key,
-                                    resolvedValue,
-                                    this.resolvedConfig,
-                                )
-                                return Promise.resolve(baseValue)
-                            })
+                                resolvedValue,
+                                this.resolvedConfig,
+                            )
+
+                            return Promise.resolve(baseValue)
                         },
                     )
                 } else {

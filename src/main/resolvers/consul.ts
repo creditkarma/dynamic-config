@@ -130,12 +130,13 @@ export function consulResolver(): IRemoteResolver {
                     const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
                         key,
                     )
+
                     return client
                         .get({ path: consulNamespace.fork((val: string) => {
                             return `${addTrailingSlash(val)}${remoteOptions.key}`
                         }, () => {
                             return `${remoteOptions.key}`
-                        }), dc: remoteOptions.dc })
+                        }), dc: remoteOptions.dc || consulKvDc.getOrElse('') })
                         .then(
                             (val: any) => {
                                 return val
