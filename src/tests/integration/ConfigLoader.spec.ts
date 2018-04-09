@@ -53,7 +53,11 @@ describe('ConfigLoader', () => {
                         },
                         health: {
                             control: '/check',
-                            response: 'GOOD',
+                            response: {
+                                _source: 'env',
+                                _key: 'HEALTH_RESPONSE',
+                                _default: 'GOOD',
+                            },
                         },
                     },
                     server: {
