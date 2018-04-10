@@ -94,6 +94,7 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
                 if (schemaLen !== objLen) {
                     logger.warn(`Tuple contains ${objLen}, but schema only allows ${schemaLen}`)
                     return false
+
                 } else {
                     for (let i = 0; i < objLen; i++) {
                         if (!objectMatchesSchema(schema.items[i], obj[i])) {
@@ -133,10 +134,18 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
                 const nextSchema: ISchema = schema.properties[key]
                 const nextObj: any = obj[key]
 
-                if (nextObj === undefined && schema.required !== undefined) {
-                    return schema.required.indexOf(key) === -1
+                if (
+                    nextObj === undefined &&
+                    schema.required !== undefined &&
+                    schema.required.indexOf(key) > -1
+                ) {
+                    return false
 
-                } else if (!objectMatchesSchema(nextSchema, nextObj)) {
+                } else if (
+                    nextObj !== undefined &&
+                    nextSchema !== undefined &&
+                    !objectMatchesSchema(nextSchema, nextObj)
+                ) {
                     return false
                 }
             }
@@ -147,6 +156,7 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
         }
 
     } else if (schema.type === 'any' || schema.type === objType) {
+        console.log('return_3')
         return true
 
     } else {
