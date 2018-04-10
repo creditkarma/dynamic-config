@@ -155,8 +155,10 @@ export function objectMatchesSchema(schema: ISchema, obj: any): boolean {
             return true
         }
 
-    } else if (schema.type === 'any' || schema.type === objType) {
-        console.log('return_3')
+    } else if (
+        schema.type === 'any' ||
+        schema.type === objType
+    ) {
         return true
 
     } else {
