@@ -87,6 +87,7 @@ export function createConfigObject(
         const configObj: IRootConfigValue = {
             type: 'root',
             properties: {},
+            watchers: [],
         }
 
         for (const key of Object.keys(obj)) {
