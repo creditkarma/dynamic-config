@@ -1,3 +1,5 @@
+import { Observer } from '@creditkarma/consul-client'
+
 import {
     isNothing,
     isPrimitive,
@@ -113,7 +115,69 @@ export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
     }, obj)
 }
 
-function setObjectPropertyValue(key: string, value: BaseConfigValue, configObject: BaseConfigValue): BaseConfigValue {
+function appendValues<T>(target: Array<T>, source: Array<T>): Array<T> {
+    source.forEach((next: T) => {
+        target.push(next)
+    })
+
+    return target
+}
+
+export function collectWatchersForKey(
+    key: string,
+    configObject: ConfigValue,
+): Array<Observer<any>> {
+    if (typeof key !== 'string') {
+        throw new Error(`Cannot find watchers for a non-string key[${key}]`)
+
+    } else if (isNothing(configObject)) {
+        throw new Error(`Cannot find watchers for null config`)
+
+    } else {
+        const [ head, ...tail ] = splitKey(key)
+        const watchers: Array<Observer<any>> = []
+        appendValues(watchers, configObject.watchers)
+
+        if (head === undefined) {
+            if (configObject.type === 'root') {
+                return configObject.watchers
+
+            } else {
+                throw new Error(`Cannot get watchers for undefined key`)
+            }
+
+        } else if (tail.length > 0) {
+            if (configObject.type === 'object' || configObject.type === 'root') {
+                if (configObject.properties[head] !== undefined) {
+                    appendValues(watchers, collectWatchersForKey(tail.join('.'), configObject.properties[head]))
+
+                } else {
+                    throw new Error(`Value for key[${head}] does not exist in object`)
+                }
+
+            } else {
+                throw new Error(`Cannot get watchers for key[${key}] on a non-object value`)
+            }
+
+        } else if (
+            configObject.type === 'object' &&
+            configObject.properties[head] !== undefined
+        ) {
+            appendValues(watchers, configObject.properties[head].watchers)
+
+        } else {
+            throw new Error(`Value for key[${head}] does not exist in object`)
+        }
+
+        return watchers
+    }
+}
+
+function setObjectPropertyValue(
+    key: string,
+    value: BaseConfigValue,
+    configObject: BaseConfigValue,
+): BaseConfigValue {
     if (configObject.type === 'object') {
         const what: IObjectConfigValue = {
             source: configObject.source,
@@ -137,7 +201,11 @@ function setObjectPropertyValue(key: string, value: BaseConfigValue, configObjec
     }
 }
 
-export function setBaseConfigValueForKey(key: string, value: BaseConfigValue, oldValue: BaseConfigValue): BaseConfigValue {
+export function setBaseConfigValueForKey(
+    key: string,
+    value: BaseConfigValue,
+    oldValue: BaseConfigValue,
+): BaseConfigValue {
     if (typeof key !== 'string') {
         throw new Error('Property to set must be a string')
 
@@ -177,7 +245,7 @@ export function setBaseConfigValueForKey(key: string, value: BaseConfigValue, ol
             return setObjectPropertyValue(head, value, oldValue)
 
         } else {
-            throw new Error('duh')
+            throw new Error(`Value for key[${head}] does not exist in object`)
         }
     }
 }
@@ -193,6 +261,7 @@ export function setRootConfigValueForKey(key: string, value: BaseConfigValue, ol
         const newConfig: IRootConfigValue = {
             type: 'root',
             properties: {},
+            watchers: [],
         }
         const [ head, ...tail ] = splitKey(key)
         const props: Array<string> = Object.keys(oldConfig.properties)
@@ -218,6 +287,7 @@ export function setRootConfigValueForKey(key: string, value: BaseConfigValue, ol
 export function setValueForKey(key: string, value: BaseConfigValue, oldConfig: ConfigValue): ConfigValue {
     if (oldConfig.type === 'root') {
         return setRootConfigValueForKey(key, value, oldConfig)
+
     } else {
         return setBaseConfigValueForKey(key, value, oldConfig)
     }

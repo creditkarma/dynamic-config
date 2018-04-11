@@ -7,7 +7,7 @@ import { CONSUL_ADDRESS, CONSUL_KEYS, CONSUL_KV_DC, CONSUL_NAMESPACE } from '../
 
 import { ConsulFailed, ConsulNotConfigured } from '../errors'
 
-import { IConsulOptions, IRemoteOverrides, IRemoteResolver } from '../types'
+import { IConsulOptions, IRemoteOverrides, IRemoteResolver, SetFunction } from '../types'
 
 import { ObjectUtils, Utils } from '../utils'
 
@@ -77,6 +77,7 @@ export function consulResolver(): IRemoteResolver {
         init(
             configInstance: DynamicConfig,
             remoteOptions: IConsulOptions = {},
+            setFunction: SetFunction,
         ): Promise<any> {
             consulAddress = Maybe.fromNullable(
                 remoteOptions.consulAddress ||
