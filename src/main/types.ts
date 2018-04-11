@@ -1,3 +1,5 @@
+import { Observer } from '@creditkarma/consul-client'
+
 export interface IRemoteOptions {
     [name: string]: any
 }
@@ -69,7 +71,7 @@ export type ConfigResolver =
 
 export type SetFunction = (key: string, value: any) => void
 
-export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions?: IRemoteOptions, setValue?: SetFunction) => Promise<any>
+export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions: IRemoteOptions | undefined, setValue: SetFunction) => Promise<any>
 
 export interface IRemoteResolver {
     type: 'remote'
@@ -109,11 +111,11 @@ export type WatchFunction =
 
 export interface IConfigValue {
     type: ConfigType
+    watchers: Array<Observer<any>>
 }
 
 export interface IBaseConfigValue extends IConfigValue {
     source: ISource
-    watchers: Array<WatchFunction>
 }
 
 export type ConfigValue =
