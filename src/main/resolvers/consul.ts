@@ -100,8 +100,6 @@ export function consulResolver(): IRemoteResolver {
                 remoteOptions.consulNamespace || Utils.readFirstMatch(CONSUL_NAMESPACE),
             )
 
-            console.log('consulAddress: ', consulAddress)
-
             return Maybe.all(consulKeys, getConsulClient(), consulDc).fork(
                 ([keys, client, dc]) => {
                     const rawConfigs: Promise<Array<any>> = Promise.all(

@@ -14,7 +14,8 @@ setTimeout(() => {
     const consulClient: KvStore = new KvStore('http://localhost:8510')
     const vaultClient: VaultClient = new VaultClient({
         apiVersion: 'v1',
-        destination: 'http://localhost:8210',
+        protocol: 'http',
+        destination: 'localhost:8210',
         tokenPath: './tmp/token',
     })
 
