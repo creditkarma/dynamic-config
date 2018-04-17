@@ -34,7 +34,7 @@ describe('DynamicConfig', () => {
                 consul: {
                     consulAddress: 'http://localhost:8510',
                     consulKeys: 'test-config-one,with-vault',
-                    consulKvDc: 'dc1',
+                    consulDc: 'dc1',
                 },
             },
             resolvers: [
@@ -81,9 +81,13 @@ describe('DynamicConfig', () => {
                         },
                         'hashicorp-vault': {
                             apiVersion: 'v1',
-                            destination: 'http://localhost:8210',
+                            protocol: 'http',
+                            destination: 'localhost:8210',
                             mount: 'secret',
                             tokenPath: './tmp/token',
+                        },
+                        'test-service': {
+                            destination: '127.0.0.1',
                         },
                     })
                 })
@@ -174,7 +178,7 @@ describe('DynamicConfig', () => {
                 consul: {
                     consulAddress: 'http://localhost:8510',
                     consulKeys: 'test-config-one',
-                    consulKvDc: 'dc1',
+                    consulDc: 'dc1',
                 },
             },
             resolvers: [
@@ -219,6 +223,9 @@ describe('DynamicConfig', () => {
                             first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
                             last: [ 'Smith', 'Warren', 'Malick' ],
                         },
+                        'test-service': {
+                            destination: '127.0.0.1',
+                        },
                     })
                 })
             })
@@ -259,6 +266,9 @@ describe('DynamicConfig', () => {
                         names: {
                             first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
                             last: [ 'Smith', 'Warren', 'Malick' ],
+                        },
+                        'test-service': {
+                            destination: '127.0.0.1',
                         },
                     })
                 })
@@ -301,7 +311,7 @@ describe('DynamicConfig', () => {
                 consul: {
                     consulAddress: 'http://localhost:8510',
                     consulKeys: 'test-config-one,test-config-two',
-                    consulKvDc: 'dc1',
+                    consulDc: 'dc1',
                 },
             },
             resolvers: [
@@ -345,6 +355,9 @@ describe('DynamicConfig', () => {
                         names: {
                             first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
                             last: [ 'Smith', 'Warren', 'Malick' ],
+                        },
+                        'test-service': {
+                            destination: '127.0.0.1',
                         },
                     })
                 })

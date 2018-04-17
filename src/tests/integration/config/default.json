@@ -24,5 +24,8 @@
     "names": {
         "first": [ "Bob", "Helen", "Joe", "Jane" ],
         "last": [ "Smith", "Warren", "Malick" ]
+    },
+    "test-service": {
+        "destination": "localhost"
     }
 }

@@ -72,6 +72,9 @@ describe('ConfigLoader', () => {
                         first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
                         last: [ 'Smith', 'Warren', 'Malick' ],
                     },
+                    'test-service': {
+                        destination: 'localhost',
+                    },
                 },
             }
 
@@ -114,6 +117,9 @@ describe('ConfigLoader', () => {
                             name: 'yaml-project',
                             ref: 123456,
                         },
+                    },
+                    'test-service': {
+                        destination: 'consul!/test-service?dc=dc1',
                     },
                 },
             }
