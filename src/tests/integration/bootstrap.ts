@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { KvStore } from '@creditkarma/consul-client'
+import { Catalog, KvStore } from '@creditkarma/consul-client'
 import { VaultClient } from '@creditkarma/vault-client'
 import { execSync } from 'child_process'
 
@@ -10,6 +10,7 @@ import * as path from 'path'
 process.chdir(__dirname)
 
 setTimeout(() => {
+    const catalog: Catalog = new Catalog('http://localhost:8510')
     const consulClient: KvStore = new KvStore('http://localhost:8510')
     const vaultClient: VaultClient = new VaultClient({
         apiVersion: 'v1',
@@ -58,6 +59,14 @@ setTimeout(() => {
 
     fs.writeFile('./tmp/token', token, (err: any) => {
         Promise.all([
+            catalog.registerEntity({
+                Node: 'bango',
+                Address: '192.168.4.19',
+                Service: {
+                    Service: 'test-service',
+                    Address: '127.0.0.1',
+                },
+            }),
             consulClient.set(
                 { path: 'test-config-one' },
                 {
@@ -103,7 +112,8 @@ setTimeout(() => {
                     },
                     'hashicorp-vault': {
                         apiVersion: 'v1',
-                        destination: 'http://localhost:8210',
+                        protocol: 'http',
+                        destination: 'localhost:8210',
                         mount: 'secret',
                         tokenPath: './tmp/token',
                     },

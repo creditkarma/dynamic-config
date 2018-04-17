@@ -10,8 +10,8 @@ import { config } from '../../main/'
 import {
     CONFIG_PATH,
     CONSUL_ADDRESS,
+    CONSUL_DC,
     CONSUL_KEYS,
-    CONSUL_KV_DC,
 } from '../../main/constants'
 
 export const lab = Lab.script()
@@ -27,7 +27,7 @@ describe('DynamicConfig Singleton', () => {
             // Set environment options for DynamicConfig
             process.env[CONFIG_PATH] = path.resolve(__dirname, './config')
             process.env[CONSUL_ADDRESS] = 'http://localhost:8510'
-            process.env[CONSUL_KV_DC] = 'dc1'
+            process.env[CONSUL_DC] = 'dc1'
             process.env[CONSUL_KEYS] = 'test-config-one,with-vault'
         })
 
@@ -35,7 +35,7 @@ describe('DynamicConfig Singleton', () => {
             // Reset environment options for DynamicConfig
             process.env[CONFIG_PATH] = undefined
             process.env[CONSUL_ADDRESS] = undefined
-            process.env[CONSUL_KV_DC] = undefined
+            process.env[CONSUL_DC] = undefined
             process.env[CONSUL_KEYS] = undefined
         })
 
@@ -105,7 +105,7 @@ describe('DynamicConfig Singleton', () => {
         let server: ChildProcess
 
         before((done) => {
-            server = exec('node ./server.js CONSUL_KV_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three')
+            server = exec('node ./server.js CONSUL_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three')
             server.stdout.on('data', (data) => {
                 console.log('msg: ', data)
             })

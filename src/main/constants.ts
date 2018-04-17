@@ -6,7 +6,7 @@ export const CONSUL_ADDRESS: string = 'CONSUL_ADDRESS'
 /**
  * Datacenter for the KV Store
  */
-export const CONSUL_KV_DC: string = 'CONSUL_KV_DC'
+export const CONSUL_DC: string = 'CONSUL_DC'
 
 /**
  * Consul Keys are a comma separated list of configs to load and merge

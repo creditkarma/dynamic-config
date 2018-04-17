@@ -270,12 +270,12 @@ Click `CREATE` and we are ready to go.
 In order for Dynamic Config to know about the values we added to Consul we must configure it to know about Consul. We can do this in a few ways. We can add static config in a file called `config-settings.json` at our project root, we can set configuration on environment variables or we can pass in command line arguments to our application. We are going to use command line arguments.
 
 ```sh
-$ node ./dist/index.js CONSUL_ADDRESS=http://localhost:8510 CONSUL_KV_DC=dc1 CONSUL_KEYS=consul-config
+$ node ./dist/index.js CONSUL_ADDRESS=http://localhost:8510 CONSUL_DC=dc1 CONSUL_KEYS=consul-config
 ```
 
 The three options we set are:
 * `CONSUL_ADDRESS` - (required) This is the URL on which Consul is running
-* `CONSUL_KV_DC` - (required) The Consul data center for the key/value store.
+* `CONSUL_DC` - (required) The Consul data center for the key/value store.
 * `CONSUL_KEYS` - (optional) These are keys in Consul that contain configs to overlay with our local configs. This can be a comma-separate list of multiple keys. You will notice I add the key we just created in Consul.
 
 There is a fourth option we're not using:
@@ -317,7 +317,7 @@ Back over to our Consul UI `http://localhost:8510/ui/`. We are going to add the 
 Now, we have a new production config that points to a single value in Consul. Let's try this out. We will need to set `NODE_ENV=production` so we pick up the new local config file.
 
 ```sh
-$ NODE_ENV=production node ./dist/index.js CONSUL_KV_DC=dc1 CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=consul-config
+$ NODE_ENV=production node ./dist/index.js CONSUL_DC=dc1 CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=consul-config
 ```
 
 And then test our work with `curl`:
@@ -864,17 +864,17 @@ Even though the resolver for Consul is included by default, it will not be used 
 The available options are:
 
 * `CONSUL_ADDRESS` - (required) Address to Consul agent.
-* `CONSUL_KV_DC` - (required) Data center to receive requests.
+* `CONSUL_DC` - (required) Data center to receive requests.
 * `CONSUL_KEYS` - (optional) Comma-separated list of keys pointing to configs stored in Consul. They are merged in left -> right order, meaning the rightmost key has highest priority.
 * `CONSUL_NAMESPACE` - (optional) A string to prepend to all Consul look ups.
 
-`CONSUL_ADDRESS` and `CONSUL_KV_DC` are required and are just about getting the connection to Consul up. `CONSUL_KEYS` is optional but more interesting. `CONSUL_KEYS` is a  comma-separated list of keys to pull from Consul. These keys should point to JSON structures that can overlay the local configs. These values will be pulled when the resolver is initialized.
+`CONSUL_ADDRESS` and `CONSUL_DC` are required and are just about getting the connection to Consul up. `CONSUL_KEYS` is optional but more interesting. `CONSUL_KEYS` is a  comma-separated list of keys to pull from Consul. These keys should point to JSON structures that can overlay the local configs. These values will be pulled when the resolver is initialized.
 
 These options can be set as environment variables:
 
 ```sh
 $ export CONSUL_ADDRESS=http://localhost:8500
-$ export CONSUL_KV_DC=dc1
+$ export CONSUL_DC=dc1
 $ export CONSUL_KEYS=production-config,production-east-config
 $ export CONSUL_NAMESPACE=my-service-name
 ```
@@ -882,7 +882,7 @@ $ export CONSUL_NAMESPACE=my-service-name
 You can also set these on the command line:
 
 ```sh
-$ node my-app.js CONSUL_ADDRESS=http://localhost:8500 CONSUL_KV_DC=dc1 CONSUL_KEYS=production-config,production-east-config CONSUL_NAMESPACE=my-service-name
+$ node my-app.js CONSUL_ADDRESS=http://localhost:8500 CONSUL_DC=dc1 CONSUL_KEYS=production-config,production-east-config CONSUL_NAMESPACE=my-service-name
 ```
 
 Or, you can set them in `config-settings.json`:
@@ -892,7 +892,7 @@ Or, you can set them in `config-settings.json`:
     "remoteOptions": {
         "consul": {
             "consulAddress": "http://localhost:8500",
-            "consulKvDc": "dc1",
+            "consulDc": "dc1",
             "consulKeys": "production-config,production-east-config",
             "consulNamesapce": "my-service-name",
         }
@@ -911,7 +911,8 @@ The configuration must conform to what is expected from [@creditkarma/vault-clie
 ```json
 "hashicorp-vault": {
     "apiVersion": "v1",
-    "destination": "http://localhost:8200",
+    "protocol": "http",
+    "destination": "localhost:8200",
     "mount": "secret",
     "namespace": "",
     "tokenPath": "./tmp/token",
@@ -1028,7 +1029,7 @@ As a reminder, `remoteOptions` could be set in `config-settings.json` as such:
     "remoteOptions": {
         "consul": {
             "consulAddress": "http://localhost:8500",
-            "consulKvDc": "dc1",
+            "consulDc": "dc1",
             "consulKeys": "production-config",
             "consulNamespace": "my-service-name",
         }

@@ -4,5 +4,8 @@
             "control": "/control",
             "response": "PASS"
         }
+    },
+    "test-service": {
+        "destination": "consul!/test-service?dc=dc1"
     }
 }

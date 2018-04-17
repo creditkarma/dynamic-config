@@ -13,7 +13,7 @@ export interface IConfigOptions {
 
 export interface IConsulOptions {
     consulAddress?: string
-    consulKvDc?: string
+    consulDc?: string
     consulKeys?: string
     consulNamespace?: string
 }
