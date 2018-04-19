@@ -87,7 +87,7 @@ describe('DynamicConfig', () => {
                             tokenPath: './tmp/token',
                         },
                         'test-service': {
-                            destination: '127.0.0.1',
+                            destination: '127.0.0.1:3000',
                         },
                     })
                 })
@@ -224,7 +224,7 @@ describe('DynamicConfig', () => {
                             last: [ 'Smith', 'Warren', 'Malick' ],
                         },
                         'test-service': {
-                            destination: '127.0.0.1',
+                            destination: '127.0.0.1:3000',
                         },
                     })
                 })
@@ -268,7 +268,7 @@ describe('DynamicConfig', () => {
                             last: [ 'Smith', 'Warren', 'Malick' ],
                         },
                         'test-service': {
-                            destination: '127.0.0.1',
+                            destination: '127.0.0.1:3000',
                         },
                     })
                 })
@@ -357,7 +357,7 @@ describe('DynamicConfig', () => {
                             last: [ 'Smith', 'Warren', 'Malick' ],
                         },
                         'test-service': {
-                            destination: '127.0.0.1',
+                            destination: '127.0.0.1:3000',
                         },
                     })
                 })

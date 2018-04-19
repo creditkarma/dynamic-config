@@ -73,7 +73,7 @@ describe('ConfigLoader', () => {
                         last: [ 'Smith', 'Warren', 'Malick' ],
                     },
                     'test-service': {
-                        destination: 'localhost',
+                        destination: 'localhost:8080',
                     },
                 },
             }
