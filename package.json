@@ -1,6 +1,6 @@
 {
   "name": "@creditkarma/dynamic-config",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Dynamic Config for Node.js backed by Consul and Vault",
   "main": "dist/main/index.js",
   "types": "dist/main/index.d.ts",
