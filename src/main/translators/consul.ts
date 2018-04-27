@@ -2,7 +2,7 @@
  * Plugin that replaces consul! urls with consul config placeholders
  */
 import { IConfigTranslator } from '../types'
-import { SchemaUtils } from '../utils'
+import { JSONUtils } from '../utils'
 
 const CONSUL_PREFIX: string = 'consul!/'
 
@@ -15,13 +15,10 @@ function isPlaceholderKey(key: string): string | undefined {
 }
 
 function isConsulPlaceholder(obj: any): boolean {
-    return SchemaUtils.objectMatchesSchema(
-        {
+    return JSONUtils.objectMatchesSchema({
             type: 'object',
             properties: {
-                default: {
-                    type: 'any',
-                },
+                default: {},
                 key: {
                     type: 'string',
                 },

@@ -1,7 +1,8 @@
+import {  } from 'ajv'
 import * as fs from 'fs'
 import * as logger from './logger'
-import { ConfigResolver, IConfigOptions, IConfigTranslator, IFileLoader, IRemoteOptions, ISchema } from './types'
-import { FileUtils, SchemaUtils } from './utils'
+import { ConfigResolver, IConfigOptions, IConfigTranslator, IFileLoader, IRemoteOptions } from './types'
+import { FileUtils, JSONUtils } from './utils'
 
 import {
     consulTranslator,
@@ -34,7 +35,7 @@ export interface IConfigSettings {
     translators?: Array<string>
 }
 
-export const configSettingsSchema: ISchema = {
+export const configSettingsSchema: object = {
     type: 'object',
     properties: {
         'configPath': {
@@ -110,6 +111,7 @@ function settingsToOptions(settings: IConfigSettings): IConfigOptions {
             }
             return acc
         }, [])
+
     } else {
         result.resolvers = [
             envResolver(),
@@ -126,6 +128,7 @@ function settingsToOptions(settings: IConfigSettings): IConfigOptions {
             }
             return acc
         }, [])
+
     } else {
         result.loaders = [
             jsonLoader,
@@ -142,6 +145,7 @@ function settingsToOptions(settings: IConfigSettings): IConfigOptions {
             }
             return acc
         }, [])
+
     } else {
         result.translators = [
             envTranslator,
@@ -158,16 +162,19 @@ export function loadSettings(): IConfigOptions {
         try {
             const content: string = fs.readFileSync(settingsPath).toString('utf-8')
             const settings: IConfigSettings = JSON.parse(content)
-            if (SchemaUtils.objectMatchesSchema(configSettingsSchema, settings)) {
+            if (JSONUtils.objectMatchesSchema(configSettingsSchema, settings)) {
                 return settingsToOptions(settings)
+
             } else {
                 logger.error(`Config settings does not match the expected schema`)
                 return settingsToOptions({})
             }
+
         } catch (e) {
             logger.error(`Failed to load config-settings from file[${settingsPath}]`)
             return settingsToOptions({})
         }
+
     } else {
         logger.log(`Unable to find static config-settings`)
         return settingsToOptions({})

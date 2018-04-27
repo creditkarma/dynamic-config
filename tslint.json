@@ -1,10 +1,11 @@
 {
-	"extends": "tslint:recommended",
-	"rules": {
-    "max-line-length": false,
-    "max-classes-per-file": false,
-		"object-literal-sort-keys": false,
-		"no-console": false,
+    "extends": "tslint:recommended",
+    "rules": {
+        "max-line-length": false,
+        "max-classes-per-file": false,
+        "no-empty-interface": false,
+        "object-literal-sort-keys": false,
+        "no-console": false,
         "no-var-requires": false,
         "only-arrow-functions": false,
         "variable-name": [
@@ -26,5 +27,5 @@
             "avoid-escape"
         ],
         "object-literal-key-quotes": false
-	}
+    }
 }

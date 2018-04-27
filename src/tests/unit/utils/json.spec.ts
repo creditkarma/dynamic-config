@@ -3,17 +3,17 @@ import * as Lab from 'lab'
 
 import { ISchema } from '../../../main'
 
-import { SchemaUtils } from '../../../main/utils'
+import { JSONUtils } from '../../../main/utils'
 
 export const lab = Lab.script()
 
 const describe = lab.describe
 const it = lab.it
 
-describe('SchemaUtils', () => {
+describe('JSONUtils', () => {
     describe('objectAsSimpileSchema', () => {
         it('should correctly generate a schema for an object', async () => {
-            const actual: ISchema = SchemaUtils.objectAsSimpleSchema({
+            const actual: ISchema = JSONUtils.objectAsSimpleSchema({
                 one: 'one',
                 two: 56,
                 three: {
@@ -53,7 +53,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should assign empty arrays to have undefined item types', async () => {
-            const actual: ISchema = SchemaUtils.objectAsSimpleSchema([])
+            const actual: ISchema = JSONUtils.objectAsSimpleSchema([])
             const expected: ISchema = {
                 type: 'array',
                 items: {
@@ -65,7 +65,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should correctly generate schema for primitive objects', async () => {
-            const actual: ISchema = SchemaUtils.objectAsSimpleSchema(3)
+            const actual: ISchema = JSONUtils.objectAsSimpleSchema(3)
             const expected: ISchema = {
                 type: 'number',
             }
@@ -74,7 +74,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should correctly generate schema for null objects', async () => {
-            const actual: ISchema = SchemaUtils.objectAsSimpleSchema(null)
+            const actual: ISchema = JSONUtils.objectAsSimpleSchema(null)
             const expected: ISchema = {
                 type: 'object',
                 properties: {},
@@ -119,15 +119,13 @@ describe('SchemaUtils', () => {
         const anySchema: ISchema = {
             type: 'object',
             properties: {
-                one: {
-                    type: 'any',
-                },
+                one: {},
             },
             required: ['one'],
         }
 
         it('should return true if object matches given schema', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(
+            const actual: boolean = JSONUtils.objectMatchesSchema(
                 objectSchema,
                 {
                     one: 'one',
@@ -140,7 +138,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should return false if object does not match given schema', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(
+            const actual: boolean = JSONUtils.objectMatchesSchema(
                 objectSchema,
                 {
                     one: 'one',
@@ -152,22 +150,8 @@ describe('SchemaUtils', () => {
             expect(actual).to.equal(expected)
         })
 
-        it('should return false if object includes fields not in schema', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(
-                objectSchema,
-                {
-                    one: 'one',
-                    two: 2,
-                    three: 3,
-                },
-            )
-            const expected: boolean = false
-
-            expect(actual).to.equal(expected)
-        })
-
         it('should return true if primitive matches given schema', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(
+            const actual: boolean = JSONUtils.objectMatchesSchema(
                 strSchema,
                 'test',
             )
@@ -177,7 +161,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should return false if primitive does not match given schema', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(
+            const actual: boolean = JSONUtils.objectMatchesSchema(
                 strSchema,
                 5,
             )
@@ -187,7 +171,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should return true if object does not include optional fields', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(
+            const actual: boolean = JSONUtils.objectMatchesSchema(
                 optionalSchema,
                 {
                     one: 'one',
@@ -199,7 +183,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should return true with any type matching number', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(anySchema, {
+            const actual: boolean = JSONUtils.objectMatchesSchema(anySchema, {
                 one: 5,
             })
             const expected: boolean = true
@@ -208,7 +192,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should return true with any type matching string', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(anySchema, {
+            const actual: boolean = JSONUtils.objectMatchesSchema(anySchema, {
                 one: 'one',
             })
             const expected: boolean = true
@@ -217,7 +201,7 @@ describe('SchemaUtils', () => {
         })
 
         it('should return true with any type matching object', async () => {
-            const actual: boolean = SchemaUtils.objectMatchesSchema(anySchema, {
+            const actual: boolean = JSONUtils.objectMatchesSchema(anySchema, {
                 one: {
                     test: 'test',
                 },
@@ -225,95 +209,6 @@ describe('SchemaUtils', () => {
             const expected: boolean = true
 
             expect(actual).to.equal(expected)
-        })
-    })
-
-    describe('findSchemaForKey', () => {
-        const mockData = {
-            user: {
-                name: 'Bob Smith',
-                age: 32,
-                location: {
-                    state: 'CA',
-                    city: 'Barstow',
-                },
-            },
-            data: {
-                favorites: ['video games', 'sports'],
-                posts: [
-                    {
-                        title: 'My Stupid Post',
-                        date: 'May 23, 1998',
-                        body: 'I like this internet thing',
-                        tags: ['dumb', 'stuff'],
-                    },
-                ],
-            },
-        }
-
-        const mockSchema: ISchema = SchemaUtils.objectAsSimpleSchema(mockData)
-
-        it('should get schema for key', async () => {
-            const actual = SchemaUtils.findSchemaForKey(mockSchema, 'user')
-            const expected: ISchema = {
-                type: 'object',
-                properties: {
-                    name: {
-                        type: 'string',
-                    },
-                    age: {
-                        type: 'number',
-                    },
-                    location: {
-                        type: 'object',
-                        properties: {
-                            state: {
-                                type: 'string',
-                            },
-                            city: {
-                                type: 'string',
-                            },
-                        },
-                        required: ['state', 'city'],
-                    },
-                },
-                required: ['name', 'age', 'location'],
-            }
-
-            expect(actual.get()).to.equal(expected)
-        })
-
-        it('should get schema for nested key', async () => {
-            const actual = SchemaUtils.findSchemaForKey(
-                mockSchema,
-                'data.posts',
-            )
-            const expected: ISchema = {
-                type: 'array',
-                items: {
-                    type: 'object',
-                    properties: {
-                        title: {
-                            type: 'string',
-                        },
-                        date: {
-                            type: 'string',
-                        },
-                        body: {
-                            type: 'string',
-                        },
-                        tags: {
-                            type: 'array',
-                            items: {
-                                type: 'string',
-                            },
-                        },
-                    },
-                    required: ['title', 'date', 'body', 'tags'],
-                },
-            }
-
-            expect(actual.get()).to.equal(expected)
         })
     })
 })

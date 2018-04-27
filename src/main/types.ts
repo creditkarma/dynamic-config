@@ -233,9 +233,7 @@ export interface IBooleanSchema {
     type: 'boolean'
 }
 
-export interface IAnySchema {
-    type: 'any'
-}
+export interface IAnySchema {}
 
 export interface IUndefinedSchema {
     type: 'undefined'
