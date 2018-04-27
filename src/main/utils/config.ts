@@ -10,7 +10,7 @@ import {
 
 import {
     objectMatchesSchema,
-} from './schema'
+} from './json'
 
 import {
     BaseConfigValue,
@@ -105,9 +105,7 @@ export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
             '_type': {
                 type: 'string',
             },
-            '_default': {
-                type: 'any',
-            },
+            '_default': {},
         },
         required: [ '_key', '_source' ],
     }, obj)

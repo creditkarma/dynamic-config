@@ -10,7 +10,6 @@ import {
     ConfigUtils,
     ObjectUtils,
     PromiseUtils,
-    SchemaUtils,
     Utils,
 } from './utils'
 
@@ -32,7 +31,6 @@ import {
     IResolvedPlaceholder,
     IResolverMap,
     IRootConfigValue,
-    ISchema,
     ITranslator,
     PromisedUpdate,
     ResolverType,
@@ -47,7 +45,6 @@ export class DynamicConfig implements IDynamicConfig {
     private configLoader: ConfigLoader
     private remoteOptions: IRemoteOptions
 
-    private configSchema: ISchema
     private resolvedConfig: IRootConfigValue
 
     private resolvers: IResolverMap
@@ -62,11 +59,6 @@ export class DynamicConfig implements IDynamicConfig {
         translators = [],
     }: IConfigOptions = {}) {
         this.configState = 'startup'
-        this.configSchema = {
-            type: 'object',
-            properties: {},
-            required: [],
-        }
         this.resolvedConfig = {
             type: 'root',
             properties: {},
@@ -117,7 +109,7 @@ export class DynamicConfig implements IDynamicConfig {
                             this.resolvedConfig,
                             resolvedValue,
                         )
-                        this.validateConfigSchema()
+
                         return Promise.resolve(
                             ConfigUtils.readConfigValue(this.resolvedConfig),
                         )
@@ -390,27 +382,9 @@ export class DynamicConfig implements IDynamicConfig {
                 ConfigBuilder.createConfigObject(envConfig.name, 'local', this.translator(envConfig.config)),
                 ...remoteConfigs,
             )
-            this.configSchema = SchemaUtils.objectAsSimpleSchema(defaultConfig.config)
         }
 
         return this.resolvedConfig
-    }
-
-    /**
-     * Just a warning for when the config schema changes. Eventually we'll probably raise an error for this. When
-     * I'm more confident in the validation.
-     */
-    private validateConfigSchema(): void {
-        if (
-            !SchemaUtils.objectMatchesSchema(
-                this.configSchema,
-                ConfigUtils.readConfigValue(this.resolvedConfig),
-            )
-        ) {
-            logger.warn(
-                'The shape of the config changed during resolution. This may indicate an error.',
-            )
-        }
     }
 
     private initializeResolvers(): Promise<Array<IRootConfigValue>> {

@@ -54,6 +54,7 @@
     "@creditkarma/consul-client": "^0.6.2",
     "@creditkarma/vault-client": "^0.5.6",
     "@types/yamljs": "^0.2.30",
+    "ajv": "^6.4.0",
     "typescript": "2.8.x",
     "yamljs": "^0.3.0"
   }

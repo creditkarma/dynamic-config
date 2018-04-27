@@ -1,9 +1,4 @@
 import {
-    objectAsSimpleSchema,
-    objectMatchesSchema,
-} from './schema'
-
-import {
     isNothing,
     isObject,
     isPrimitive,
@@ -11,8 +6,11 @@ import {
 } from './basic'
 
 import {
-    ISchema,
-} from '../types'
+    objectAsSimpleSchema,
+    objectMatchesSchema,
+} from './json'
+
+import { ISchema } from '../types'
 
 /**
  * Map over all keyed elements in an object, running over leafs first and recursing up.
