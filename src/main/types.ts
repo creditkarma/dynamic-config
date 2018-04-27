@@ -2,6 +2,10 @@ export interface IRemoteOptions {
     [name: string]: any
 }
 
+export interface ISchemaMap {
+    [key: string]: object
+}
+
 export interface IConfigOptions {
     configPath?: string
     configEnv?: string
@@ -9,6 +13,7 @@ export interface IConfigOptions {
     resolvers?: Array<ConfigResolver>
     loaders?: Array<IFileLoader>
     translators?: Array<IConfigTranslator>
+    schemas?: ISchemaMap
 }
 
 export interface IConsulOptions {
@@ -201,10 +206,6 @@ export type PromisedUpdate =
     [ Array<string>, Promise<BaseConfigValue> ]
 
 // SCHEMA TYPES
-
-export interface ISchemaMap {
-    [key: string]: ISchema
-}
 
 export type ISchema =
     IArraySchema | IObjectSchema | IStringSchema | INumberSchema |

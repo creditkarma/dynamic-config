@@ -65,6 +65,9 @@ export const configSettingsSchema: object = {
                 type: 'string',
             },
         },
+        'schemas': {
+            type: 'object',
+        },
     },
 }
 
