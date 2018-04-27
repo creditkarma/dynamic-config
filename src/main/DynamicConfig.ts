@@ -8,6 +8,7 @@ import {
     ConfigBuilder,
     ConfigPromises,
     ConfigUtils,
+    JSONUtils,
     ObjectUtils,
     PromiseUtils,
     Utils,
@@ -15,6 +16,7 @@ import {
 
 import {
     // DynamicConfigInvalidObject,
+    DynamicConfigInvalidObject,
     DynamicConfigMissingKey,
     MissingConfigPlaceholder,
     ResolverUnavailable,
@@ -31,6 +33,7 @@ import {
     IResolvedPlaceholder,
     IResolverMap,
     IRootConfigValue,
+    ISchemaMap,
     ITranslator,
     PromisedUpdate,
     ResolverType,
@@ -49,6 +52,7 @@ export class DynamicConfig implements IDynamicConfig {
 
     private resolvers: IResolverMap
     private translator: ITranslator
+    private schemas: ISchemaMap
 
     constructor({
         configPath,
@@ -57,12 +61,14 @@ export class DynamicConfig implements IDynamicConfig {
         resolvers = [],
         loaders = [],
         translators = [],
+        schemas = {},
     }: IConfigOptions = {}) {
         this.configState = 'startup'
         this.resolvedConfig = {
             type: 'root',
             properties: {},
         }
+        this.schemas = schemas
         this.translator = ConfigUtils.makeTranslator(translators)
         this.configLoader = new ConfigLoader({
             loaders,
@@ -131,13 +137,20 @@ export class DynamicConfig implements IDynamicConfig {
                                 resolvedValue,
                             )
 
+                            const schema: object | undefined = this.schemas[key]
+
                             this.resolvedConfig = ConfigUtils.setRootConfigValueForKey(
                                 key,
                                 resolvedValue,
                                 this.resolvedConfig,
                             )
 
-                            return Promise.resolve(baseValue)
+                            if (schema !== undefined && !JSONUtils.objectMatchesSchema(schema, baseValue)) {
+                                return Promise.reject(new DynamicConfigInvalidObject(key))
+
+                            } else {
+                                return Promise.resolve(baseValue)
+                            }
                         },
                     )
                 } else {
@@ -307,6 +320,7 @@ export class DynamicConfig implements IDynamicConfig {
             }
 
             return updates
+
         } else {
             return []
         }
@@ -336,6 +350,7 @@ export class DynamicConfig implements IDynamicConfig {
                     )
                 },
             )
+
         } else if (
             configValue.type === 'object' ||
             configValue.type === 'root'
@@ -366,6 +381,7 @@ export class DynamicConfig implements IDynamicConfig {
             )
 
             return ConfigPromises.resolveConfigPromises(newObj)
+
         } else {
             return Promise.resolve(configValue)
         }
@@ -440,6 +456,7 @@ export class DynamicConfig implements IDynamicConfig {
                     return Promise.reject(new DynamicConfigMissingKey(key))
                 },
             )
+
         } else {
             logger.error(`There are no remote resolvers for key[${key}]`)
             return Promise.reject(new ResolverUnavailable(key))

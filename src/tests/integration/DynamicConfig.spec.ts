@@ -385,6 +385,32 @@ describe('DynamicConfig', () => {
                 envTranslator,
                 consulTranslator,
             ],
+            schemas: {
+                'project.health': {
+                    type: 'object',
+                    properties: {
+                        control: {
+                            type: 'string',
+                        },
+                        response: {
+                            type: 'string',
+                        },
+                    },
+                    required: [ 'control', 'response' ],
+                },
+                'database': {
+                    type: 'object',
+                    properties: {
+                        username: {
+                            type: 'string',
+                        },
+                        password: {
+                            type: 'number',
+                        },
+                    },
+                    required: [ 'username', 'password' ],
+                },
+            },
         })
 
         describe('get', () => {
@@ -408,6 +434,14 @@ describe('DynamicConfig', () => {
                     throw new Error('Should reject for missing key')
                 }, (err: any) => {
                     expect(err.message).to.equal('Unable to find value for key[fake.path]')
+                })
+            })
+
+            it('should reject if the value does not match specified schema', async () => {
+                return dynamicConfig.get<object>('database').then((actual: object) => {
+                    throw new Error('Should reject for missing key')
+                }, (err: any) => {
+                    expect(err.message).to.equal('Object does not match expected schema[database]')
                 })
             })
         })

@@ -16,9 +16,13 @@ Support for config file types is added through plugins. Dynamic Config comes wit
 
 Dynamic Config also supports remote data sources through plugins. The included plugins include clients for pulling values from Hashicorp Consul and Vault. The plugin interface is also used for adding support for environment variables and command line arguments.
 
-#### Transformation and Validation
+#### Transformation
 
-The third kind of plugin is something we call a translator. When raw config values are loaded, either form local files or remote sources, you can use translators to transform or validate the structure of the raw data before it is added to the resolved config object.
+The third kind of plugin is something we call a translator. When raw config values are loaded, either form local files or remote sources, you can use translators to transform the structure of the raw data before it is added to the resolved config object.
+
+#### Validation
+
+The fourth thing we can do is validate the structure of our config. This is done by mapping keys in the config to JSON schema.
 
 ### Promise-based
 
@@ -476,6 +480,7 @@ interface IConfigSettings {
     resolvers?: Array<string>
     loaders?: Array<string>
     translators?: Array<string>
+    schema?: ISchemaMap
 }
 ```
 
@@ -542,6 +547,18 @@ The included Translators are:
 * `env` - Allows usage of environment variables of the form `http://${HOSTNAME}:8080'`
 * `consul` - Allos usage of `consul!` urls.
 
+#### `schemas`
+
+`type: ISchemaMap`
+
+A map of key names to JSON schema to validate that key.
+
+```typescript
+interface ISchemaMap {
+    [key: string]: object
+}
+```
+
 ### CONFIG-SETTINGS.JSON
 
 If for instance I wanted to change the path to my local config files I would add a new file `config-settings.json` and add something like this:
@@ -592,8 +609,6 @@ Local configuration files are stored localally with your application source, typ
 ### Default Configuration
 
 The default config for your app is loaded from the `config/default.(json|yml|js|ts...)` file. The default configuration is required.
-
-The default configuration is the contract between you and your application. At runtime a schema is built from your default configuration. This schema is a simplified [JSON Schema](http://json-schema.org/). You can only use keys that you define in your default config and they must have the same shape. Config values should be predictable. If the form of your config is mutable this is very likely the source (or result of) a bug.
 
 ### File Types
 
@@ -955,7 +970,7 @@ There are three kinds of plugins:
 
 - *File Loaders* - For reading local config files
 - *Remote Resolvers* - For reading remote data sources
-- *Translators* - For transforming/validating raw data
+- *Translators* - For transforming raw data
 
 ### File Loaders
 
