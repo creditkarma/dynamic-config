@@ -18,6 +18,7 @@ export function vaultResolver(): ISecretResolver {
     async function getVaultClient(): Promise<Maybe<VaultClient>> {
         if (vaultClient !== undefined) {
             return vaultClient
+
         } else {
             vaultClient = dynamicConfig
                 .get<IHVConfig>(HVAULT_CONFIG_KEY).then(

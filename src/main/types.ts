@@ -73,17 +73,20 @@ export type SetFunction = (key: string, value: any) => void
 
 export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions: IRemoteOptions | undefined, setValue: SetFunction) => Promise<any>
 
+export type SecretInitializer = (dynamicConfig: IDynamicConfig, remoteOptions: IRemoteOptions) => Promise<any>
+
 export interface IRemoteResolver {
     type: 'remote'
     name: string
     init: RemoteInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
+    watch<T>(key: string, type?: ObjectType): Observer<T>
 }
 
 export interface ISecretResolver {
     type: 'secret'
     name: string
-    init: RemoteInitializer
+    init: SecretInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
 }
 
