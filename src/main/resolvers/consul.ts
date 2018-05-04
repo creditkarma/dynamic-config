@@ -1,4 +1,4 @@
-import { Catalog, KvStore } from '@creditkarma/consul-client'
+import { Catalog, KvStore, Observer } from '@creditkarma/consul-client'
 
 import { DynamicConfig } from '../DynamicConfig'
 import { Just, Maybe, Nothing } from '../Maybe'
@@ -150,6 +150,7 @@ export function consulResolver(): IRemoteResolver {
                             (val: any) => {
                                 if (val !== null) {
                                     return val
+
                                 } else {
                                     return client.catalog.resolveAddress(key).then((address: string) => {
                                         return address
@@ -169,6 +170,10 @@ export function consulResolver(): IRemoteResolver {
                     return Promise.reject(new ConsulNotConfigured(key))
                 },
             )
+        },
+
+        watch<T = any>(key: string): Observer<T> {
+
         },
     }
 }

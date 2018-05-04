@@ -426,17 +426,31 @@ export class DynamicConfig implements IDynamicConfig {
     private initializeResolvers(): Promise<Array<IRootConfigValue>> {
         return Promise.all(
             [...this.resolvers.all.values()].map((next: ConfigResolver) => {
-                return next
-                    .init(this, this.remoteOptions[next.name], (key: string, value: any) => {
-                        this.set(key, value)
-                    })
-                    .then((config: any) => {
-                        return ConfigBuilder.createConfigObject(
-                            next.name,
-                            next.type,
-                            this.translator(config),
-                        )
-                    })
+                switch (next.type) {
+                    case 'remote':
+                        return next
+                            .init(this, this.remoteOptions[next.name], (key: string, value: any) => {
+                                this.set(key, value)
+                            })
+                            .then((config: any) => {
+                                return ConfigBuilder.createConfigObject(
+                                    next.name,
+                                    next.type,
+                                    this.translator(config),
+                                )
+                            })
+
+                    case 'secret':
+                        return next
+                            .init(this, this.remoteOptions[next.name])
+                            .then((config: any) => {
+                                return ConfigBuilder.createConfigObject(
+                                    next.name,
+                                    next.type,
+                                    this.translator(config),
+                                )
+                            })
+                }
             }),
         )
     }
