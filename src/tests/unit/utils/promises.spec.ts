@@ -23,6 +23,7 @@ describe('PromiseUtils', () => {
             })
         })
     })
+
     describe('race', () => {
         it('should resolve to value of first successful Promise', async () => {
             return PromiseUtils.race([

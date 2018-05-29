@@ -29,7 +29,7 @@ export function envResolver(): IRemoteResolver {
                     return Promise.resolve(value) as any
                 }
             } else {
-                logger.error(`Error retrieving key[${key}] from environment`)
+                logger.warn(`Unable to retrieve key[${key}] from environment`)
                 return Promise.reject(new MissingEnvironmentVariable(key))
             }
         },

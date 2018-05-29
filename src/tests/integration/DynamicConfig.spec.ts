@@ -20,6 +20,7 @@ export const lab = Lab.script()
 const describe = lab.describe
 const it = lab.it
 const before = lab.before
+const after = lab.after
 
 describe('DynamicConfig', () => {
     before(async () => {
@@ -476,7 +477,13 @@ describe('DynamicConfig', () => {
             ],
         })
 
-        process.env.TEST_USERNAME = 'foobarwilly'
+        before(async () => {
+            process.env.TEST_USERNAME = 'foobarwilly'
+        })
+
+        after(async () => {
+            process.env.TEST_USERNAME = undefined
+        })
 
         describe('get', () => {
             it('should return value stored in environment variable', async () => {
@@ -583,8 +590,15 @@ describe('DynamicConfig', () => {
             ],
         })
 
-        process.env.HEALTH_RESPONSE = 'WHAM BAM!'
-        process.env.TEST_USERNAME = 'foobarwilly'
+        before(async () => {
+            process.env.HEALTH_RESPONSE = 'WHAM BAM!'
+            process.env.TEST_USERNAME = 'foobarwilly'
+        })
+
+        after(async () => {
+            process.env.HEALTH_RESPONSE = undefined
+            process.env.TEST_USERNAME = undefined
+        })
 
         describe('get', () => {
             it('should return value stored in environment variable', async () => {
