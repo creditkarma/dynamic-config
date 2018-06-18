@@ -1,3 +1,5 @@
+import { Observer } from '@creditkarma/consul-client'
+
 import { ConfigLoader } from './ConfigLoader'
 
 import {
@@ -67,6 +69,7 @@ export class DynamicConfig implements IDynamicConfig {
         this.resolvedConfig = {
             type: 'root',
             properties: {},
+            watchers: [],
         }
         this.schemas = schemas
         this.translator = ConfigUtils.makeTranslator(translators)
@@ -161,6 +164,19 @@ export class DynamicConfig implements IDynamicConfig {
         })
     }
 
+    public watch<T>(key: string): Observer<T> {
+        const value = ConfigUtils.getConfigForKey(key, this.resolvedConfig)
+        const observer: Observer<T> = new Observer<T>()
+
+        if (value !== null) {
+            value.watchers.push(observer)
+        } else {
+            logger.error(`Key[${key}}] cannot be watched as it is not found in config`)
+        }
+
+        return observer
+    }
+
     public async source(key: string): Promise<string> {
         this.configState = 'running'
 
@@ -212,6 +228,10 @@ export class DynamicConfig implements IDynamicConfig {
 
     public async getSecretValue<T>(key: string, remoteName?: string): Promise<T> {
         return this.getValueFromResolver<T>(key, 'secret', remoteName)
+    }
+
+    private async set(key: string, value: any): Promise<void> {
+        // Do stuff
     }
 
     /**
@@ -407,7 +427,9 @@ export class DynamicConfig implements IDynamicConfig {
         return Promise.all(
             [...this.resolvers.all.values()].map((next: ConfigResolver) => {
                 return next
-                    .init(this, this.remoteOptions[next.name])
+                    .init(this, this.remoteOptions[next.name], (key: string, value: any) => {
+                        this.set(key, value)
+                    })
                     .then((config: any) => {
                         return ConfigBuilder.createConfigObject(
                             next.name,

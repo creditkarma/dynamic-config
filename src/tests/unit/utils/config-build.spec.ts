@@ -88,6 +88,7 @@ describe('ConfigBuilder', () => {
                         watchers: [],
                     },
                 },
+                watchers: [],
             }
 
             expect(actual).to.equal(expected)
@@ -137,6 +138,7 @@ describe('ConfigBuilder', () => {
                         watchers: [],
                     },
                 },
+                watchers: [],
             }
 
             expect(actual).to.equal(expected)
@@ -186,6 +188,7 @@ describe('ConfigBuilder', () => {
                         watchers: [],
                     },
                 },
+                watchers: [],
             }
 
             expect(actual).to.equal(expected)
@@ -249,6 +252,7 @@ describe('ConfigBuilder', () => {
                         watchers: [],
                     },
                 },
+                watchers: [],
             }
 
             expect(actual).to.equal(expected)
