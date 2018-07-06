@@ -718,7 +718,7 @@ In this section we are going to look at the resolvers that ship with `DefaultCon
 
 There are two things a remote resolver can do:
 
-#### 1. Load full configuration to overlay loal configs
+#### 1. Load full configuration to overlay local configs
 
 When the `DynamicConfig` instance is initialized all registered resolvers are given the opportunity to load config data to overlay the local config, giving remote config a higher priority than local config. With the included resolvers only the Consul resolver takes advantage of this.
 

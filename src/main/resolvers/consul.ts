@@ -3,11 +3,22 @@ import { Catalog, KvStore } from '@creditkarma/consul-client'
 import { DynamicConfig } from '../DynamicConfig'
 import { Just, Maybe, Nothing } from '../Maybe'
 
-import { CONSUL_ADDRESS, CONSUL_DC, CONSUL_KEYS, CONSUL_NAMESPACE } from '../constants'
+import {
+    CONSUL_ADDRESS,
+    CONSUL_DC,
+    CONSUL_KEYS,
+    CONSUL_NAMESPACE,
+} from '../constants'
 
 import { ConsulFailed, ConsulNotConfigured } from '../errors'
 
-import { IConsulOptions, IRemoteOverrides, IRemoteResolver } from '../types'
+import {
+    IConsulOptions,
+    IRemoteOverrides,
+    IRemoteResolver,
+    ObjectType,
+    WatchFunction,
+} from '../types'
 
 import { ObjectUtils, Utils } from '../utils'
 
@@ -87,8 +98,7 @@ export function consulResolver(): IRemoteResolver {
             remoteOptions: IConsulOptions = {},
         ): Promise<any> {
             consulAddress = Maybe.fromNullable(
-                remoteOptions.consulAddress ||
-                    Utils.readFirstMatch(CONSUL_ADDRESS),
+                remoteOptions.consulAddress || Utils.readFirstMatch(CONSUL_ADDRESS),
             )
             consulDc = Maybe.fromNullable(
                 remoteOptions.consulDc || Utils.readFirstMatch(CONSUL_DC),
@@ -133,39 +143,60 @@ export function consulResolver(): IRemoteResolver {
         },
 
         get<T = any>(key: string): Promise<T> {
-            return getConsulClient().fork(
+            console.log('consul get: ', key)
+            return getConsulClient().fork((client: IConsulClient) => {
+                const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
+                    key,
+                )
+
+                return client.kvStore
+                    .get({ path: consulNamespace.fork((val: string) => {
+                        return `${addTrailingSlash(val)}${remoteOptions.key}`
+                    }, () => {
+                        return `${remoteOptions.key}`
+                    }), dc: remoteOptions.dc || consulDc.getOrElse('') }).then((val: any) => {
+                        console.log(`val from consul[${key}]: `, val)
+                        if (val !== null) {
+                            return val
+
+                        } else {
+                            return client.catalog.resolveAddress(key).then((address: string) => {
+                                return address
+                            }, (err: Error) => {
+                                logger.error(`Error retrieving key[${key}] from Consul: `, err)
+                                return Promise.reject(new ConsulFailed(err.message))
+                            })
+                        }
+                    }, (err: any) => {
+                        logger.error(`Error retrieving key[${key}] from Consul: `, err)
+                        return Promise.reject(new ConsulFailed(err.message))
+                    })
+            }, () => {
+                logger.error(`Error retrieving key[${key}]: Consul is not configured`)
+                return Promise.reject(new ConsulNotConfigured(key))
+            })
+        },
+
+        watch<T = any>(key: string, callback: WatchFunction<T>, type?: ObjectType): void {
+            getConsulClient().fork(
                 (client: IConsulClient) => {
                     const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
                         key,
                     )
 
-                    return client.kvStore
-                        .get({ path: consulNamespace.fork((val: string) => {
+                    client.kvStore
+                        .watch({ path: consulNamespace.fork((val: string) => {
                             return `${addTrailingSlash(val)}${remoteOptions.key}`
                         }, () => {
                             return `${remoteOptions.key}`
                         }), dc: remoteOptions.dc || consulDc.getOrElse('') })
-                        .then(
-                            (val: any) => {
-                                if (val !== null) {
-                                    return val
-                                } else {
-                                    return client.catalog.resolveAddress(key).then((address: string) => {
-                                        return address
-                                    }, (err: Error) => {
-                                        logger.error(`Error retrieving key[${key}] from Consul: `, err)
-                                        return Promise.reject(new ConsulFailed(err.message))
-                                    })
-                                }
-                            },
-                            (err: any) => {
-                                logger.error(`Error retrieving key[${key}] from Consul: `, err)
-                                return Promise.reject(new ConsulFailed(err.message))
-                            },
-                        )
+                        .onValue((val: any) => {
+                            console.log('val: ', val)
+                            callback(val)
+                        })
                 },
                 () => {
-                    return Promise.reject(new ConsulNotConfigured(key))
+                    logger.error(`Error watching key[${key}]: Consul is not configured`)
                 },
             )
         },

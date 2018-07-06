@@ -18,6 +18,7 @@ export function vaultResolver(): ISecretResolver {
     async function getVaultClient(): Promise<Maybe<VaultClient>> {
         if (vaultClient !== undefined) {
             return vaultClient
+
         } else {
             vaultClient = dynamicConfig
                 .get<IHVConfig>(HVAULT_CONFIG_KEY).then(
@@ -46,11 +47,14 @@ export function vaultResolver(): ISecretResolver {
             return Promise.resolve({})
         },
         get<T>(key: string): Promise<T> {
+            console.log(`vault: get[${key}]: 1`)
             return getVaultClient().then((maybeClient: Maybe<VaultClient>) => {
                 return maybeClient.fork(
                     (client: VaultClient) => {
-                        return client.get<T>(key).then(
+                        console.log('vault client required')
+                        return client.get<T>(key, { timeout: 8000 }).then(
                             (value: T) => {
+                                console.log(`vault: get[${key}]: 2`)
                                 return Promise.resolve(value)
                             },
                             (err: any) => {

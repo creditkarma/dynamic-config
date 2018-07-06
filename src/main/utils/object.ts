@@ -282,3 +282,39 @@ export function objectHasShape(...args: Array<any>): any {
         }
     }
 }
+
+export function deepEqual(obj1: any, obj2: any): boolean {
+    if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+        return obj1 === obj2
+
+    } else if (obj1 !== null && obj2 !== null) {
+        const keys1: Array<string> = Object.keys(obj1)
+        const keys2: Array<string> = Object.keys(obj2)
+        const len1: number = keys1.length
+        const len2: number = keys2.length
+
+        if (len1 !== len2) {
+            return false
+
+        } else {
+            for (const key of keys1) {
+                const value1: any = obj1[key]
+                const value2: any = obj2[key]
+
+                if (value1 !== undefined && value2 !== undefined) {
+                    if (!deepEqual(value1, value2)) {
+                        return false
+                    }
+
+                } else {
+                    return false
+                }
+            }
+
+            return true
+        }
+
+    } else {
+        return false
+    }
+}

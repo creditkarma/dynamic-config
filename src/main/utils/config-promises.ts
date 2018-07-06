@@ -1,6 +1,7 @@
 import {
     BaseConfigValue,
     ConfigValue,
+    IRootConfigValue,
     ObjectUpdate,
     PromisedUpdate,
 } from '../types'
@@ -96,7 +97,7 @@ function collectUnresolvedPromises(
 
     } else if (configValue.type === 'promise') {
         updates.push([ path, configValue.value.then((value: any) => {
-            return ConfigBuilder.buildBaseConfigValue(configValue.source.name, configValue.source.type, value)
+            return ConfigBuilder.buildBaseConfigValue(configValue.source, value)
         }) ])
 
         return updates
@@ -118,11 +119,7 @@ function collectUnresolvedPromises(
 export async function resolveConfigPromises(configValue: ConfigValue): Promise<ConfigValue> {
     if (configValue.type === 'promise') {
         return configValue.value.then((val: any) => {
-            return resolveConfigPromises(ConfigBuilder.buildBaseConfigValue(
-                configValue.source.name,
-                configValue.source.type,
-                val,
-            ))
+            return resolveConfigPromises(ConfigBuilder.buildBaseConfigValue(configValue.source, val))
         })
 
     } else if (configValue.type === 'object' || configValue.type === 'root') {
@@ -132,4 +129,8 @@ export async function resolveConfigPromises(configValue: ConfigValue): Promise<C
     } else {
         return configValue
     }
+}
+
+export async function resolveRootConfigPromises(config: IRootConfigValue): Promise<IRootConfigValue> {
+    return resolveConfigPromises(config) as Promise<IRootConfigValue>
 }

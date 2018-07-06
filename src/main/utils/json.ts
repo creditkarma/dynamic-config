@@ -42,14 +42,12 @@ export function objectAsSimpleSchema(obj: any): ISchema {
 
         return schema
 
-    } else {
-        if (objType !== 'function' && objType !== 'symbol') {
-            return {
-                type: objType,
-            } as ISchema
+    } else if (objType !== 'function' && objType !== 'symbol') {
+        return {
+            type: objType,
+        } as ISchema
 
-        } else {
-            throw new Error(`Type[${objType}] cannot be encoded to JSON`)
-        }
+    } else {
+        throw new Error(`Type[${objType}] cannot be encoded to JSON`)
     }
 }

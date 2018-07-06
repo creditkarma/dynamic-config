@@ -24,6 +24,7 @@ import {
     IRootConfigValue,
     ITranslator,
     ObjectType,
+    SetFunction,
 } from '../types'
 
 import * as logger from '../logger'
@@ -111,7 +112,77 @@ export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
     }, obj)
 }
 
-function setObjectPropertyValue(key: string, value: BaseConfigValue, configObject: BaseConfigValue): BaseConfigValue {
+function appendWatcher<T>(target: Array<T>, source: T | null): Array<T> {
+    if (source !== null) {
+        target.push(source)
+    }
+
+    return target
+}
+
+function appendWatchers<T>(target: Array<T>, source: Array<T>): Array<T> {
+    source.forEach((next: T) => {
+        target.push(next)
+    })
+
+    return target
+}
+
+export function collectWatchersForKey(
+    key: string,
+    configObject: ConfigValue,
+): Array<SetFunction<any>> {
+    if (typeof key !== 'string') {
+        throw new Error(`Cannot find watchers for a non-string key[${key}]`)
+
+    } else if (isNothing(configObject)) {
+        throw new Error(`Cannot find watchers for null config`)
+
+    } else {
+        const [ head, ...tail ] = splitKey(key)
+        const watchers: Array<SetFunction<any>> = []
+        appendWatcher(watchers, configObject.watcher)
+
+        if (head === undefined) {
+            if (configObject.type === 'root') {
+                return watchers
+
+            } else {
+                throw new Error(`Cannot get watchers for undefined key`)
+            }
+
+        } else if (tail.length > 0) {
+            if (configObject.type === 'object' || configObject.type === 'root') {
+                if (configObject.properties[head] !== undefined) {
+                    appendWatchers(watchers, collectWatchersForKey(tail.join('.'), configObject.properties[head]))
+
+                } else {
+                    throw new Error(`Value for key[${head}] does not exist in object`)
+                }
+
+            } else {
+                throw new Error(`Cannot get watchers for key[${key}] on a non-object value`)
+            }
+
+        } else if (
+            configObject.type === 'object' &&
+            configObject.properties[head] !== undefined
+        ) {
+            appendWatcher(watchers, configObject.properties[head].watcher)
+
+        } else {
+            throw new Error(`Value for key[${head}] does not exist in object`)
+        }
+
+        return watchers
+    }
+}
+
+function setObjectPropertyValue(
+    key: string,
+    value: BaseConfigValue,
+    configObject: BaseConfigValue,
+): BaseConfigValue {
     if (configObject.type === 'object') {
         const what: IObjectConfigValue = {
             source: configObject.source,
@@ -124,7 +195,8 @@ function setObjectPropertyValue(key: string, value: BaseConfigValue, configObjec
                 }
                 return acc
             }, {}),
-            watchers: configObject.watchers,
+            observer: configObject.observer,
+            watcher: configObject.watcher,
         }
 
         return what
@@ -135,7 +207,12 @@ function setObjectPropertyValue(key: string, value: BaseConfigValue, configObjec
     }
 }
 
-export function setBaseConfigValueForKey(key: string, value: BaseConfigValue, oldValue: BaseConfigValue): BaseConfigValue {
+export function setBaseConfigValueForKey(
+    key: string,
+    value: BaseConfigValue,
+    oldValue: BaseConfigValue,
+    alertWatchers: boolean = false,
+): BaseConfigValue {
     if (typeof key !== 'string') {
         throw new Error('Property to set must be a string')
 
@@ -150,7 +227,7 @@ export function setBaseConfigValueForKey(key: string, value: BaseConfigValue, ol
 
         if (tail.length > 0) {
             if (oldValue.type === 'object') {
-                return {
+                const returnVal: BaseConfigValue = {
                     source: oldValue.source,
                     type: 'object',
                     properties: Object.keys(oldValue.properties).reduce((acc: IConfigProperties, next: string) => {
@@ -161,8 +238,11 @@ export function setBaseConfigValueForKey(key: string, value: BaseConfigValue, ol
                         }
                         return acc
                     }, {}),
-                    watchers: oldValue.watchers,
+                    observer: oldValue.observer,
+                    watcher: oldValue.watcher,
                 }
+
+                return returnVal
 
             } else {
                 throw new Error(`Cannot set value for key[${key}] on a non-object value`)
@@ -175,7 +255,7 @@ export function setBaseConfigValueForKey(key: string, value: BaseConfigValue, ol
             return setObjectPropertyValue(head, value, oldValue)
 
         } else {
-            throw new Error('duh')
+            throw new Error(`Value for key[${head}] does not exist in object`)
         }
     }
 }
@@ -191,6 +271,8 @@ export function setRootConfigValueForKey(key: string, value: BaseConfigValue, ol
         const newConfig: IRootConfigValue = {
             type: 'root',
             properties: {},
+            observer: null,
+            watcher: null,
         }
         const [ head, ...tail ] = splitKey(key)
         const props: Array<string> = Object.keys(oldConfig.properties)
@@ -216,6 +298,7 @@ export function setRootConfigValueForKey(key: string, value: BaseConfigValue, ol
 export function setValueForKey(key: string, value: BaseConfigValue, oldConfig: ConfigValue): ConfigValue {
     if (oldConfig.type === 'root') {
         return setRootConfigValueForKey(key, value, oldConfig)
+
     } else {
         return setBaseConfigValueForKey(key, value, oldConfig)
     }
@@ -302,6 +385,39 @@ export function getConfigForKey(key: string, obj: IRootConfigValue): BaseConfigV
 
         } else {
             return null
+        }
+    }
+}
+
+export function applyValueForKey(key: string, value: any, config: IRootConfigValue): void {
+    if (typeof key !== 'string') {
+        throw new Error('Property to set must be a string')
+
+    } else if (isNothing(config)) {
+        throw new Error(`Cannot set value on null type at key: ${key}`)
+
+    } else {
+        const newConfig: IRootConfigValue = {
+            type: config.type,
+            properties: {},
+            observer: null,
+            watcher: null,
+        }
+        const [ head, ...tail ] = splitKey(key)
+        const props: Array<string> = Object.keys(config.properties)
+
+        for (const prop of props) {
+            if (prop === head) {
+                if (tail.length > 0) {
+                    newConfig.properties[prop] = setBaseConfigValueForKey(tail.join('.'), value, config.properties[prop])
+
+                } else {
+                    newConfig.properties[prop] = value
+                }
+
+            } else {
+                newConfig.properties[prop] = config.properties[prop]
+            }
         }
     }
 }

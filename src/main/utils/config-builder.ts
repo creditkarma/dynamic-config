@@ -7,70 +7,60 @@ import {
     BaseConfigValue,
     IConfigProperties,
     IRootConfigValue,
-    SourceType,
+    ISource,
 } from '../types'
 
 import * as ConfigUtils from './config'
 
-export function buildBaseConfigValue(sourceName: string, sourceType: SourceType, obj: any): BaseConfigValue {
+export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue {
     const objType = typeof obj
 
     if (obj instanceof Promise) {
         return {
-            source: {
-                type: sourceType,
-                name: sourceName,
-            },
+            source,
             type: 'promise',
             value: obj,
-            watchers: [],
+            observer: null,
+            watcher: null,
         }
 
     } else if (ConfigUtils.isConfigPlaceholder(obj)) {
         return {
-            source: {
-                type: sourceType,
-                name: sourceName,
-            },
+            source,
             type: 'placeholder',
             value: obj,
-            watchers: [],
+            observer: null,
+            watcher: null,
         }
 
     } else if (Array.isArray(obj)) {
         return {
-            source: {
-                type: sourceType,
-                name: sourceName,
-            },
+            source,
             type: 'array',
             items: obj,
-            watchers: [],
+            observer: null,
+            watcher: null,
         }
 
     } else if (isObject(obj)) {
         return {
-            source: {
-                type: sourceType,
-                name: sourceName,
-            },
+            source,
             type: 'object',
             properties: Object.keys(obj).reduce((acc: IConfigProperties, next: string) => {
-                acc[next] = buildBaseConfigValue(sourceName, sourceType, obj[next])
+                acc[next] = buildBaseConfigValue(source, obj[next])
                 return acc
             }, {}),
-            watchers: [],
+            observer: null,
+            watcher: null,
         }
 
     } else if (isPrimitiveType(objType)) {
         return {
-            source: {
-                type: sourceType,
-                name: sourceName,
-            },
+            source,
             type: objType,
             value: obj,
-            watchers: [],
+            observer: null,
+            watcher: null,
         }
 
     } else {
@@ -79,18 +69,19 @@ export function buildBaseConfigValue(sourceName: string, sourceType: SourceType,
 }
 
 export function createConfigObject(
-    sourceName: string,
-    sourceType: SourceType,
+    source: ISource,
     obj: any,
 ): IRootConfigValue {
     if (isObject(obj)) {
         const configObj: IRootConfigValue = {
             type: 'root',
             properties: {},
+            observer: null,
+            watcher: null,
         }
 
         for (const key of Object.keys(obj)) {
-            configObj.properties[key] = buildBaseConfigValue(sourceName, sourceType, obj[key])
+            configObj.properties[key] = buildBaseConfigValue(source, obj[key])
         }
 
         return configObj

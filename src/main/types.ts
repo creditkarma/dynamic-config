@@ -1,3 +1,7 @@
+import { Observer } from '@creditkarma/consul-client'
+
+export { Observer } from '@creditkarma/consul-client'
+
 export interface IRemoteOptions {
     [name: string]: any
 }
@@ -31,6 +35,7 @@ export interface IRemoteOverrides {
 export interface IDynamicConfig {
     register(...resolvers: Array<ConfigResolver>): void
     get<T = any>(key?: string): Promise<T>
+    watch<T = any>(key?: string): Observer<T>
     getAll(...args: Array<string>): Promise<Array<any>>
     getWithDefault<T = any>(key: string, defaultVal: T): Promise<T>
     getRemoteValue<T>(key: string): Promise<T>
@@ -67,21 +72,24 @@ export interface IResolverMap {
 export type ConfigResolver =
     IRemoteResolver | ISecretResolver
 
-export type SetFunction = (key: string, value: any) => void
+export type SetFunction<T = any> = (key: string, value: T) => void
 
-export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions?: IRemoteOptions, setValue?: SetFunction) => Promise<any>
+export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions: IRemoteOptions | undefined) => Promise<any>
+
+export type SecretInitializer = (dynamicConfig: IDynamicConfig, remoteOptions: IRemoteOptions) => Promise<any>
 
 export interface IRemoteResolver {
     type: 'remote'
     name: string
     init: RemoteInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
+    watch<T>(key: string, cb: WatchFunction<T>, type?: ObjectType): void
 }
 
 export interface ISecretResolver {
     type: 'secret'
     name: string
-    init: RemoteInitializer
+    init: SecretInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
 }
 
@@ -93,6 +101,7 @@ export type SourceType =
 export interface ISource {
     type: SourceType
     name: string
+    key?: string
 }
 
 export type ConfigType =
@@ -104,16 +113,17 @@ export type ObjectType =
 export type DeferredType =
     'promise' | 'placeholder'
 
-export type WatchFunction =
-    (val: any) => void
+export type WatchFunction<T = any> =
+    (val: T) => void
 
 export interface IConfigValue {
     type: ConfigType
+    observer: Observer<any> | null
+    watcher: SetFunction<any> | null
 }
 
 export interface IBaseConfigValue extends IConfigValue {
     source: ISource
-    watchers: Array<WatchFunction>
 }
 
 export type ConfigValue =
@@ -125,11 +135,6 @@ export type BaseConfigValue =
 
 export interface IConfigProperties {
     [name: string]: BaseConfigValue
-}
-
-export interface IRootConfigValue extends IConfigValue {
-    type: 'root'
-    properties: IConfigProperties
 }
 
 export interface IRootConfigValue extends IConfigValue {

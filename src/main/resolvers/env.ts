@@ -1,6 +1,11 @@
 import { DynamicConfig } from '../DynamicConfig'
 
-import { IConsulOptions, IRemoteResolver, ObjectType } from '../types'
+import {
+    IConsulOptions,
+    IRemoteResolver,
+    ObjectType,
+    WatchFunction,
+} from '../types'
 
 import { MissingEnvironmentVariable } from '../errors'
 
@@ -32,6 +37,10 @@ export function envResolver(): IRemoteResolver {
                 logger.warn(`Unable to retrieve key[${key}] from environment`)
                 return Promise.reject(new MissingEnvironmentVariable(key))
             }
+        },
+
+        watch<T = any>(key: string, cb: WatchFunction<T>, type?: ObjectType): void {
+
         },
     }
 }
