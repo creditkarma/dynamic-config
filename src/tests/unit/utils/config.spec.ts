@@ -9,6 +9,7 @@ import {
 import {
     ConfigValue,
     IRootConfigValue,
+    SetFunction,
 } from '../../../main'
 import { collectWatchersForKey } from '../../../main/utils/config'
 
@@ -44,7 +45,8 @@ describe('ConfigUtils', () => {
                                         },
                                         type: 'string',
                                         value: '/javascript',
-                                        watchers: [],
+                                        observer: null,
+                                        watcher: null,
                                     },
                                     response: {
                                         source: {
@@ -53,13 +55,16 @@ describe('ConfigUtils', () => {
                                         },
                                         type: 'string',
                                         value: 'PASS',
-                                        watchers: [],
+                                        observer: null,
+                                        watcher: null,
                                     },
                                 },
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                         },
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     database: {
                         source: {
@@ -75,7 +80,8 @@ describe('ConfigUtils', () => {
                                 },
                                 type: 'string',
                                 value: 'root',
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                             password: {
                                 source: {
@@ -84,13 +90,16 @@ describe('ConfigUtils', () => {
                                 },
                                 type: 'string',
                                 value: 'root',
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                         },
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                 },
-                watchers: [],
+                observer: null,
+                watcher: null,
             }
 
             const actual: ConfigValue | null = ConfigUtils.getConfigForKey('project.health', mockConfig)
@@ -108,7 +117,8 @@ describe('ConfigUtils', () => {
                         },
                         type: 'string',
                         value: '/javascript',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     response: {
                         source: {
@@ -117,10 +127,12 @@ describe('ConfigUtils', () => {
                         },
                         type: 'string',
                         value: 'PASS',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                 },
-                watchers: [],
+                observer: null,
+                watcher: null,
             }
 
             expect(actual).to.equal(expected)
@@ -152,10 +164,8 @@ describe('ConfigUtils', () => {
                                     },
                                     type: 'string',
                                     value: '/javascript',
-                                    watchers: [
-                                        new Observer(1),
-                                        new Observer(2),
-                                    ],
+                                    observer: Observer.create(1),
+                                    watcher: (key: string, value: any) => {},
                                 },
                                 response: {
                                     source: {
@@ -164,17 +174,16 @@ describe('ConfigUtils', () => {
                                     },
                                     type: 'string',
                                     value: 'PASS',
-                                    watchers: [],
+                                    observer: null,
+                                    watcher: null,
                                 },
                             },
-                            watchers: [
-                                new Observer(3),
-                            ],
+                            observer: Observer.create(3),
+                            watcher: (key: string, value: any) => {},
                         },
                     },
-                    watchers: [
-                        new Observer(4),
-                    ],
+                    observer: Observer.create(4),
+                    watcher: (key: string, value: any) => {},
                 },
                 database: {
                     source: {
@@ -190,7 +199,8 @@ describe('ConfigUtils', () => {
                             },
                             type: 'string',
                             value: 'root',
-                            watchers: [],
+                            observer: null,
+                            watcher: null,
                         },
                         password: {
                             source: {
@@ -199,28 +209,27 @@ describe('ConfigUtils', () => {
                             },
                             type: 'string',
                             value: 'root',
-                            watchers: [
-                                new Observer(5),
-                            ],
+                            observer: Observer.create(5),
+                            watcher: (key: string, value: any) => {},
                         },
                     },
-                    watchers: [],
+                    observer: null,
+                    watcher: null,
                 },
             },
-            watchers: [
-                new Observer(6),
-            ],
+            observer: Observer.create(6),
+            watcher: (key: string, value: any) => {},
         }
 
         it('should return watchers for nested key', async () => {
-            const actual: Array<Observer<any>> = collectWatchersForKey('project.health.control', mockConfig)
+            const actual: Array<SetFunction<any>> = collectWatchersForKey('project.health.control', mockConfig)
 
-            expect(actual.length).to.equal(5)
+            expect(actual.length).to.equal(4)
         })
 
-        it('should return watchers for nested key', async () => {
-            const actual: Array<Observer<any>> = collectWatchersForKey('', mockConfig)
-
+        it('should return watchers for root key', async () => {
+            const actual: Array<SetFunction<any>> = collectWatchersForKey('', mockConfig)
+            console.log('actual: ', actual)
             expect(actual.length).to.equal(1)
         })
     })

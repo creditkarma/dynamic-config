@@ -9,6 +9,102 @@ const describe = lab.describe
 const it = lab.it
 
 describe('ObjectUtils', () => {
+    describe('deepEqual', () => {
+        it('should return true for two numbers that are strictly equal', async () => {
+            expect(ObjectUtils.deepEqual(5, 5)).to.equal(true)
+        })
+
+        it('should return true for two strings that are strictly equal', async () => {
+            expect(ObjectUtils.deepEqual('test', 'test')).to.equal(true)
+        })
+
+        it('should return false for two numbers that are different', async () => {
+            expect(ObjectUtils.deepEqual(3, 9)).to.equal(false)
+        })
+
+        it('should return false for two strings that are different', async () => {
+            expect(ObjectUtils.deepEqual('foo', 'bar')).to.equal(false)
+        })
+
+        it('should return true for two objects that have the same values', async () => {
+            const obj1: any = {
+                one: 1,
+                two: {
+                    three: 3,
+                    four: 4,
+                },
+            }
+
+            const obj2: any = {
+                one: 1,
+                two: {
+                    three: 3,
+                    four: 4,
+                },
+            }
+
+            expect(ObjectUtils.deepEqual(obj1, obj2)).to.equal(true)
+        })
+
+        it('should return false for two objects that have the same values', async () => {
+            const obj1: any = {
+                one: 1,
+                two: {
+                    three: 3,
+                    four: 4,
+                },
+            }
+
+            const obj2: any = {
+                one: 1,
+                two: {
+                    three: 3,
+                    four: 5,
+                },
+            }
+
+            expect(ObjectUtils.deepEqual(obj1, obj2)).to.equal(false)
+        })
+
+        it('should return false for two values that are different types', async () => {
+            const obj1: any = {
+                one: 1,
+                two: {
+                    three: 3,
+                    four: 4,
+                },
+            }
+
+            const obj2: any = 'test'
+
+            expect(ObjectUtils.deepEqual(obj1, obj2)).to.equal(false)
+        })
+
+        it('should return true for two arrays that have the same values', async () => {
+            const obj1: any = [1, 2, 3, 4]
+
+            const obj2: any = [1, 2, 3, 4]
+
+            expect(ObjectUtils.deepEqual(obj1, obj2)).to.equal(true)
+        })
+
+        it('should return false for two arrays that have different values', async () => {
+            const obj1: any = [1, 2, 3, 4]
+
+            const obj2: any = [1, 2, 3, 4, 7]
+
+            expect(ObjectUtils.deepEqual(obj1, obj2)).to.equal(false)
+        })
+
+        it('should return true for two arrays that have the same objects as values', async () => {
+            const obj1: any = [1, 2, 3, { one: 1, two: { three: 3 } }]
+
+            const obj2: any = [1, 2, 3, { one: 1, two: { three: 3 } }]
+
+            expect(ObjectUtils.deepEqual(obj1, obj2)).to.equal(true)
+        })
+    })
+
     describe('deepMap', () => {
         it('should correctly transform values of object', async () => {
             const mockObj = {

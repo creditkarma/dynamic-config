@@ -1,6 +1,7 @@
 {
     "extends": "tslint:recommended",
     "rules": {
+        "no-empty": false,
         "max-line-length": false,
         "max-classes-per-file": false,
         "no-empty-interface": false,

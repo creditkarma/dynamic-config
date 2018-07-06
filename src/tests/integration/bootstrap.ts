@@ -123,13 +123,10 @@ setTimeout(() => {
             ),
             vaultClient.set('test-secret', 'this is a secret'),
             vaultClient.set('password', 'K1ndaS3cr3t'),
-        ]).then(
-            (result: any) => {
-                console.log('Done populating mock data')
-            },
-            (failure: any) => {
-                console.log('Error populating mock data: ', failure)
-            },
-        )
+        ]).then((result: any) => {
+            console.log('Done populating mock data')
+        }, (failure: any) => {
+            console.log('Error populating mock data: ', failure)
+        })
     })
 }, 2000)

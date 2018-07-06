@@ -17,18 +17,17 @@ const it = lab.it
 describe('ConfigBuilder', () => {
     describe('createConfigObject', () => {
         it('should build config for object', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
-                'test',
-                'local',
-                {
-                    protocol: 'https',
-                    destination: '127.0.0.1:9000',
-                    hostHeader: 'hvault.com',
-                    sslValidation: false,
-                    namespace: '/your-group/your-service',
-                    tokenPath: '/tmp/test-token',
-                },
-            )
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
+                type: 'local',
+                name: 'test',
+            }, {
+                protocol: 'https',
+                destination: '127.0.0.1:9000',
+                hostHeader: 'hvault.com',
+                sslValidation: false,
+                namespace: '/your-group/your-service',
+                tokenPath: '/tmp/test-token',
+            })
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -40,7 +39,8 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: 'https',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     destination: {
                         source: {
@@ -49,7 +49,8 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: '127.0.0.1:9000',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     hostHeader: {
                         source: {
@@ -58,7 +59,8 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: 'hvault.com',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     sslValidation: {
                         source: {
@@ -67,7 +69,8 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'boolean',
                         value: false,
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     namespace: {
                         source: {
@@ -76,7 +79,8 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: '/your-group/your-service',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     tokenPath: {
                         source: {
@@ -85,26 +89,27 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: '/tmp/test-token',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                 },
-                watchers: [],
+                observer: null,
+                watcher: null,
             }
 
             expect(actual).to.equal(expected)
         })
 
         it('should build config with nested keys', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
-                'test',
-                'local',
-                {
-                    server: {
-                        host: 'localhost',
-                        port: 8080,
-                    },
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
+                type: 'local',
+                name: 'test',
+            }, {
+                server: {
+                    host: 'localhost',
+                    port: 8080,
                 },
-            )
+            })
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -123,7 +128,8 @@ describe('ConfigBuilder', () => {
                                 },
                                 type: 'string',
                                 value: 'localhost',
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                             port: {
                                 source: {
@@ -132,29 +138,31 @@ describe('ConfigBuilder', () => {
                                 },
                                 type: 'number',
                                 value: 8080,
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                         },
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                 },
-                watchers: [],
+                observer: null,
+                watcher: null,
             }
 
             expect(actual).to.equal(expected)
         })
 
         it('should build config with promised values', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
-                'test',
-                'local',
-                {
-                    server: {
-                        host: Promise.resolve('localhost'),
-                        port: Promise.resolve(8080),
-                    },
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
+                type: 'local',
+                name: 'test',
+            }, {
+                server: {
+                    host: Promise.resolve('localhost'),
+                    port: Promise.resolve(8080),
                 },
-            )
+            })
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -173,7 +181,8 @@ describe('ConfigBuilder', () => {
                                 },
                                 type: 'promise',
                                 value: Promise.resolve('localhost'),
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                             port: {
                                 source: {
@@ -182,36 +191,38 @@ describe('ConfigBuilder', () => {
                                 },
                                 type: 'promise',
                                 value: Promise.resolve(8080),
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                         },
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                 },
-                watchers: [],
+                observer: null,
+                watcher: null,
             }
 
             expect(actual).to.equal(expected)
         })
 
         it('should build config with placeholder values', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
-                'test',
-                'local',
-                {
-                    server: {
-                        host: {
-                            _source: 'consul',
-                            _key: 'host-name',
-                        },
-                        port: {
-                            _source: 'consul',
-                            _key: 'port-number',
-                            _default: 8080,
-                        },
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
+                type: 'local',
+                name: 'test',
+            }, {
+                server: {
+                    host: {
+                        _source: 'consul',
+                        _key: 'host-name',
+                    },
+                    port: {
+                        _source: 'consul',
+                        _key: 'port-number',
+                        _default: 8080,
                     },
                 },
-            )
+            })
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -233,7 +244,8 @@ describe('ConfigBuilder', () => {
                                     _source: 'consul',
                                     _key: 'host-name',
                                 },
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                             port: {
                                 source: {
@@ -246,13 +258,16 @@ describe('ConfigBuilder', () => {
                                     _key: 'port-number',
                                     _default: 8080,
                                 },
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                         },
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                 },
-                watchers: [],
+                observer: null,
+                watcher: null,
             }
 
             expect(actual).to.equal(expected)
@@ -260,7 +275,10 @@ describe('ConfigBuilder', () => {
 
         it('should throw if config value is not an object', async () => {
             expect(() => {
-                ConfigBuilder.createConfigObject('test', 'local', 5)
+                ConfigBuilder.createConfigObject({
+                    type: 'local',
+                    name: 'test',
+                }, 5)
             }).to.throw()
         })
     })

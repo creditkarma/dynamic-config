@@ -115,20 +115,20 @@ describe('DynamicConfig Singleton', () => {
             })
 
             const configValue: string = `
-            {
-                "configPath": "./config",
-                "configEnv": "development",
-                "remoteOptions": {},
-                "resolvers": [
-                    "env", "process", "consul", "vault"
-                ],
-                "loaders": [
-                    "json", "yml", "js", "ts"
-                ],
-                "translators": [
-                    "env", "consul"
-                ]
-            }
+                {
+                    "configPath": "./config",
+                    "configEnv": "development",
+                    "remoteOptions": {},
+                    "resolvers": [
+                        "env", "process", "consul", "vault"
+                    ],
+                    "loaders": [
+                        "json", "yml", "js", "ts"
+                    ],
+                    "translators": [
+                        "env", "consul"
+                    ]
+                }
             `
 
             fs.writeFileSync('./config-settings.json', configValue)

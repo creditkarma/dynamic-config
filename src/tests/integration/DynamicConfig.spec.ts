@@ -1,3 +1,4 @@
+// import { KvStore } from '@creditkarma/consul-client'
 import { expect } from 'code'
 import * as Lab from 'lab'
 import * as path from 'path'
@@ -57,6 +58,7 @@ describe('DynamicConfig', () => {
         describe('get', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get().then((actual: any) => {
+                    console.log('actual: ', actual)
                     expect(actual).to.equal({
                         server: {
                             port: 8000,
@@ -198,6 +200,8 @@ describe('DynamicConfig', () => {
             ],
         })
 
+        // const consulClient = new KvStore('http://localhost:8510')
+
         describe('get', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
@@ -293,6 +297,23 @@ describe('DynamicConfig', () => {
             })
         })
 
+        // describe('watch', () => {
+        //     it('should return an observer for requested key', (done) => {
+        //         const password = dynamicConfig.watch('database.password')
+        //         console.log('password: ', password)
+        //         password.onValue((next: string) => {
+        //             console.log('next: ', next)
+        //             if (next === '123456') {
+        //                 done()
+        //             }
+        //         })
+
+        //         consulClient.set({ path: 'password', dc: 'dc1' }, '123456').then((res: boolean) => {
+        //             console.log('res: ', res)
+        //         })
+        //     })
+        // })
+
         describe('getSecretValue', () => {
             it('should reject when Vault not configured', async () => {
                 return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
@@ -304,7 +325,7 @@ describe('DynamicConfig', () => {
         })
     })
 
-    describe('Configured with Overlayed Consul Configs', () => {
+    describe('Configured with overlayed Consul Configs', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'development',
             configPath: path.resolve(__dirname, './config'),
@@ -417,6 +438,7 @@ describe('DynamicConfig', () => {
         describe('get', () => {
             it('should return the value from local config', async () => {
                 return dynamicConfig.get<string>('database.username').then((actual: string) => {
+                    console.log('actual: ', actual)
                     expect(actual).to.equal('root')
                 })
             })

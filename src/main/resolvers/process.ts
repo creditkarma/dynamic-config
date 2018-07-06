@@ -1,6 +1,11 @@
 import { DynamicConfig } from '../DynamicConfig'
 
-import { IConsulOptions, IRemoteResolver, ObjectType } from '../types'
+import {
+    IConsulOptions,
+    IRemoteResolver,
+    ObjectType,
+    WatchFunction,
+} from '../types'
 
 import { MissingProcessVariable } from '../errors'
 
@@ -29,6 +34,10 @@ export function processResolver(): IRemoteResolver {
                 logger.error(`Error retrieving key[${key}] from command line arguments`)
                 return Promise.reject(new MissingProcessVariable(key))
             }
+        },
+
+        watch<T = any>(key: string, cb: WatchFunction<T>, type?: ObjectType): void {
+
         },
     }
 }

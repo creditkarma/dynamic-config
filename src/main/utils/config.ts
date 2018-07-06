@@ -1,5 +1,3 @@
-import { Observer } from '@creditkarma/consul-client'
-
 import {
     isNothing,
     isPrimitive,
@@ -26,6 +24,7 @@ import {
     IRootConfigValue,
     ITranslator,
     ObjectType,
+    SetFunction,
 } from '../types'
 
 import * as logger from '../logger'
@@ -113,7 +112,15 @@ export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
     }, obj)
 }
 
-function appendValues<T>(target: Array<T>, source: Array<T>): Array<T> {
+function appendWatcher<T>(target: Array<T>, source: T | null): Array<T> {
+    if (source !== null) {
+        target.push(source)
+    }
+
+    return target
+}
+
+function appendWatchers<T>(target: Array<T>, source: Array<T>): Array<T> {
     source.forEach((next: T) => {
         target.push(next)
     })
@@ -124,7 +131,7 @@ function appendValues<T>(target: Array<T>, source: Array<T>): Array<T> {
 export function collectWatchersForKey(
     key: string,
     configObject: ConfigValue,
-): Array<Observer<any>> {
+): Array<SetFunction<any>> {
     if (typeof key !== 'string') {
         throw new Error(`Cannot find watchers for a non-string key[${key}]`)
 
@@ -133,12 +140,12 @@ export function collectWatchersForKey(
 
     } else {
         const [ head, ...tail ] = splitKey(key)
-        const watchers: Array<Observer<any>> = []
-        appendValues(watchers, configObject.watchers)
+        const watchers: Array<SetFunction<any>> = []
+        appendWatcher(watchers, configObject.watcher)
 
         if (head === undefined) {
             if (configObject.type === 'root') {
-                return configObject.watchers
+                return watchers
 
             } else {
                 throw new Error(`Cannot get watchers for undefined key`)
@@ -147,7 +154,7 @@ export function collectWatchersForKey(
         } else if (tail.length > 0) {
             if (configObject.type === 'object' || configObject.type === 'root') {
                 if (configObject.properties[head] !== undefined) {
-                    appendValues(watchers, collectWatchersForKey(tail.join('.'), configObject.properties[head]))
+                    appendWatchers(watchers, collectWatchersForKey(tail.join('.'), configObject.properties[head]))
 
                 } else {
                     throw new Error(`Value for key[${head}] does not exist in object`)
@@ -161,7 +168,7 @@ export function collectWatchersForKey(
             configObject.type === 'object' &&
             configObject.properties[head] !== undefined
         ) {
-            appendValues(watchers, configObject.properties[head].watchers)
+            appendWatcher(watchers, configObject.properties[head].watcher)
 
         } else {
             throw new Error(`Value for key[${head}] does not exist in object`)
@@ -188,7 +195,8 @@ function setObjectPropertyValue(
                 }
                 return acc
             }, {}),
-            watchers: configObject.watchers,
+            observer: configObject.observer,
+            watcher: configObject.watcher,
         }
 
         return what
@@ -203,6 +211,7 @@ export function setBaseConfigValueForKey(
     key: string,
     value: BaseConfigValue,
     oldValue: BaseConfigValue,
+    alertWatchers: boolean = false,
 ): BaseConfigValue {
     if (typeof key !== 'string') {
         throw new Error('Property to set must be a string')
@@ -218,7 +227,7 @@ export function setBaseConfigValueForKey(
 
         if (tail.length > 0) {
             if (oldValue.type === 'object') {
-                return {
+                const returnVal: BaseConfigValue = {
                     source: oldValue.source,
                     type: 'object',
                     properties: Object.keys(oldValue.properties).reduce((acc: IConfigProperties, next: string) => {
@@ -229,8 +238,11 @@ export function setBaseConfigValueForKey(
                         }
                         return acc
                     }, {}),
-                    watchers: oldValue.watchers,
+                    observer: oldValue.observer,
+                    watcher: oldValue.watcher,
                 }
+
+                return returnVal
 
             } else {
                 throw new Error(`Cannot set value for key[${key}] on a non-object value`)
@@ -259,7 +271,8 @@ export function setRootConfigValueForKey(key: string, value: BaseConfigValue, ol
         const newConfig: IRootConfigValue = {
             type: 'root',
             properties: {},
-            watchers: [],
+            observer: null,
+            watcher: null,
         }
         const [ head, ...tail ] = splitKey(key)
         const props: Array<string> = Object.keys(oldConfig.properties)
@@ -372,6 +385,39 @@ export function getConfigForKey(key: string, obj: IRootConfigValue): BaseConfigV
 
         } else {
             return null
+        }
+    }
+}
+
+export function applyValueForKey(key: string, value: any, config: IRootConfigValue): void {
+    if (typeof key !== 'string') {
+        throw new Error('Property to set must be a string')
+
+    } else if (isNothing(config)) {
+        throw new Error(`Cannot set value on null type at key: ${key}`)
+
+    } else {
+        const newConfig: IRootConfigValue = {
+            type: config.type,
+            properties: {},
+            observer: null,
+            watcher: null,
+        }
+        const [ head, ...tail ] = splitKey(key)
+        const props: Array<string> = Object.keys(config.properties)
+
+        for (const prop of props) {
+            if (prop === head) {
+                if (tail.length > 0) {
+                    newConfig.properties[prop] = setBaseConfigValueForKey(tail.join('.'), value, config.properties[prop])
+
+                } else {
+                    newConfig.properties[prop] = value
+                }
+
+            } else {
+                newConfig.properties[prop] = config.properties[prop]
+            }
         }
     }
 }
