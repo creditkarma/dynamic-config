@@ -48,15 +48,15 @@
     "lab": "^14.3.1",
     "request-promise-native": "^1.0.5",
     "rimraf": "^2.6.2",
-    "tslint": "^5.8.0",
+    "tslint": "^5.10.0",
     "wait-on": "^2.1.0"
   },
   "dependencies": {
     "@creditkarma/consul-client": "^0.6.4",
     "@creditkarma/vault-client": "^0.5.7",
     "@types/yamljs": "^0.2.30",
-    "ajv": "^6.4.0",
-    "typescript": "2.8.x",
+    "ajv": "^6.5.2",
+    "typescript": "2.9.x",
     "yamljs": "^0.3.0"
   }
 }
