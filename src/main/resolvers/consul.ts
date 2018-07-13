@@ -110,30 +110,37 @@ export function consulResolver(): IRemoteResolver {
                 remoteOptions.consulNamespace || Utils.readFirstMatch(CONSUL_NAMESPACE),
             )
 
-            return Maybe.all(consulKeys, getConsulClient(), consulDc).fork(
-                ([keys, client, dc]) => {
-                    const rawConfigs: Promise<Array<any>> = Promise.all(
-                        keys.split(',').map((key: string) => {
-                            return client.kvStore.get({ path: key, dc }).then((val: any) => {
-                                if (val === null) {
-                                    throw new Error(`Unable to find key[${key}] in Consul`)
-                                } else {
-                                    return val
-                                }
-                            })
-                        }),
-                    ).catch((err: any) => {
-                        logger.error(`Unable to read keys[${keys}] from Consul: `, err)
-                        return []
-                    })
+            return Maybe.all(getConsulClient(), consulDc).fork(
+                ([client, dc]) => {
+                    const keys: string = consulKeys.getOrElse('')
+                    if (keys !== '') {
+                        const rawConfigs: Promise<Array<any>> = Promise.all(
+                            keys.split(',').map((key: string) => {
+                                return client.kvStore.get({ path: key, dc }).then((val: any) => {
+                                    if (val === null) {
+                                        throw new Error(`Unable to find key[${key}] in Consul`)
+                                    } else {
+                                        return val
+                                    }
+                                })
+                            }),
+                        ).catch((err: any) => {
+                            logger.error(`Unable to read keys[${keys}] from Consul: `, err)
+                            return []
+                        })
 
-                    const resolvedConfigs: Promise<any> = rawConfigs.then(
-                        (configs: Array<any>): any => {
-                            return ObjectUtils.overlayObjects(...configs) as any
-                        },
-                    )
+                        const resolvedConfigs: Promise<any> = rawConfigs.then(
+                            (configs: Array<any>): any => {
+                                return ObjectUtils.overlayObjects(...configs) as any
+                            },
+                        )
 
-                    return resolvedConfigs
+                        return resolvedConfigs
+
+                    } else {
+                        logger.log('No keys to load from Consul')
+                        return Promise.resolve({})
+                    }
                 },
                 () => {
                     logger.log('Consul is not configured')
