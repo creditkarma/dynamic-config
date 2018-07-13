@@ -38,34 +38,34 @@ export interface IConfigSettings {
 export const configSettingsSchema: object = {
     type: 'object',
     properties: {
-        'configPath': {
+        configPath: {
             type: 'string',
         },
-        'configEnv': {
+        configEnv: {
             type: 'string',
         },
-        'remoteOptions': {
+        remoteOptions: {
             type: 'object',
         },
-        'resolvers': {
+        resolvers: {
             type: 'array',
             items: {
                 type: 'string',
             },
         },
-        'loaders': {
+        loaders: {
             type: 'array',
             items: {
                 type: 'string',
             },
         },
-        'translators': {
+        translators: {
             type: 'array',
             items: {
                 type: 'string',
             },
         },
-        'schemas': {
+        schemas: {
             type: 'object',
         },
     },

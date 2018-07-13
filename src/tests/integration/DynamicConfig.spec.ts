@@ -1,3 +1,4 @@
+import { KvStore } from '@creditkarma/consul-client'
 import { expect } from 'code'
 import * as Lab from 'lab'
 import * as path from 'path'
@@ -198,6 +199,8 @@ describe('DynamicConfig', () => {
             ],
         })
 
+        const consulClient = new KvStore('http://localhost:8510')
+
         describe('get', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
@@ -293,15 +296,21 @@ describe('DynamicConfig', () => {
             })
         })
 
-        describe('getSecretValue', () => {
-            it('should reject when Vault not configured', async () => {
-                return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
-                    throw new Error('Should reject when Vault not configured')
-                }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[test-secret]')
+        describe('watch', () => {
+            it('should return an observer for requested key', (done) => {
+                const password = dynamicConfig.watch('database.password')
+                password.onValue((next: string) => {
+                    if (next === '123456') {
+                        consulClient.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t').then((res: boolean) => {
+                            done()
+                        })
+                    }
                 })
+
+                consulClient.set({ path: 'password', dc: 'dc1' }, '123456')
             })
         })
+
     })
 
     describe('Configured with Overlayed Consul Configs', () => {
@@ -361,6 +370,9 @@ describe('DynamicConfig', () => {
                             destination: '127.0.0.1:3000',
                         },
                     })
+                }, (err: any) => {
+                    console.log('err: ', err)
+                    throw err
                 })
             })
 

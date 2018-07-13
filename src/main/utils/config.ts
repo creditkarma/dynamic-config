@@ -1,5 +1,3 @@
-import { Observer } from '@creditkarma/consul-client'
-
 import {
     isNothing,
     isPrimitive,
@@ -113,181 +111,162 @@ export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
     }, obj)
 }
 
-function appendValues<T>(target: Array<T>, source: Array<T>): Array<T> {
-    source.forEach((next: T) => {
-        target.push(next)
-    })
-
-    return target
-}
-
-export function collectWatchersForKey(
-    key: string,
-    configObject: ConfigValue,
-): Array<Observer<any>> {
-    if (typeof key !== 'string') {
-        throw new Error(`Cannot find watchers for a non-string key[${key}]`)
-
-    } else if (isNothing(configObject)) {
-        throw new Error(`Cannot find watchers for null config`)
-
-    } else {
-        const [ head, ...tail ] = splitKey(key)
-        const watchers: Array<Observer<any>> = []
-        appendValues(watchers, configObject.watchers)
-
-        if (head === undefined) {
-            if (configObject.type === 'root') {
-                return configObject.watchers
-
-            } else {
-                throw new Error(`Cannot get watchers for undefined key`)
+function newConfigValue(
+    oldValue: BaseConfigValue,
+    newValue: BaseConfigValue,
+): BaseConfigValue {
+    switch (newValue.type) {
+        case 'array':
+            return {
+                source: newValue.source,
+                type: newValue.type,
+                items: newValue.items,
+                watcher: oldValue.watcher,
+                observer: oldValue.observer,
             }
-
-        } else if (tail.length > 0) {
-            if (configObject.type === 'object' || configObject.type === 'root') {
-                if (configObject.properties[head] !== undefined) {
-                    appendValues(watchers, collectWatchersForKey(tail.join('.'), configObject.properties[head]))
-
-                } else {
-                    throw new Error(`Value for key[${head}] does not exist in object`)
-                }
-
-            } else {
-                throw new Error(`Cannot get watchers for key[${key}] on a non-object value`)
+        case 'object':
+            return {
+                source: newValue.source,
+                type: newValue.type,
+                properties: newValue.properties,
+                watcher: oldValue.watcher,
+                observer: oldValue.observer,
             }
-
-        } else if (
-            configObject.type === 'object' &&
-            configObject.properties[head] !== undefined
-        ) {
-            appendValues(watchers, configObject.properties[head].watchers)
-
-        } else {
-            throw new Error(`Value for key[${head}] does not exist in object`)
-        }
-
-        return watchers
+        default:
+            return {
+                source: newValue.source,
+                type: newValue.type,
+                value: newValue.value,
+                watcher: oldValue.watcher,
+                observer: oldValue.observer,
+            } as BaseConfigValue
     }
 }
 
-function setObjectPropertyValue(
+function setBaseConfigValueForKey(
     key: string,
-    value: BaseConfigValue,
-    configObject: BaseConfigValue,
+    newValue: BaseConfigValue,
+    oldValue: BaseConfigValue,
+    alertWatchers: boolean = false,
 ): BaseConfigValue {
-    if (configObject.type === 'object') {
-        const what: IObjectConfigValue = {
-            source: configObject.source,
-            type: 'object',
-            properties: Object.keys(configObject.properties).reduce((acc: IConfigProperties, next: string) => {
-                if (next === key) {
-                    acc[next] = value
+    const [ head, ...tail ] = splitKey(key)
+
+    if (oldValue.type === 'object') {
+        const returnValue: IObjectConfigValue = {
+            source: oldValue.source,
+            type: oldValue.type,
+            properties: Object.keys(oldValue.properties).reduce((acc: IConfigProperties, next: string): IConfigProperties => {
+                const oldValueAtKey = oldValue.properties[next]
+                if (next === head) {
+                    if (tail.length > 0) {
+                        acc[next] = setBaseConfigValueForKey(
+                            tail.join('.'),
+                            newValue,
+                            oldValueAtKey,
+                            alertWatchers,
+                        )
+
+                    } else {
+                        acc[next] = newConfigValue(oldValueAtKey, newValue)
+                        acc[next].watcher = oldValueAtKey.watcher
+                        acc[next].observer = oldValueAtKey.observer
+
+                        if (alertWatchers && oldValueAtKey.watcher) {
+                            oldValueAtKey.watcher(readConfigValue(newValue))
+                        }
+                    }
+
                 } else {
-                    acc[next] = configObject.properties[next]
+                    acc[next] = oldValueAtKey
                 }
+
                 return acc
             }, {}),
-            watchers: configObject.watchers,
+            watcher: oldValue.watcher,
+            observer: oldValue.observer,
         }
 
-        return what
+        if (alertWatchers && returnValue.watcher) {
+            returnValue.watcher(readConfigValue(returnValue))
+        }
+
+        return returnValue
+
+    } else if (tail.length === 0) {
+        const returnValue = newConfigValue(oldValue, newValue)
+        returnValue.watcher = oldValue.watcher
+        returnValue.observer = oldValue.observer
+
+        if (alertWatchers && oldValue.watcher) {
+            oldValue.watcher(readConfigValue(newValue))
+        }
+
+        return returnValue
 
     } else {
-        logger.warn(`Cannot set value for key[${key}] on a non-object`)
-        return configObject
+        throw new Error('Blah!!!!')
     }
 }
 
-export function setBaseConfigValueForKey(
+function setRootConfigValueForKey(
     key: string,
-    value: BaseConfigValue,
-    oldValue: BaseConfigValue,
-): BaseConfigValue {
-    if (typeof key !== 'string') {
-        throw new Error('Property to set must be a string')
+    newValue: BaseConfigValue,
+    oldValue: IRootConfigValue,
+    alertWatchers: boolean = false,
+): IRootConfigValue {
+    const [ head, ...tail ] = splitKey(key)
 
-    } else if (isNothing(value)) {
-        throw new Error(`Cannot set null value for key[${key}]`)
-
-    } else if (isNothing(oldValue)) {
-        throw new Error(`Cannot set value on null type at key[${key}]`)
-
-    } else {
-        const [ head, ...tail ] = splitKey(key)
-
-        if (tail.length > 0) {
-            if (oldValue.type === 'object') {
-                return {
-                    source: oldValue.source,
-                    type: 'object',
-                    properties: Object.keys(oldValue.properties).reduce((acc: IConfigProperties, next: string) => {
-                        if (next === head) {
-                            acc[next] = setBaseConfigValueForKey(tail.join('.'), value, oldValue.properties[next])
-                        } else {
-                            acc[next] = oldValue.properties[next]
-                        }
-                        return acc
-                    }, {}),
-                    watchers: oldValue.watchers,
-                }
-
-            } else {
-                throw new Error(`Cannot set value for key[${key}] on a non-object value`)
-            }
-
-        } else if (
-            oldValue.type === 'object' &&
-            oldValue.properties[head] !== undefined
-        ) {
-            return setObjectPropertyValue(head, value, oldValue)
-
-        } else {
-            throw new Error(`Value for key[${head}] does not exist in object`)
-        }
-    }
-}
-
-export function setRootConfigValueForKey(key: string, value: BaseConfigValue, oldConfig: IRootConfigValue): IRootConfigValue {
-    if (typeof key !== 'string') {
-        throw new Error('Property to set must be a string')
-
-    } else if (isNothing(oldConfig)) {
-        throw new Error(`Cannot set value on null type at key: ${key}`)
-
-    } else {
-        const newConfig: IRootConfigValue = {
-            type: 'root',
-            properties: {},
-            watchers: [],
-        }
-        const [ head, ...tail ] = splitKey(key)
-        const props: Array<string> = Object.keys(oldConfig.properties)
-
-        for (const prop of props) {
-            if (prop === head) {
+    const returnValue: IRootConfigValue = {
+        type: 'root',
+        properties: Object.keys(oldValue.properties).reduce((acc: IConfigProperties, next: string): IConfigProperties => {
+            const oldValueAtKey = oldValue.properties[next]
+            if (next === head) {
                 if (tail.length > 0) {
-                    newConfig.properties[prop] = setBaseConfigValueForKey(tail.join('.'), value, oldConfig.properties[prop])
+                    acc[next] = setBaseConfigValueForKey(
+                        tail.join('.'),
+                        newValue,
+                        oldValueAtKey,
+                        alertWatchers,
+                    )
 
                 } else {
-                    newConfig.properties[prop] = value
+                    acc[next] = newConfigValue(oldValueAtKey, newValue)
+                    acc[next].watcher = oldValueAtKey.watcher
+                    acc[next].observer = oldValueAtKey.observer
+
+                    if (alertWatchers && oldValueAtKey.watcher) {
+                        oldValueAtKey.watcher(readConfigValue(newValue))
+                    }
                 }
 
             } else {
-                newConfig.properties[prop] = oldConfig.properties[prop]
+                acc[next] = oldValueAtKey
             }
-        }
 
-        return newConfig
+            return acc
+        }, {}),
+        observer: oldValue.observer,
+        watcher: oldValue.watcher,
     }
+
+    if (alertWatchers && returnValue.watcher) {
+        returnValue.watcher(readConfigValue(returnValue))
+    }
+
+    return returnValue
 }
 
-export function setValueForKey(key: string, value: BaseConfigValue, oldConfig: ConfigValue): ConfigValue {
+export function setValueForKey(
+    key: string,
+    newValue: BaseConfigValue,
+    oldConfig: ConfigValue,
+    alertWatchers: boolean = false,
+): ConfigValue {
     if (oldConfig.type === 'root') {
-        return setRootConfigValueForKey(key, value, oldConfig)
+        return setRootConfigValueForKey(key, newValue, oldConfig, alertWatchers)
 
     } else {
-        return setBaseConfigValueForKey(key, value, oldConfig)
+        return setBaseConfigValueForKey(key, newValue, oldConfig, alertWatchers)
     }
 }
 
