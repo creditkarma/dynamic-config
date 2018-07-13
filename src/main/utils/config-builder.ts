@@ -20,7 +20,6 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
             source,
             type: 'promise',
             value: obj,
-            observer: null,
             watcher: null,
         }
 
@@ -29,7 +28,6 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
             source,
             type: 'placeholder',
             value: obj,
-            observer: null,
             watcher: null,
         }
 
@@ -38,7 +36,6 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
             source,
             type: 'array',
             items: obj,
-            observer: null,
             watcher: null,
         }
 
@@ -50,7 +47,6 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
                 acc[next] = buildBaseConfigValue(source, obj[next])
                 return acc
             }, {}),
-            observer: null,
             watcher: null,
         }
 
@@ -59,7 +55,6 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
             source,
             type: objType,
             value: obj,
-            observer: null,
             watcher: null,
         }
 
@@ -76,7 +71,6 @@ export function createConfigObject(
         const configObj: IRootConfigValue = {
             type: 'root',
             properties: {},
-            observer: null,
             watcher: null,
         }
 

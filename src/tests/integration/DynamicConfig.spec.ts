@@ -201,6 +201,30 @@ describe('DynamicConfig', () => {
 
         const consulClient = new KvStore('http://localhost:8510')
 
+        describe('watch', () => {
+            it('should return an observer for requested key', (done) => {
+                const password = dynamicConfig.watch('database.password')
+                let count: number = 0
+                password.onValue((next: string) => {
+                    if (count === 0) {
+                        expect(next).to.equal('Sup3rS3cr3t')
+                        count += 1
+                        consulClient.set({ path: 'password', dc: 'dc1' }, '123456')
+
+                    } else if (count === 1) {
+                        expect(next).to.equal('123456')
+                        count += 1
+                        consulClient.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
+
+                    } else if (count === 2) {
+                        expect(next).to.equal('Sup3rS3cr3t')
+                        count += 1
+                        done()
+                    }
+                })
+            })
+        })
+
         describe('get', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
@@ -299,18 +323,26 @@ describe('DynamicConfig', () => {
         describe('watch', () => {
             it('should return an observer for requested key', (done) => {
                 const password = dynamicConfig.watch('database.password')
+                let count: number = 0
                 password.onValue((next: string) => {
-                    if (next === '123456') {
-                        consulClient.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t').then((res: boolean) => {
-                            done()
-                        })
+                    if (count === 0) {
+                        expect(next).to.equal('Sup3rS3cr3t')
+                        count += 1
+                        consulClient.set({ path: 'password', dc: 'dc1' }, '123456')
+
+                    } else if (count === 1) {
+                        expect(next).to.equal('123456')
+                        count += 1
+                        consulClient.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
+
+                    } else if (count === 2) {
+                        expect(next).to.equal('Sup3rS3cr3t')
+                        count += 1
+                        done()
                     }
                 })
-
-                consulClient.set({ path: 'password', dc: 'dc1' }, '123456')
             })
         })
-
     })
 
     describe('Configured with Overlayed Consul Configs', () => {

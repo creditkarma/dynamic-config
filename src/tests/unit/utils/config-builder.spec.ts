@@ -39,7 +39,6 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: 'https',
-                        observer: null,
                         watcher: null,
                     },
                     destination: {
@@ -49,7 +48,6 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: '127.0.0.1:9000',
-                        observer: null,
                         watcher: null,
                     },
                     hostHeader: {
@@ -59,7 +57,6 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: 'hvault.com',
-                        observer: null,
                         watcher: null,
                     },
                     sslValidation: {
@@ -69,7 +66,6 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'boolean',
                         value: false,
-                        observer: null,
                         watcher: null,
                     },
                     namespace: {
@@ -79,7 +75,6 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: '/your-group/your-service',
-                        observer: null,
                         watcher: null,
                     },
                     tokenPath: {
@@ -89,11 +84,9 @@ describe('ConfigBuilder', () => {
                         },
                         type: 'string',
                         value: '/tmp/test-token',
-                        observer: null,
                         watcher: null,
                     },
                 },
-                observer: null,
                 watcher: null,
             }
 
@@ -128,7 +121,6 @@ describe('ConfigBuilder', () => {
                                 },
                                 type: 'string',
                                 value: 'localhost',
-                                observer: null,
                                 watcher: null,
                             },
                             port: {
@@ -138,15 +130,12 @@ describe('ConfigBuilder', () => {
                                 },
                                 type: 'number',
                                 value: 8080,
-                                observer: null,
                                 watcher: null,
                             },
                         },
-                        observer: null,
                         watcher: null,
                     },
                 },
-                observer: null,
                 watcher: null,
             }
 
@@ -181,7 +170,6 @@ describe('ConfigBuilder', () => {
                                 },
                                 type: 'promise',
                                 value: Promise.resolve('localhost'),
-                                observer: null,
                                 watcher: null,
                             },
                             port: {
@@ -191,15 +179,12 @@ describe('ConfigBuilder', () => {
                                 },
                                 type: 'promise',
                                 value: Promise.resolve(8080),
-                                observer: null,
                                 watcher: null,
                             },
                         },
-                        observer: null,
                         watcher: null,
                     },
                 },
-                observer: null,
                 watcher: null,
             }
 
@@ -244,7 +229,6 @@ describe('ConfigBuilder', () => {
                                     _source: 'consul',
                                     _key: 'host-name',
                                 },
-                                observer: null,
                                 watcher: null,
                             },
                             port: {
@@ -258,15 +242,12 @@ describe('ConfigBuilder', () => {
                                     _key: 'port-number',
                                     _default: 8080,
                                 },
-                                observer: null,
                                 watcher: null,
                             },
                         },
-                        observer: null,
                         watcher: null,
                     },
                 },
-                observer: null,
                 watcher: null,
             }
 

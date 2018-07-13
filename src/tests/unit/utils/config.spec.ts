@@ -46,7 +46,6 @@ describe('ConfigUtils', () => {
                                         },
                                         type: 'string',
                                         value: '/javascript',
-                                        observer: null,
                                         watcher: null,
                                     },
                                     response: {
@@ -56,15 +55,12 @@ describe('ConfigUtils', () => {
                                         },
                                         type: 'string',
                                         value: 'PASS',
-                                        observer: null,
                                         watcher: null,
                                     },
                                 },
-                                observer: null,
                                 watcher: null,
                             },
                         },
-                        observer: null,
                         watcher: null,
                     },
                     database: {
@@ -81,7 +77,6 @@ describe('ConfigUtils', () => {
                                 },
                                 type: 'string',
                                 value: 'root',
-                                observer: null,
                                 watcher: null,
                             },
                             password: {
@@ -91,15 +86,12 @@ describe('ConfigUtils', () => {
                                 },
                                 type: 'string',
                                 value: 'root',
-                                observer: null,
                                 watcher: null,
                             },
                         },
-                        observer: null,
                         watcher: null,
                     },
                 },
-                observer: null,
                 watcher: null,
             }
 
@@ -118,7 +110,6 @@ describe('ConfigUtils', () => {
                         },
                         type: 'string',
                         value: '/javascript',
-                        observer: null,
                         watcher: null,
                     },
                     response: {
@@ -128,11 +119,9 @@ describe('ConfigUtils', () => {
                         },
                         type: 'string',
                         value: 'PASS',
-                        observer: null,
                         watcher: null,
                     },
                 },
-                observer: null,
                 watcher: null,
             }
 

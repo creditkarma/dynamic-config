@@ -118,7 +118,6 @@ export type WatchFunction<T = any> =
 
 export interface IConfigValue {
     type: ConfigType
-    observer: Observer<any> | null
     watcher: WatchFunction<any> | null
 }
 
