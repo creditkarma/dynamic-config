@@ -62,6 +62,7 @@ export class DynamicConfig implements IDynamicConfig {
     private translator: ITranslator
     private schemas: ISchemaMap
     private error: string
+    private observerMap: Map<string, Observer<any>>
 
     constructor({
         configPath,
@@ -79,7 +80,6 @@ export class DynamicConfig implements IDynamicConfig {
             type: 'root',
             properties: {},
             watcher: null,
-            observer: null,
         }
         this.schemas = schemas
         this.translator = ConfigUtils.makeTranslator(translators)
@@ -93,6 +93,7 @@ export class DynamicConfig implements IDynamicConfig {
             names: new Set<string>(),
             all: new Map(),
         }
+        this.observerMap = new Map()
         this.register(...resolvers)
     }
 
@@ -116,17 +117,15 @@ export class DynamicConfig implements IDynamicConfig {
         if (this.configState !== ConfigState.HAS_ERROR) {
             this.configState = ConfigState.RUNNING
 
-            return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
+            return this.getConfig().then((rootConfig: IRootConfigValue) => {
                 // If the key is not set we return the entire structure
                 if (key === undefined) {
-                    return this.replaceConfigPlaceholders(resolvedConfig).then(
-                        (
-                            resolvedValue: IRootConfigValue,
-                        ): Promise<IRootConfigValue> => {
-                            this.resolvedConfig = ObjectUtils.overlayObjects(
+                    return this.replaceConfigPlaceholders(rootConfig).then(
+                        (resolvedConfig: IRootConfigValue): Promise<IRootConfigValue> => {
+                            this.setConfig(ObjectUtils.overlayObjects(
                                 this.resolvedConfig,
-                                resolvedValue,
-                            )
+                                resolvedConfig,
+                            ))
 
                             return Promise.resolve(
                                 ConfigUtils.readConfigValue(this.resolvedConfig),
@@ -138,7 +137,7 @@ export class DynamicConfig implements IDynamicConfig {
                 } else {
                     const value: ConfigValue | null = ConfigUtils.getConfigForKey(
                         key,
-                        resolvedConfig,
+                        rootConfig,
                     )
 
                     // If the value is a thing we need to resolve any placeholders
@@ -151,11 +150,11 @@ export class DynamicConfig implements IDynamicConfig {
 
                                 const schema: object | undefined = this.schemas[key]
 
-                                this.resolvedConfig = ConfigUtils.setValueForKey(
+                                this.setConfig(ConfigUtils.setValueForKey(
                                     key,
                                     resolvedValue,
                                     this.resolvedConfig,
-                                ) as IRootConfigValue
+                                ) as IRootConfigValue)
 
                                 if (schema !== undefined && !JSONUtils.objectMatchesSchema(schema, baseValue)) {
                                     return Promise.reject(new DynamicConfigInvalidObject(key))
@@ -177,13 +176,13 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public watch<T>(key: string): Observer<T> {
-        const value = ConfigUtils.getConfigForKey(key, this.resolvedConfig)
+        if (this.observerMap.has(key)) {
+            return this.observerMap.get(key)!
 
-        if (value !== null) {
-            if (value.watcher !== null && value.observer !== null) {
-                return value.observer
+        } else {
+            const value: ConfigValue | null = ConfigUtils.getConfigForKey(key, this.resolvedConfig)
 
-            } else {
+            if (value !== null) {
                 const observer: Observer<T> = new Observer((sink: (val: T) => boolean) => {
                     value.watcher = (val: T): void => {
                         sink(val)
@@ -194,7 +193,9 @@ export class DynamicConfig implements IDynamicConfig {
                     if (resolver !== undefined && resolver.type === 'remote' && value.source.key !== undefined) {
                         resolver.watch(value.source.key, (val: any) => {
                             const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(value.source, val)
-                            ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true)
+                            this.setConfig(
+                                ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
+                            )
                         })
 
                     } else {
@@ -202,21 +203,62 @@ export class DynamicConfig implements IDynamicConfig {
                     }
                 }, ConfigUtils.readConfigValue(value))
 
-                value.observer = observer
+                this.observerMap.set(key, observer)
+
+                return observer
+
+            } else {
+                const observer = new Observer<T>((sink: ValueSink<T>) => {
+                    this.getConfig().then((rootConfig: IRootConfigValue) => {
+                        this.replaceConfigPlaceholders(rootConfig).then((resolvedConfig: IRootConfigValue) => {
+                            this.setConfig(ObjectUtils.overlayObjects(
+                                this.resolvedConfig,
+                                resolvedConfig,
+                            ))
+
+                            const rawValue: ConfigValue | null = ConfigUtils.getConfigForKey(
+                                key,
+                                this.resolvedConfig,
+                            )
+
+                            if (rawValue !== null) {
+                                // Set initial value
+                                sink(ConfigUtils.readConfigValue(rawValue))
+
+                                rawValue.watcher = (val: T): void => {
+                                    sink(val)
+                                }
+
+                                const resolver: ConfigResolver | undefined = this.resolvers.all.get(rawValue.source.name)
+
+                                if (resolver !== undefined && resolver.type === 'remote' && rawValue.source.key !== undefined) {
+                                    resolver.watch(rawValue.source.key, (val: any) => {
+                                        const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
+                                        this.setConfig(
+                                            ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
+                                        )
+                                    })
+
+                                } else {
+                                    logger.error(`No resolver found for key[${key}]`)
+                                }
+
+                            } else {
+                                logger.error(`Value for key[${key}] not found in config`)
+                                throw new DynamicConfigMissingKey(key)
+                            }
+                        })
+
+                    }, (err: any) => {
+                        logger.error(`Unable to load config: `, err)
+                        throw new Error(`Unable to load configs: ${err.message}`)
+                    })
+                })
+
+                this.observerMap.set(key, observer)
 
                 return observer
             }
-
-        } else {
-            const observer = new Observer<T>((sink: ValueSink<T>) => {
-                this.getConfig().then((rootConfig: IRootConfigValue) => {
-
-                }, (err: any) => {
-
-                })
-            })
-
-            return observer
         }
     }
 
@@ -461,11 +503,16 @@ export class DynamicConfig implements IDynamicConfig {
         )
     }
 
+    private setConfig(config: IRootConfigValue): void {
+        this.resolvedConfig = config
+        this.promisedConfig = Promise.resolve(this.resolvedConfig)
+    }
+
     private getConfig(): Promise<IRootConfigValue> {
         if (this.promisedConfig === null) {
             this.promisedConfig = this.loadConfigs()
             return this.promisedConfig.then((loadedConfigs: IRootConfigValue) => {
-                this.resolvedConfig = loadedConfigs
+                this.setConfig(loadedConfigs)
                 return loadedConfigs
             })
         }

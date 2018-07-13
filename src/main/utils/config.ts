@@ -122,7 +122,6 @@ function newConfigValue(
                 type: newValue.type,
                 items: newValue.items,
                 watcher: oldValue.watcher,
-                observer: oldValue.observer,
             }
         case 'object':
             return {
@@ -130,7 +129,6 @@ function newConfigValue(
                 type: newValue.type,
                 properties: newValue.properties,
                 watcher: oldValue.watcher,
-                observer: oldValue.observer,
             }
         default:
             return {
@@ -138,7 +136,6 @@ function newConfigValue(
                 type: newValue.type,
                 value: newValue.value,
                 watcher: oldValue.watcher,
-                observer: oldValue.observer,
             } as BaseConfigValue
     }
 }
@@ -169,7 +166,6 @@ function setBaseConfigValueForKey(
                     } else {
                         acc[next] = newConfigValue(oldValueAtKey, newValue)
                         acc[next].watcher = oldValueAtKey.watcher
-                        acc[next].observer = oldValueAtKey.observer
 
                         if (alertWatchers && oldValueAtKey.watcher) {
                             oldValueAtKey.watcher(readConfigValue(newValue))
@@ -183,7 +179,6 @@ function setBaseConfigValueForKey(
                 return acc
             }, {}),
             watcher: oldValue.watcher,
-            observer: oldValue.observer,
         }
 
         if (alertWatchers && returnValue.watcher) {
@@ -194,11 +189,10 @@ function setBaseConfigValueForKey(
 
     } else if (tail.length === 0) {
         const returnValue = newConfigValue(oldValue, newValue)
-        returnValue.watcher = oldValue.watcher
-        returnValue.observer = oldValue.observer
+        returnValue.watcher = returnValue.watcher
 
-        if (alertWatchers && oldValue.watcher) {
-            oldValue.watcher(readConfigValue(newValue))
+        if (alertWatchers && returnValue.watcher !== null) {
+            returnValue.watcher(readConfigValue(newValue))
         }
 
         return returnValue
@@ -232,7 +226,6 @@ function setRootConfigValueForKey(
                 } else {
                     acc[next] = newConfigValue(oldValueAtKey, newValue)
                     acc[next].watcher = oldValueAtKey.watcher
-                    acc[next].observer = oldValueAtKey.observer
 
                     if (alertWatchers && oldValueAtKey.watcher) {
                         oldValueAtKey.watcher(readConfigValue(newValue))
@@ -245,7 +238,6 @@ function setRootConfigValueForKey(
 
             return acc
         }, {}),
-        observer: oldValue.observer,
         watcher: oldValue.watcher,
     }
 
