@@ -11,7 +11,7 @@ services:
       - ./vault/config.hcl:/vault/config.hcl
 
   consul:
-    image: consul:latest
+    image: consul:1.1.0
     volumes:
       - $PWD/consuldata:/tmp/consuldata
     ports:
