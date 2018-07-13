@@ -1,21 +1,23 @@
-import { Observer } from '@creditkarma/consul-client'
 import { expect } from 'code'
 import * as Lab from 'lab'
 
 import {
+    ConfigBuilder,
     ConfigUtils,
 } from '../../../main/utils'
 
 import {
+    BaseConfigValue,
     ConfigValue,
     IRootConfigValue,
+    ISource,
 } from '../../../main'
-import { collectWatchersForKey } from '../../../main/utils/config'
 
 export const lab = Lab.script()
 
 const describe = lab.describe
 const it = lab.it
+const before = lab.before
 
 describe('ConfigUtils', () => {
     describe('getConfigForKey', () => {
@@ -44,7 +46,8 @@ describe('ConfigUtils', () => {
                                         },
                                         type: 'string',
                                         value: '/javascript',
-                                        watchers: [],
+                                        observer: null,
+                                        watcher: null,
                                     },
                                     response: {
                                         source: {
@@ -53,13 +56,16 @@ describe('ConfigUtils', () => {
                                         },
                                         type: 'string',
                                         value: 'PASS',
-                                        watchers: [],
+                                        observer: null,
+                                        watcher: null,
                                     },
                                 },
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                         },
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     database: {
                         source: {
@@ -75,7 +81,8 @@ describe('ConfigUtils', () => {
                                 },
                                 type: 'string',
                                 value: 'root',
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                             password: {
                                 source: {
@@ -84,13 +91,16 @@ describe('ConfigUtils', () => {
                                 },
                                 type: 'string',
                                 value: 'root',
-                                watchers: [],
+                                observer: null,
+                                watcher: null,
                             },
                         },
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                 },
-                watchers: [],
+                observer: null,
+                watcher: null,
             }
 
             const actual: ConfigValue | null = ConfigUtils.getConfigForKey('project.health', mockConfig)
@@ -108,7 +118,8 @@ describe('ConfigUtils', () => {
                         },
                         type: 'string',
                         value: '/javascript',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                     response: {
                         source: {
@@ -117,111 +128,60 @@ describe('ConfigUtils', () => {
                         },
                         type: 'string',
                         value: 'PASS',
-                        watchers: [],
+                        observer: null,
+                        watcher: null,
                     },
                 },
-                watchers: [],
+                observer: null,
+                watcher: null,
             }
 
             expect(actual).to.equal(expected)
         })
     })
 
-    describe('collectWatchersForKey', () => {
-        const mockConfig: IRootConfigValue = {
-            type: 'root',
-            properties: {
-                project: {
-                    source: {
-                        type: 'local',
-                        name: 'development',
-                    },
-                    type: 'object',
-                    properties: {
-                        health: {
-                            source: {
-                                type: 'local',
-                                name: 'development',
-                            },
-                            type: 'object',
-                            properties: {
-                                control: {
-                                    source: {
-                                        type: 'local',
-                                        name: 'development',
-                                    },
-                                    type: 'string',
-                                    value: '/javascript',
-                                    watchers: [
-                                        new Observer(1),
-                                        new Observer(2),
-                                    ],
-                                },
-                                response: {
-                                    source: {
-                                        type: 'local',
-                                        name: 'development',
-                                    },
-                                    type: 'string',
-                                    value: 'PASS',
-                                    watchers: [],
-                                },
-                            },
-                            watchers: [
-                                new Observer(3),
-                            ],
-                        },
-                    },
-                    watchers: [
-                        new Observer(4),
-                    ],
-                },
-                database: {
-                    source: {
-                        type: 'local',
-                        name: 'default',
-                    },
-                    type: 'object',
-                    properties: {
-                        username: {
-                            source: {
-                                type: 'local',
-                                name: 'default',
-                            },
-                            type: 'string',
-                            value: 'root',
-                            watchers: [],
-                        },
-                        password: {
-                            source: {
-                                type: 'local',
-                                name: 'default',
-                            },
-                            type: 'string',
-                            value: 'root',
-                            watchers: [
-                                new Observer(5),
-                            ],
-                        },
-                    },
-                    watchers: [],
-                },
-            },
-            watchers: [
-                new Observer(6),
-            ],
+    describe('setValueForKey', () => {
+        const mockSource: ISource = {
+            type: 'local',
+            name: 'default',
         }
+        let mockConfg: IRootConfigValue
 
-        it('should return watchers for nested key', async () => {
-            const actual: Array<Observer<any>> = collectWatchersForKey('project.health.control', mockConfig)
-
-            expect(actual.length).to.equal(5)
+        before(async () => {
+            mockConfg = ConfigBuilder.createConfigObject(mockSource, {
+                serviceName: 'test-service',
+                database: {
+                    username: 'root',
+                    password: 'root',
+                },
+            })
         })
 
-        it('should return watchers for nested key', async () => {
-            const actual: Array<Observer<any>> = collectWatchersForKey('', mockConfig)
+        it('should correctly set value for object', async () => {
+            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(mockSource, 'fake-service')
+            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey('serviceName', newValue, mockConfg) as IRootConfigValue
+            const baseValue = ConfigUtils.getConfigForKey('serviceName', newConfig)
 
-            expect(actual.length).to.equal(1)
+            if (baseValue !== null) {
+                const actual = ConfigUtils.readConfigValue(baseValue)
+                expect(actual).to.equal('fake-service')
+
+            } else {
+                throw new Error('Config not found')
+            }
+        })
+
+        it('should correctly set value for object with nested key', async () => {
+            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(mockSource, '123456')
+            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey('database.username', newValue, mockConfg) as IRootConfigValue
+            const baseValue = ConfigUtils.getConfigForKey('database.username', newConfig)
+
+            if (baseValue !== null) {
+                expect(ConfigUtils.readConfigValue(baseValue)).to.equal('123456')
+
+            } else {
+                throw new Error('Config not found')
+            }
         })
     })
 })

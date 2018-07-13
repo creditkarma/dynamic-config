@@ -12,11 +12,11 @@ import { ISecretResolver } from '../types'
 import * as logger from '../logger'
 
 export function vaultResolver(): ISecretResolver {
-    let vaultClient: Promise<Maybe<VaultClient>>
+    let vaultClient: Promise<Maybe<VaultClient>> | null = null
     let dynamicConfig: DynamicConfig
 
     async function getVaultClient(): Promise<Maybe<VaultClient>> {
-        if (vaultClient !== undefined) {
+        if (vaultClient !== null) {
             return vaultClient
 
         } else {
@@ -26,7 +26,7 @@ export function vaultResolver(): ISecretResolver {
                         return Promise.resolve(new Just(new VaultClient(vaultConfig)))
                     },
                     (err: any) => {
-                        logger.log(`Unable to find valid configuration for Vault`)
+                        logger.warn(`Unable to find valid configuration for Vault: `, err)
                         return Promise.resolve(new Nothing<VaultClient>())
                     },
                 )

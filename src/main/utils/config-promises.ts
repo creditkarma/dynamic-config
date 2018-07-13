@@ -96,7 +96,7 @@ function collectUnresolvedPromises(
 
     } else if (configValue.type === 'promise') {
         updates.push([ path, configValue.value.then((value: any) => {
-            return ConfigBuilder.buildBaseConfigValue(configValue.source.name, configValue.source.type, value)
+            return ConfigBuilder.buildBaseConfigValue(configValue.source, value)
         }) ])
 
         return updates
@@ -118,11 +118,9 @@ function collectUnresolvedPromises(
 export async function resolveConfigPromises(configValue: ConfigValue): Promise<ConfigValue> {
     if (configValue.type === 'promise') {
         return configValue.value.then((val: any) => {
-            return resolveConfigPromises(ConfigBuilder.buildBaseConfigValue(
-                configValue.source.name,
-                configValue.source.type,
-                val,
-            ))
+            return resolveConfigPromises(
+                ConfigBuilder.buildBaseConfigValue(configValue.source, val),
+            )
         })
 
     } else if (configValue.type === 'object' || configValue.type === 'root') {
