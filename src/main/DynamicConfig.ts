@@ -37,6 +37,7 @@ import {
     IRootConfigValue,
     ISchemaMap,
     ITranslator,
+    IVariable,
     PromisedUpdate,
     ResolverType,
     // SetFunction,
@@ -175,7 +176,7 @@ export class DynamicConfig implements IDynamicConfig {
         }
     }
 
-    public watch<T>(key: string): Observer<T> {
+    public watch<T>(key: string): IVariable<T> {
         if (this.observerMap.has(key)) {
             return this.observerMap.get(key)!
 

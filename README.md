@@ -425,6 +425,28 @@ export async function createHttpClient(): Promise<Client> {
 }
 ```
 
+#### `watch`
+
+This is like `get` except it returns an Observable-like object of the config value. The Observable satisfies the `IVariable` interface:
+
+```typescript
+interface IVariable<T> {
+    onValue(callback: (val: T) => void): void
+}
+```
+
+If there are values in your config that may change at runtime, this gives you the option to watch those values and make appropriate adjustments. A realistic usage of this would be to back feature flags for ramping new code.
+
+```typescript
+import { config } from '@creditkarma/dynamic-config'
+
+const watchedValue: string = config().watch<string>('test-key')
+
+watchedValue.onValue((val: string)  => {
+    // Any time the value changes the will run
+})
+```
+
 #### `getRemoteValue`
 
 You can also request a value from one of the registered remotes.
@@ -1020,6 +1042,7 @@ interface IRemoteResolver {
     name: string
     init(configInstance: DynamicConfig, remoteOptions?: IRemoteOptions): Promise<any>
     get<T>(key: string): Promise<T>
+    watch<T>(key: string, cb: (val: T) => void): void
 }
 ```
 
@@ -1063,6 +1086,12 @@ interface IRemoteOptions {
 #### `get`
 
 This is easy, given a string key return a value for it. This method is called when a value in the config needs to be resolved remotely. Usually this will be because of a config placeholder. Once this method resolves, the return value will be cached in the config object and this method will not be called for that same key again.
+
+#### `watch`
+
+This alerts the remote that the user is watching a value. If there is machinery to set up to support this do it here. You get the key the user is watching and a callback to use when the value changes.
+
+If your remote doesn't support watching just supply an empty function.
 
 ### Translators
 

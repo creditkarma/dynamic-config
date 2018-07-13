@@ -1,6 +1,6 @@
-import { Observer } from '@creditkarma/consul-client'
-
-export { Observer } from '@creditkarma/consul-client'
+export interface IVariable<T> {
+    onValue(callback: (val: T) => void): void
+}
 
 export interface IRemoteOptions {
     [name: string]: any
@@ -35,7 +35,7 @@ export interface IRemoteOverrides {
 export interface IDynamicConfig {
     register(...resolvers: Array<ConfigResolver>): void
     get<T = any>(key?: string): Promise<T>
-    watch<T = any>(key?: string): Observer<T>
+    watch<T = any>(key?: string): IVariable<T>
     getAll(...args: Array<string>): Promise<Array<any>>
     getWithDefault<T = any>(key: string, defaultVal: T): Promise<T>
     getRemoteValue<T>(key: string): Promise<T>
