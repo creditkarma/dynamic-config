@@ -12,20 +12,20 @@ import * as logger from '../logger'
 
 export function vaultResolver(): ISecretResolver {
     let vaultClient: Maybe<VaultClient> | null = null
-    let configStore: IConfigStore
+    let vaultConfig: IHVConfig | null = null
 
     async function getVaultClient(): Promise<Maybe<VaultClient>> {
         if (vaultClient !== null) {
             return vaultClient
 
         } else {
-            const vaultConfig: IHVConfig | null = configStore.get<IHVConfig>(HVAULT_CONFIG_KEY)
             if (vaultConfig !== null) {
                 vaultClient = new Just(new VaultClient(vaultConfig))
+                logger.log(`Vault client initialized for secret config store`)
 
             } else {
                 logger.warn(`Unable to find valid configuration for Vault`)
-                return Promise.resolve(new Nothing<VaultClient>())
+                vaultClient = new Nothing<VaultClient>()
             }
 
             return vaultClient
@@ -37,7 +37,7 @@ export function vaultResolver(): ISecretResolver {
         name: 'vault',
 
         init(configInstance: IConfigStore, remoteOptions: any = {}): Promise<any> {
-            configStore = configInstance
+            vaultConfig = configInstance.get<IHVConfig>(HVAULT_CONFIG_KEY)
             return Promise.resolve({})
         },
 
