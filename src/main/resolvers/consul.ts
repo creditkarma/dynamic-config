@@ -1,6 +1,5 @@
 import { Catalog, KvStore } from '@creditkarma/consul-client'
 
-import { DynamicConfig } from '../DynamicConfig'
 import { Just, Maybe, Nothing } from '../Maybe'
 
 import {
@@ -13,6 +12,7 @@ import {
 import { ConsulFailed, ConsulNotConfigured } from '../errors'
 
 import {
+    IConfigStore,
     IConsulOptions,
     IRemoteOverrides,
     IRemoteResolver,
@@ -25,7 +25,7 @@ import { ObjectUtils, Utils } from '../utils'
 import * as logger from '../logger'
 
 export function toRemoteOptionMap(str: string): IRemoteOverrides {
-    const [key, ...tail] = str.split('?')
+    const [ key, ...tail ] = str.split('?')
     const result: IRemoteOverrides = { key }
 
     if (tail.length > 0) {
@@ -93,8 +93,9 @@ export function consulResolver(): IRemoteResolver {
     return {
         type: 'remote',
         name: 'consul',
+
         init(
-            configInstance: DynamicConfig,
+            configInstance: IConfigStore,
             remoteOptions: IConsulOptions = {},
         ): Promise<any> {
             consulAddress = Maybe.fromNullable(

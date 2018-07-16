@@ -1,6 +1,5 @@
-import { DynamicConfig } from '../DynamicConfig'
-
 import {
+    IConfigStore,
     IConsulOptions,
     IRemoteResolver,
     ObjectType,
@@ -18,7 +17,7 @@ export function processResolver(): IRemoteResolver {
         type: 'remote',
         name: 'process',
 
-        init(configInstance: DynamicConfig, remoteOptions: IConsulOptions = {}): Promise<any> {
+        init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
             return Promise.resolve({})
         },
 
