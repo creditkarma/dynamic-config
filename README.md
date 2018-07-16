@@ -1040,7 +1040,7 @@ They are defined by this interface:
 interface IRemoteResolver {
     type: 'remote' | 'secret'
     name: string
-    init(configInstance: DynamicConfig, remoteOptions?: IRemoteOptions): Promise<any>
+    init(configInstance: IConfigStore, remoteOptions?: IRemoteOptions): Promise<any>
     get<T>(key: string): Promise<T>
     watch<T>(key: string, cb: (val: T) => void): void
 }
@@ -1058,7 +1058,19 @@ The name for this remote. This is used to lookup config placeholders, the `_sour
 
 The init method is called and resolved before any request to `conifg().get` can be completed. The init method returns a Promise. The resolved value of this Promise is deeply merged with the local config. This is where you load remote configuration that should be available on application startup.
 
-The init method receives an instance of the `DynamicConfig` object it is being registered on and any optional parameters that were defined with out config options (the `remoteOptions` piece of our config options).
+The init method receives an instance of the `IConfigStore` object and any optional parameters that were defined with out config options (the `remoteOptions` piece of our config options). The `IConfigStore` instance is a simple object store that represents the config as it exists at the moment in time that this resolver is being resolved. Remote resolvers are initialized sequentially in the order in which they are registered, meaning a remote resolver has access to all of the config values from remotes that were previously initialized.
+
+The `IConfigStore` interface is as follows:
+
+```typescript
+interface IConfigStore {
+    get<T = any>(key: string): T | null
+    getAll(...args: Array<string>): Array<any>
+    getWithDefault<T = any>(key: string, defaultVal: T): T
+}
+```
+
+This allows a resolver's initialization to rely on configuration loaded through local config files or through a previously loaded remote.
 
 As a reminder, `remoteOptions` could be set in `config-settings.json` as such:
 
