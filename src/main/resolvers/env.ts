@@ -17,10 +17,7 @@ export function envResolver(): IRemoteResolver {
         type: 'remote',
         name: 'env',
 
-        init(
-            configInstance: IConfigStore,
-            remoteOptions: IConsulOptions = {},
-        ): Promise<any> {
+        init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
             return Promise.resolve({})
         },
 
