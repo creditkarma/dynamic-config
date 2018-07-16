@@ -97,3 +97,17 @@ export function dashToCamel(str: string): string {
         return str
     }
 }
+
+export function memoize<A>(fn: () => A): () => A
+export function memoize<A, B>(fn: (a: A) => B): (a: A) => B
+export function memoize<A, B, C>(fn: (a: A, b: B) => C): (a: A, b: B) => C
+export function memoize(fn: (...args: Array<any>) => any): (...args: Array<any>) => any {
+    let cachedValue: any
+    return (...args: Array<any>) => {
+        if (cachedValue === undefined) {
+            cachedValue = fn(...args)
+        }
+
+        return cachedValue
+    }
+}
