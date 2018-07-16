@@ -94,10 +94,7 @@ export function consulResolver(): IRemoteResolver {
         type: 'remote',
         name: 'consul',
 
-        init(
-            configInstance: IConfigStore,
-            remoteOptions: IConsulOptions = {},
-        ): Promise<any> {
+        init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
             consulAddress = Maybe.fromNullable(
                 remoteOptions.consulAddress || Utils.readFirstMatch(CONSUL_ADDRESS),
             )
