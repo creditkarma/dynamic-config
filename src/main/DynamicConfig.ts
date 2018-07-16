@@ -44,6 +44,7 @@ import {
 } from './types'
 
 import * as logger from './logger'
+import { SyncConfig } from './SyncConfig'
 
 const enum ConfigState {
     INIT,
@@ -488,20 +489,21 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     private async loadConfigs(): Promise<IRootConfigValue> {
-        const defaultConfig: ILoadedFile = await this.configLoader.loadDefault()
-        const envConfig: ILoadedFile = await this.configLoader.loadEnvironment()
-        const remoteConfigs: Array<IRootConfigValue> = await this.initializeResolvers()
-        return ObjectUtils.overlayObjects(
-            ConfigBuilder.createConfigObject({
-                type: 'local',
-                name: 'default',
-            }, this.translator(defaultConfig.config)),
-            ConfigBuilder.createConfigObject({
-                type: 'local',
-                name: envConfig.name,
-            }, this.translator(envConfig.config)),
-            ...remoteConfigs,
-        )
+        const defaultConfigFile: ILoadedFile = await this.configLoader.loadDefault()
+        const defaultConfig: IRootConfigValue = ConfigBuilder.createConfigObject({
+            type: 'local',
+            name: 'default',
+        }, this.translator(defaultConfigFile.config))
+
+        const envConfigFile: ILoadedFile = await this.configLoader.loadEnvironment()
+        const envConfig: IRootConfigValue = ConfigBuilder.createConfigObject({
+            type: 'local',
+            name: envConfigFile.name,
+        }, this.translator(envConfigFile.config))
+
+        const localConfig: IRootConfigValue = ObjectUtils.overlayObjects(defaultConfig, envConfig)
+
+        return this.initializeResolvers(localConfig)
     }
 
     private setConfig(config: IRootConfigValue): void {
@@ -521,32 +523,37 @@ export class DynamicConfig implements IDynamicConfig {
         return this.promisedConfig
     }
 
-    private initializeResolvers(): Promise<Array<IRootConfigValue>> {
-        return Promise.all(
-            [...this.resolvers.all.values()].map((next: ConfigResolver) => {
-                switch (next.type) {
-                    case 'remote':
-                        return next
-                            .init(this, this.remoteOptions[next.name])
-                            .then((config: any) => {
-                                return ConfigBuilder.createConfigObject({
-                                    type: next.type,
-                                    name: next.name,
-                                }, this.translator(config))
-                            })
+    private initializeResolvers(currentConfig: IRootConfigValue): Promise<IRootConfigValue> {
+        const allResolvers: Array<ConfigResolver> = [ ...this.resolvers.all.values() ]
+        const numResolvers: number = allResolvers.length
+        const remoteOptions: IRemoteOptions = this.remoteOptions
+        const translator: ITranslator = this.translator
+        let index: number = 0
 
-                    case 'secret':
-                        return next
-                            .init(this, this.remoteOptions[next.name])
-                            .then((config: any) => {
-                                return ConfigBuilder.createConfigObject({
-                                    type: next.type,
-                                    name: next.name,
-                                }, this.translator(config))
-                            })
+        return new Promise(async (resolve, reject) => {
+            async function loadNextConfig(): Promise<IRootConfigValue> {
+                if (index < numResolvers) {
+                    const nextResolver: ConfigResolver = allResolvers[index]
+                    const configStore = new SyncConfig(currentConfig)
+                    const remoteConfig: any = await nextResolver.init(configStore, remoteOptions[nextResolver.name])
+                    const resolvedConfig: IRootConfigValue = ConfigBuilder.createConfigObject({
+                        type: nextResolver.type,
+                        name: nextResolver.name,
+                    }, translator(remoteConfig))
+                    currentConfig = ObjectUtils.overlayObjects(currentConfig, resolvedConfig)
+
+                    // Increment index for next resolver
+                    index += 1
+
+                    return loadNextConfig()
+
+                } else {
+                    return currentConfig
                 }
-            }),
-        )
+            }
+
+            resolve(loadNextConfig())
+        })
     }
 
     private getValueFromResolver<T>(

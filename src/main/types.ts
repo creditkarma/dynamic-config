@@ -32,6 +32,12 @@ export interface IRemoteOverrides {
     [name: string]: string
 }
 
+export interface IConfigStore {
+    get<T = any>(key: string): T | null
+    getAll(...args: Array<string>): Array<any>
+    getWithDefault<T = any>(key: string, defaultVal: T): T
+}
+
 export interface IDynamicConfig {
     register(...resolvers: Array<ConfigResolver>): void
     get<T = any>(key?: string): Promise<T>
@@ -74,9 +80,7 @@ export type ConfigResolver =
 
 export type SetFunction<T = any> = (key: string, value: T) => void
 
-export type RemoteInitializer = (dynamicConfig: IDynamicConfig, remoteOptions: IRemoteOptions | undefined) => Promise<any>
-
-export type SecretInitializer = (dynamicConfig: IDynamicConfig, remoteOptions: IRemoteOptions) => Promise<any>
+export type RemoteInitializer = (config: IConfigStore, remoteOptions?: IRemoteOptions) => Promise<any>
 
 export interface IRemoteResolver {
     type: 'remote'
@@ -89,7 +93,7 @@ export interface IRemoteResolver {
 export interface ISecretResolver {
     type: 'secret'
     name: string
-    init: SecretInitializer
+    init: RemoteInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
 }
 

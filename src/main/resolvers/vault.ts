@@ -2,38 +2,31 @@ import { IHVConfig, VaultClient } from '@creditkarma/vault-client'
 
 import { HVAULT_CONFIG_KEY } from '../constants'
 
-import { DynamicConfig } from '../DynamicConfig'
 import { Just, Maybe, Nothing } from '../Maybe'
 
 import { HVFailed, HVNotConfigured } from '../errors'
 
-import { ISecretResolver } from '../types'
+import { IConfigStore, ISecretResolver } from '../types'
 
 import * as logger from '../logger'
 
 export function vaultResolver(): ISecretResolver {
-    let vaultClient: Promise<Maybe<VaultClient>> | null = null
-    let dynamicConfig: DynamicConfig
+    let vaultClient: Maybe<VaultClient> | null = null
+    let configStore: IConfigStore
 
     async function getVaultClient(): Promise<Maybe<VaultClient>> {
         if (vaultClient !== null) {
             return vaultClient
 
         } else {
-            vaultClient = dynamicConfig
-                .get<IHVConfig>(HVAULT_CONFIG_KEY).then(
-                    (vaultConfig: IHVConfig) => {
-                        return Promise.resolve(new Just(new VaultClient(vaultConfig)))
-                    },
-                    (err: any) => {
-                        logger.warn(`Unable to find valid configuration for Vault: `, err)
-                        return Promise.resolve(new Nothing<VaultClient>())
-                    },
-                )
-                .catch((err: any) => {
-                    logger.error(`Error creating VaultClient: `, err)
-                    return Promise.reject(new Error('Unable to create VaultClient'))
-                })
+            const vaultConfig: IHVConfig | null = configStore.get<IHVConfig>(HVAULT_CONFIG_KEY)
+            if (vaultConfig !== null) {
+                vaultClient = new Just(new VaultClient(vaultConfig))
+
+            } else {
+                logger.warn(`Unable to find valid configuration for Vault`)
+                return Promise.resolve(new Nothing<VaultClient>())
+            }
 
             return vaultClient
         }
@@ -42,10 +35,12 @@ export function vaultResolver(): ISecretResolver {
     return {
         type: 'secret',
         name: 'vault',
-        init(configInstance: DynamicConfig): Promise<any> {
-            dynamicConfig = configInstance
+
+        init(configInstance: IConfigStore, remoteOptions: any = {}): Promise<any> {
+            configStore = configInstance
             return Promise.resolve({})
         },
+
         get<T>(key: string): Promise<T> {
             return getVaultClient().then((maybeClient: Maybe<VaultClient>) => {
                 return maybeClient.fork(

@@ -1130,14 +1130,6 @@ const configInstance: DynamicConfig = config({
 
 *Note: Here `consulResolver` is a function that returns `IRemoteResolver` because there is state that needs to be initialized for this resolver.*
 
-[back to top](#back-to-top)
-
-## Roadmap
-
-* Add ability to watch a value for runtime changes
-* Pull K/V store functionality out into own module
-* Explore options for providing a synchronous API
-
 [back to top](#table-of-contents)
 
 ## Contributing
