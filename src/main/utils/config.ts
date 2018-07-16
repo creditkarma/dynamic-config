@@ -28,12 +28,19 @@ import {
 
 import * as logger from '../logger'
 
+import { InvalidConfigValue } from '../errors'
+
 export function makeTranslator(translators: Array<IConfigTranslator>): ITranslator {
     return function applyTranslators(obj: any): any {
-        return deepMap((val, key) => {
-            return translators.reduce((acc: any, next: IConfigTranslator) => {
-                return next.translate(acc)
-            }, val)
+        return deepMap((val, path) => {
+            try {
+                return translators.reduce((acc: any, next: IConfigTranslator) => {
+                    return next.translate(acc)
+                }, val)
+
+            } catch (err) {
+                throw new InvalidConfigValue(path, err.message)
+            }
         }, obj)
     }
 }

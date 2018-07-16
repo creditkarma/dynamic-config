@@ -27,6 +27,7 @@ export function some(promises: Array<Promise<any>>): Promise<Array<any>> {
                     const result = temp.filter((val: any) => val !== null)
                     if (result.length > 0) {
                         resolve(result)
+
                     } else {
                         reject(new Error('All promises completed without success'))
                     }

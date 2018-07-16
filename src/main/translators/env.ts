@@ -3,6 +3,7 @@
  *
  * http://${HOSTNAME}:9000
  */
+import { MissingEnvironmentVariable } from '../errors'
 import {
     IConfigTranslator,
 } from '../types'
@@ -37,14 +38,14 @@ class Interpolater {
                     this.match += this.current()
                     this.advance()
 
-                    if (this.current() === '}' && process.env[this.match]) {
+                    if (this.current() === '}' && process.env[this.match] !== undefined) {
                         // Match found
                         this.advance() // advance past }
                         result += process.env[this.match]
                         this.match = ''
 
                     } else if (this.current() === '}') {
-                        throw new Error(`Environment variable '${result}' not set`)
+                        throw new MissingEnvironmentVariable(this.match)
 
                     } else if (this.isAtEnd()) {
                         result += this.match
