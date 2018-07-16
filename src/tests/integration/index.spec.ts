@@ -64,11 +64,11 @@ describe('DynamicConfig Singleton', () => {
                     .get<object>('fake.path')
                     .then(
                         (val: object) => {
-                            throw new Error('Should reject for missing key')
+                            throw new Error('Should reject for missing key.')
                         },
                         (err: any) => {
                             expect(err.message).to.equal(
-                                'Unable to find value for key[fake.path]',
+                                'Unable to find value for key[fake.path].',
                             )
                         },
                     )
@@ -89,11 +89,11 @@ describe('DynamicConfig Singleton', () => {
                     .getSecretValue<string>('missing-secret')
                     .then(
                         (val: string) => {
-                            throw new Error('Should reject for missing secret')
+                            throw new Error('Should reject for missing secret.')
                         },
                         (err: any) => {
                             expect(err.message).to.equal(
-                                'Unable to find value for key[missing-secret]',
+                                'Unable to find value for key[missing-secret].',
                             )
                         },
                     )

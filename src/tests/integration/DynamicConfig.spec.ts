@@ -120,7 +120,7 @@ describe('DynamicConfig', () => {
                 return dynamicConfig.get<object>('fake.path').then((actual: object) => {
                     throw new Error('Should reject for missing key')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[fake.path]')
+                    expect(err.message).to.equal('Unable to find value for key[fake.path].')
                 })
             })
         })
@@ -136,7 +136,7 @@ describe('DynamicConfig', () => {
                 return dynamicConfig.getAll('database.username', 'database.fake').then((val: any) => {
                     throw new Error('Promise should reject')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[database.fake]')
+                    expect(err.message).to.equal('Unable to find value for key[database.fake].')
                 })
             })
         })
@@ -166,7 +166,7 @@ describe('DynamicConfig', () => {
                 return dynamicConfig.getSecretValue<string>('missing-secret').then((actual: string) => {
                     throw new Error('Should reject for missing secret')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[missing-secret]')
+                    expect(err.message).to.equal('Unable to find value for key[missing-secret].')
                 })
             })
         })
@@ -315,7 +315,7 @@ describe('DynamicConfig', () => {
                 return dynamicConfig.get<object>('fake.path').then((actual: object) => {
                     throw new Error('Should reject for missing key')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[fake.path]')
+                    expect(err.message).to.equal('Unable to find value for key[fake.path].')
                 })
             })
         })
@@ -478,7 +478,7 @@ describe('DynamicConfig', () => {
                 return dynamicConfig.get<object>('fake.path').then((actual: object) => {
                     throw new Error('Should reject for missing key')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[fake.path]')
+                    expect(err.message).to.equal('Unable to find value for key[fake.path].')
                 })
             })
 
@@ -486,7 +486,7 @@ describe('DynamicConfig', () => {
                 return dynamicConfig.get<object>('database').then((actual: object) => {
                     throw new Error('Should reject for missing key')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Object does not match expected schema[database]')
+                    expect(err.message).to.equal('Object does not match expected schema[database].')
                 })
             })
         })
@@ -526,7 +526,7 @@ describe('DynamicConfig', () => {
         })
 
         after(async () => {
-            process.env.TEST_USERNAME = undefined
+            delete process.env.TEST_USERNAME
         })
 
         describe('get', () => {
@@ -555,7 +555,7 @@ describe('DynamicConfig', () => {
                 return dynamicConfig.get<object>('fake.path').then((actual: object) => {
                     throw new Error('Should reject for missing key')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[fake.path]')
+                    expect(err.message).to.equal('Unable to find value for key[fake.path].')
                 })
             })
         })
@@ -568,6 +568,65 @@ describe('DynamicConfig', () => {
                     expect(err.message).to.equal('Unable to retrieve key[test-secret]. No resolver found.')
                 })
             })
+        })
+    })
+
+    describe('When Using Missing Environment Variables', () => {
+        const dynamicConfig: DynamicConfig = new DynamicConfig({
+            configEnv: 'production',
+            configPath: path.resolve(__dirname, './config'),
+            resolvers: [
+                envResolver(),
+            ],
+            loaders: [
+                jsonLoader,
+                ymlLoader,
+                jsLoader,
+                tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
+        })
+
+        describe('get', () => {
+            it('should reject if unable to resolve environment variable', async () => {
+                return dynamicConfig.get<string>('database.username').then((actual: string) => {
+                    throw new Error(`Should  reject`)
+                }, (err: any) => {
+                    expect(err.message).to.equal(
+                        `Unable to resolve config at key[database.username]. Environment variable 'TEST_USERNAME' not set.`,
+                    )
+                })
+            })
+
+            it('should return the default for value missing in environment', async () => {
+                return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                    throw new Error(`Should  reject`)
+                }, (err: any) => {
+                    expect(err.message).to.equal(
+                        `Unable to resolve config at key[database.username]. Environment variable 'TEST_USERNAME' not set.`,
+                    )
+                })
+            })
+
+            // it('should fallback to returning from local config', async () => {
+            //     return dynamicConfig.get<object>('project.health').then((actual: object) => {
+            //         expect(actual).to.equal({
+            //             control: '/typescript',
+            //             response: 'PASS',
+            //         })
+            //     })
+            // })
+
+            // it('should reject for a missing key', async () => {
+            //     return dynamicConfig.get<object>('fake.path').then((actual: object) => {
+            //         throw new Error('Should reject for missing key')
+            //     }, (err: any) => {
+            //         expect(err.message).to.equal('Unable to find value for key[fake.path]')
+            //     })
+            // })
         })
     })
 

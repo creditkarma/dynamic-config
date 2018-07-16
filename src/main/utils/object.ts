@@ -18,24 +18,25 @@ import { ISchema } from '../types'
  * @param obj
  * @param mapping
  */
-export function deepMap(mapping: (val: any, key: string) => any, obj: object): any {
+export function deepMap(mapping: (val: any, path: string) => any, obj: object, path: string = ''): any {
     if (isNothing(obj) || isPrimitive(obj)) {
         return obj
 
     } else if (Array.isArray(obj)) {
         const newObj: Array<any> = []
         for (let i = 0; i < obj.length; i++) {
+            const currentPath: string = (path.length > 0) ? `${path}[${i}]` : `[${i}]`
             const value = obj[i]
             if (isNothing(value)) {
                 newObj[i] = value
 
             } else if (isPrimitive(value)) {
-                newObj[i] = mapping(value, `${i}`)
+                newObj[i] = mapping(value, currentPath)
 
             } else {
-                newObj[i] = mapping(value, `${i}`)
-                newObj[i] = deepMap(mapping, newObj[i])
-                newObj[i] = mapping(newObj[i], `${i}`)
+                newObj[i] = mapping(value, currentPath)
+                newObj[i] = deepMap(mapping, newObj[i], currentPath)
+                newObj[i] = mapping(newObj[i], currentPath)
             }
         }
 
@@ -45,17 +46,18 @@ export function deepMap(mapping: (val: any, key: string) => any, obj: object): a
         const newObj: any = {}
         for (const key in obj) {
             if (obj.hasOwnProperty(key)) {
+                const currentPath: string = (path.length > 0) ? `${path}.${key}` : `${key}`
                 const value = (obj as any)[key]
                 if (isNothing(value)) {
                     newObj[key] = value
 
                 } else if (isPrimitive(value)) {
-                    newObj[key] = mapping(value, key)
+                    newObj[key] = mapping(value, currentPath)
 
                 } else {
-                    newObj[key] = mapping(value, key)
-                    newObj[key] = deepMap(mapping, newObj[key])
-                    newObj[key] = mapping(newObj[key], key)
+                    newObj[key] = mapping(value, currentPath)
+                    newObj[key] = deepMap(mapping, newObj[key], currentPath)
+                    newObj[key] = mapping(newObj[key], currentPath)
                 }
             }
         }
@@ -112,6 +114,7 @@ export function setValueForKey<T>(key: string, value: any, oldObj: any): T {
                 if (tail.length > 0) {
                     const nextObj = oldObj[prop] || {}
                     newObj[prop] = setValueForKey(tail.join('.'), value, nextObj)
+
                 } else {
                     newObj[prop] = value
                 }
@@ -206,66 +209,68 @@ export function overlayObjects(...configs: Array<any>): any {
 export function arraysAreEqual(arr1: Array<any>, arr2: Array<any>): boolean {
     if (!Array.isArray(arr1) || !Array.isArray(arr2)) {
         return arr1 === arr2
-    }
 
-    if (arr1.length !== arr2.length) {
+    } else if (arr1.length !== arr2.length) {
         return false
-    }
 
-    for (let i = 0; i < arr1.length; i++) {
-        const item1: any = arr1[i]
-        const item2: any = arr2[i]
+    } else {
+        for (let i = 0; i < arr1.length; i++) {
+            const item1: any = arr1[i]
+            const item2: any = arr2[i]
 
-        if (Array.isArray(item1) && Array.isArray(item2)) {
-            if (!arraysAreEqual(item1, item2)) {
+            if (Array.isArray(item1) && Array.isArray(item2)) {
+                if (!arraysAreEqual(item1, item2)) {
+                    return false
+                }
+
+            } else if (isObject(item1) && isObject(item2)) {
+                if (!objectsAreEqual(item1, item2)) {
+                    return false
+                }
+
+            } else if (item1 !== item2) {
                 return false
             }
-
-        } else if (isObject(item1) && isObject(item2)) {
-            if (!objectsAreEqual(item1, item2)) {
-                return false
-            }
-
-        } else if (item1 !== item2) {
-            return false
         }
-    }
 
-    return true
+        return true
+    }
 }
 
 export function objectsAreEqual(obj1: any, obj2: any): boolean {
     if (!isObject(obj1) || !isObject(obj2)) {
         return obj1 === obj2
-    }
 
-    const keys1 = Object.keys(obj1)
-    const keys2 = Object.keys(obj2)
+    } else {
+        const keys1 = Object.keys(obj1)
+        const keys2 = Object.keys(obj2)
 
-    if (!arraysAreEqual(keys1, keys2)) {
-        return false
-    }
-
-    for (const key of keys1) {
-        const value1: any = obj1[key]
-        const value2: any = obj2[key]
-
-        if (isObject(value1) && isObject(value2)) {
-            if (!objectsAreEqual(value1, value2)) {
-                return false
-            }
-
-        } else if (Array.isArray(value1) && Array.isArray(value2)) {
-            if (!arraysAreEqual(value1, value2)) {
-                return false
-            }
-
-        } else if (value1 !== value2) {
+        if (!arraysAreEqual(keys1, keys2)) {
             return false
+
+        } else {
+            for (const key of keys1) {
+                const value1: any = obj1[key]
+                const value2: any = obj2[key]
+
+                if (isObject(value1) && isObject(value2)) {
+                    if (!objectsAreEqual(value1, value2)) {
+                        return false
+                    }
+
+                } else if (Array.isArray(value1) && Array.isArray(value2)) {
+                    if (!arraysAreEqual(value1, value2)) {
+                        return false
+                    }
+
+                } else if (value1 !== value2) {
+                    return false
+                }
+            }
+
+            return true
         }
     }
-
-    return true
 }
 
 export function objectHasShape(shape: object, obj: object): boolean
