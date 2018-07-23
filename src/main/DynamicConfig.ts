@@ -18,7 +18,10 @@ import {
 
 import {
     // DynamicConfigInvalidObject,
+    DynamicConfigError,
+    DynamicConfigErrorType,
     DynamicConfigInvalidObject,
+    DynamicConfigInvalidResolver,
     DynamicConfigMissingKey,
     MissingConfigPlaceholder,
     ResolverUnavailable,
@@ -63,7 +66,7 @@ export class DynamicConfig implements IDynamicConfig {
     private resolvers: IResolverMap
     private translator: ITranslator
     private schemas: ISchemaMap
-    private error: string
+    private error: DynamicConfigError | null
     private observerMap: Map<string, Observer<any>>
 
     constructor({
@@ -75,7 +78,7 @@ export class DynamicConfig implements IDynamicConfig {
         translators = [],
         schemas = {},
     }: IConfigOptions = {}) {
-        this.error = ''
+        this.error = null
         this.configState = ConfigState.INIT
         this.promisedConfig = null
         this.resolvedConfig = {
@@ -116,7 +119,7 @@ export class DynamicConfig implements IDynamicConfig {
      * loaded, so we must return a Promise.
      */
     public async get<T = any>(key?: string): Promise<T> {
-        if (this.configState !== ConfigState.HAS_ERROR) {
+        if (this.error === null) {
             this.configState = ConfigState.RUNNING
 
             return this.getConfig().then((rootConfig: IRootConfigValue) => {
@@ -159,7 +162,7 @@ export class DynamicConfig implements IDynamicConfig {
                                 ) as IRootConfigValue)
 
                                 if (schema !== undefined && !JSONUtils.objectMatchesSchema(schema, baseValue)) {
-                                    return Promise.reject(new DynamicConfigInvalidObject(key))
+                                    throw new DynamicConfigInvalidObject(key)
 
                                 } else {
                                     return Promise.resolve(baseValue)
@@ -168,12 +171,16 @@ export class DynamicConfig implements IDynamicConfig {
                         )
                     } else {
                         logger.error(`Value for key[${key}] not found in config`)
-                        return Promise.reject(new DynamicConfigMissingKey(key))
+                        throw new DynamicConfigMissingKey(key)
                     }
                 }
+            }, (err: DynamicConfigError) => {
+                logger.error(`Unable to load config: `, err)
+                this.setError(err)
+                throw err
             })
         } else {
-            return Promise.reject(this.error)
+            throw this.error
         }
     }
 
@@ -212,7 +219,7 @@ export class DynamicConfig implements IDynamicConfig {
             } else {
                 const observer = new Observer<T>((sink: ValueSink<T>) => {
                     this.getConfig().then((rootConfig: IRootConfigValue) => {
-                        this.replaceConfigPlaceholders(rootConfig).then((resolvedConfig: IRootConfigValue) => {
+                        return this.replaceConfigPlaceholders(rootConfig).then((resolvedConfig: IRootConfigValue) => {
                             this.setConfig(ObjectUtils.overlayObjects(
                                 this.resolvedConfig,
                                 resolvedConfig,
@@ -251,9 +258,9 @@ export class DynamicConfig implements IDynamicConfig {
                             }
                         })
 
-                    }, (err: any) => {
+                    }, (err: DynamicConfigError) => {
                         logger.error(`Unable to load config: `, err)
-                        throw new Error(`Unable to load configs: ${err.message}`)
+                        this.setError(err)
                     })
                 })
 
@@ -265,7 +272,7 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public async source(key: string): Promise<string> {
-        if (this.configState !== ConfigState.HAS_ERROR) {
+        if (this.error === null) {
             this.configState = ConfigState.RUNNING
 
             return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
@@ -280,9 +287,12 @@ export class DynamicConfig implements IDynamicConfig {
                 } else {
                     throw new DynamicConfigMissingKey(key)
                 }
+            }, (err: DynamicConfigError) => {
+                this.setError(err)
+                throw err
             })
         } else {
-           return Promise.reject(this.error)
+           throw this.error
         }
     }
 
@@ -361,7 +371,7 @@ export class DynamicConfig implements IDynamicConfig {
         )
     }
 
-    private resolvePlaceholder(placeholder: IResolvedPlaceholder): Promise<any> {
+    private async resolvePlaceholder(placeholder: IResolvedPlaceholder): Promise<any> {
         switch (placeholder.resolver.type) {
             case 'remote':
                 return this.getRemotePlaceholder(placeholder)
@@ -370,9 +380,7 @@ export class DynamicConfig implements IDynamicConfig {
                 return this.getSecretPlaceholder(placeholder)
 
             default:
-                return Promise.reject(
-                    new Error(`Unrecognized placeholder type[${placeholder.resolver.type}]`),
-                )
+                throw new DynamicConfigInvalidResolver(placeholder.resolver.type)
         }
     }
 
@@ -509,6 +517,24 @@ export class DynamicConfig implements IDynamicConfig {
     private setConfig(config: IRootConfigValue): void {
         this.resolvedConfig = config
         this.promisedConfig = Promise.resolve(this.resolvedConfig)
+    }
+
+    private setError(err: DynamicConfigError): void {
+        switch (err.type) {
+            case DynamicConfigErrorType.MissingConfigPlaceholder:
+            case DynamicConfigErrorType.DynamicConfigInvalidObject:
+            case DynamicConfigErrorType.ResolverUnavailable:
+            case DynamicConfigErrorType.MissingEnvironmentVariable:
+            case DynamicConfigErrorType.MissingProcessVariable:
+            case DynamicConfigErrorType.InvalidConfigValue:
+            case DynamicConfigErrorType.DynamicConfigInvalidResolver:
+                logger.error(`Fatal error encountered. Entering error state and locking config: `, err)
+                this.configState = ConfigState.HAS_ERROR
+                this.error = err
+
+            default:
+                logger.warn(`Non-fatal error encountered: `, err)
+        }
     }
 
     private getConfig(): Promise<IRootConfigValue> {

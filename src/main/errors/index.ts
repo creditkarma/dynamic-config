@@ -2,6 +2,7 @@ export const enum DynamicConfigErrorType {
     MissingConfigPlaceholder = 'MissingConfigPlaceholder',
     DynamicConfigMissingKey = 'DynamicConfigMissingKey',
     DynamicConfigInvalidObject = 'DynamicConfigInvalidObject',
+    DynamicConfigInvalidResolver = 'DynamicConfigInvalidResolver',
     UnknownError = 'UnkownError',
     HVNotConfigured = 'HVNotConfigured',
     HVFailed = 'HVFailed',
@@ -15,8 +16,9 @@ export const enum DynamicConfigErrorType {
 
 export type DynamicConfigError =
     MissingConfigPlaceholder | DynamicConfigMissingKey | DynamicConfigInvalidObject |
-    HVNotConfigured | HVFailed | ConsulFailed | ResolverUnavailable | InvalidConfigValue |
-    MissingEnvironmentVariable | MissingProcessVariable | UnknownError
+    DynamicConfigInvalidResolver | HVNotConfigured | HVFailed | ConsulFailed |
+    ResolverUnavailable | InvalidConfigValue | MissingEnvironmentVariable |
+    MissingProcessVariable | UnknownError
 
 export class InvalidConfigValue extends Error {
     public readonly type = DynamicConfigErrorType.InvalidConfigValue
@@ -43,6 +45,13 @@ export class DynamicConfigInvalidObject extends Error {
     public readonly type = DynamicConfigErrorType.DynamicConfigInvalidObject
     constructor(key: string) {
         super(`Object does not match expected schema[${key}].`)
+    }
+}
+
+export class DynamicConfigInvalidResolver extends Error {
+    public readonly type = DynamicConfigErrorType.DynamicConfigInvalidResolver
+    constructor(type: string) {
+        super(`Requested resolver type[${type}] is invalid.`)
     }
 }
 
