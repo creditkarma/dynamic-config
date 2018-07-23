@@ -18,7 +18,11 @@ import { ISchema } from '../types'
  * @param obj
  * @param mapping
  */
-export function deepMap(mapping: (val: any, path: string) => any, obj: object, path: string = ''): any {
+export function deepMap(
+    mapping: (val: any, path: string) => any,
+    obj: object,
+    path: string = '',
+): any {
     if (isNothing(obj) || isPrimitive(obj)) {
         return obj
 
