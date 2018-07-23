@@ -3,6 +3,7 @@ export const enum DynamicConfigErrorType {
     DynamicConfigMissingKey = 'DynamicConfigMissingKey',
     DynamicConfigInvalidObject = 'DynamicConfigInvalidObject',
     DynamicConfigInvalidResolver = 'DynamicConfigInvalidResolver',
+    DynamicConfigMissingDefault = 'DynamicConfigMissingDefault',
     UnknownError = 'UnkownError',
     HVNotConfigured = 'HVNotConfigured',
     HVFailed = 'HVFailed',
@@ -18,7 +19,7 @@ export type DynamicConfigError =
     MissingConfigPlaceholder | DynamicConfigMissingKey | DynamicConfigInvalidObject |
     DynamicConfigInvalidResolver | HVNotConfigured | HVFailed | ConsulFailed |
     ResolverUnavailable | InvalidConfigValue | MissingEnvironmentVariable |
-    MissingProcessVariable | UnknownError
+    MissingProcessVariable | UnknownError | DynamicConfigMissingDefault
 
 export class InvalidConfigValue extends Error {
     public readonly type = DynamicConfigErrorType.InvalidConfigValue
@@ -31,6 +32,13 @@ export class MissingConfigPlaceholder extends Error {
     public readonly type = DynamicConfigErrorType.MissingConfigPlaceholder
     constructor(key: string) {
         super(`Unable to resolve placeholder with key[${key}].`)
+    }
+}
+
+export class DynamicConfigMissingDefault extends Error {
+    public readonly type = DynamicConfigErrorType.DynamicConfigMissingDefault
+    constructor(path: string) {
+        super(`Unable to load default config at path[${path}]`)
     }
 }
 

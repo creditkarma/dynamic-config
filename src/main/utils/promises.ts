@@ -103,7 +103,7 @@ function resolveAtIndex(promise: Promise<object>, index: number): Promise<Promis
         promise.then((val: object) => {
             return resolve([val, index])
         }, (err: any) => {
-            return resolve([{}, index])
+            return reject([{}, index])
         })
     })
 }

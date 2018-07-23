@@ -528,6 +528,7 @@ export class DynamicConfig implements IDynamicConfig {
             case DynamicConfigErrorType.MissingProcessVariable:
             case DynamicConfigErrorType.InvalidConfigValue:
             case DynamicConfigErrorType.DynamicConfigInvalidResolver:
+            case DynamicConfigErrorType.DynamicConfigMissingDefault:
                 logger.error(`Fatal error encountered. Entering error state and locking config: `, err)
                 this.configState = ConfigState.HAS_ERROR
                 this.error = err
@@ -543,6 +544,9 @@ export class DynamicConfig implements IDynamicConfig {
             return this.promisedConfig.then((loadedConfigs: IRootConfigValue) => {
                 this.setConfig(loadedConfigs)
                 return loadedConfigs
+            }, (err: DynamicConfigError) => {
+                this.setError(err)
+                throw err
             })
         }
 
