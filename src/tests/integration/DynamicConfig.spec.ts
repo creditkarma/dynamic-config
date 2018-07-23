@@ -120,7 +120,6 @@ describe('DynamicConfig', () => {
                 return dynamicConfig.get<object>('fake.path').then((actual: object) => {
                     throw new Error('Should reject for missing key')
                 }, (err: any) => {
-                    console.log('err: ', err)
                     expect(err.message).to.equal('Unable to find value for key[fake.path].')
                 })
             })
@@ -403,9 +402,6 @@ describe('DynamicConfig', () => {
                             destination: '127.0.0.1:3000',
                         },
                     })
-                }, (err: any) => {
-                    console.log('err: ', err)
-                    throw err
                 })
             })
 
