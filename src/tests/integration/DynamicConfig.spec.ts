@@ -610,23 +610,6 @@ describe('DynamicConfig', () => {
                     )
                 })
             })
-
-            // it('should fallback to returning from local config', async () => {
-            //     return dynamicConfig.get<object>('project.health').then((actual: object) => {
-            //         expect(actual).to.equal({
-            //             control: '/typescript',
-            //             response: 'PASS',
-            //         })
-            //     })
-            // })
-
-            // it('should reject for a missing key', async () => {
-            //     return dynamicConfig.get<object>('fake.path').then((actual: object) => {
-            //         throw new Error('Should reject for missing key')
-            //     }, (err: any) => {
-            //         expect(err.message).to.equal('Unable to find value for key[fake.path]')
-            //     })
-            // })
         })
     })
 
