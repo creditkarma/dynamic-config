@@ -32,6 +32,17 @@ export function some(promises: Array<Promise<any>>): Promise<Array<any>> {
                         reject(new Error('All promises completed without success'))
                     }
                 }
+            }, (err: any) => {
+                count++
+                if (count >= promises.length) {
+                    const result = temp.filter((val: any) => val !== null)
+                    if (result.length > 0) {
+                        resolve(result)
+
+                    } else {
+                        reject(new Error('All promises completed without success'))
+                    }
+                }
             })
         })
     })
@@ -103,7 +114,7 @@ function resolveAtIndex(promise: Promise<object>, index: number): Promise<Promis
         promise.then((val: object) => {
             return resolve([val, index])
         }, (err: any) => {
-            return reject([{}, index])
+            return reject(err)
         })
     })
 }
