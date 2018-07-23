@@ -45,7 +45,7 @@ export function makeTranslator(translators: Array<IConfigTranslator>): ITranslat
     }
 }
 
-export function readValueForType(raw: string, type: ObjectType): Promise<any> {
+export async function readValueForType(raw: string, type: ObjectType): Promise<any> {
     const rawType: string = typeof raw
 
     if (rawType === 'string') {
@@ -66,7 +66,7 @@ export function readValueForType(raw: string, type: ObjectType): Promise<any> {
             }
         } catch (err) {
             logger.error(`Unable to parse value as type[${type}]`)
-            return Promise.reject(new Error(`Unable to parse value as type[${type}]`))
+            throw new Error(`Unable to parse value as type[${type}]`)
         }
     } else {
         logger.log(`Raw value of type[${rawType}] being returned as is`)
@@ -205,7 +205,7 @@ function setBaseConfigValueForKey(
         return returnValue
 
     } else {
-        throw new Error('Blah!!!!')
+        throw new Error(`Cannot set value at key[${key}] because it is not an object`)
     }
 }
 
