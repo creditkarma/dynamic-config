@@ -94,7 +94,7 @@ export function consulResolver(): IRemoteResolver {
         type: 'remote',
         name: 'consul',
 
-        init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
+        async init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
             consulAddress = Maybe.fromNullable(
                 remoteOptions.consulAddress || Utils.readFirstMatch(CONSUL_ADDRESS),
             )
@@ -137,12 +137,12 @@ export function consulResolver(): IRemoteResolver {
 
                     } else {
                         logger.log('No keys to load from Consul.')
-                        return Promise.resolve({})
+                        return {}
                     }
                 },
                 () => {
                     logger.log('Consul is not configured.')
-                    return Promise.resolve({})
+                    return {}
                 },
             )
         },
@@ -167,7 +167,7 @@ export function consulResolver(): IRemoteResolver {
                                 return address
                             }, (err: Error) => {
                                 logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
-                                return Promise.reject(new ConsulFailed(err.message))
+                                throw new ConsulFailed(err.message)
                             })
                         }
                     }, (err: any) => {
