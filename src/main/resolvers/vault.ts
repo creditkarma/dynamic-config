@@ -50,14 +50,14 @@ export function vaultResolver(): ISecretResolver {
                                 return Promise.resolve(value)
                             },
                             (err: any) => {
-                                logger.error(`Error retrieving key[${key}] from Vault: ${err.message}`)
-                                return Promise.reject(new HVFailed(err.message))
+                                logger.error(`Unable to get key[${key}] from Vault. ${err.message}`)
+                                throw new HVFailed(err.message)
                             },
                         )
                     },
                     () => {
                         logger.error(`Unable to get key[${key}]. Vault is not configured.`)
-                        return Promise.reject(new HVNotConfigured(key))
+                        throw new HVNotConfigured(key)
                     },
                 )
             })

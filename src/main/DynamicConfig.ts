@@ -17,7 +17,6 @@ import {
 } from './utils'
 
 import {
-    // DynamicConfigInvalidObject,
     DynamicConfigError,
     DynamicConfigErrorType,
     DynamicConfigInvalidObject,
@@ -43,7 +42,6 @@ import {
     IVariable,
     PromisedUpdate,
     ResolverType,
-    // SetFunction,
 } from './types'
 
 import * as logger from './logger'
@@ -170,7 +168,7 @@ export class DynamicConfig implements IDynamicConfig {
                             },
                         )
                     } else {
-                        logger.error(`Value for key[${key}] not found in config`)
+                        logger.warn(`Value for key[${key}] not found in config`)
                         throw new DynamicConfigMissingKey(key)
                     }
                 }
@@ -253,7 +251,7 @@ export class DynamicConfig implements IDynamicConfig {
                                 }
 
                             } else {
-                                logger.error(`Value for key[${key}] not found in config`)
+                                logger.warn(`Value for key[${key}] not found in config`)
                                 throw new DynamicConfigMissingKey(key)
                             }
                         })
@@ -625,12 +623,12 @@ export class DynamicConfig implements IDynamicConfig {
                     if (remoteValue !== null) {
                         return Promise.resolve(remoteValue)
                     } else {
-                        logger.error(`Unable to resolve remote value for key[${key}]`)
+                        logger.warn(`Unable to resolve ${type} value for key[${key}]`)
                         return Promise.reject(new DynamicConfigMissingKey(key))
                     }
                 },
                 (err: any) => {
-                    logger.error(`Unable to resolve remote value for key[${key}]`)
+                    logger.warn(`Unable to resolve ${type} value for key[${key}]`)
                     return Promise.reject(new DynamicConfigMissingKey(key))
                 },
             )

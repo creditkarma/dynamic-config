@@ -123,7 +123,7 @@ export function consulResolver(): IRemoteResolver {
                                 })
                             }),
                         ).catch((err: any) => {
-                            logger.error(`Unable to read keys[${keys}] from Consul: ${err.message}`)
+                            logger.error(`Unable to read keys[${keys}] from Consul. ${err.message}`)
                             return []
                         })
 
@@ -166,17 +166,17 @@ export function consulResolver(): IRemoteResolver {
                             return client.catalog.resolveAddress(key).then((address: string) => {
                                 return address
                             }, (err: Error) => {
-                                logger.error(`Error retrieving key[${key}] from Consul: ${err.message}`)
+                                logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
                                 return Promise.reject(new ConsulFailed(err.message))
                             })
                         }
                     }, (err: any) => {
-                        logger.error(`Error retrieving key[${key}] from Consul: ${err.message}`)
-                        return Promise.reject(new ConsulFailed(err.message))
+                        logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
+                        throw new ConsulFailed(err.message)
                     })
             }, () => {
-                logger.error(`Error retrieving key[${key}]: Consul is not configured.`)
-                return Promise.reject(new ConsulNotConfigured(key))
+                logger.warn(`Error retrieving key[${key}]. Consul is not configured.`)
+                throw new ConsulNotConfigured(key)
             })
         },
 
@@ -198,7 +198,7 @@ export function consulResolver(): IRemoteResolver {
                         })
                 },
                 () => {
-                    logger.error(`Error watching key[${key}]: Consul is not configured.`)
+                    logger.warn(`Unable to watch changes for key[${key}]. Consul is not configured.`)
                 },
             )
         },
