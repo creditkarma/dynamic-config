@@ -1,11 +1,8 @@
 import { DynamicConfig } from './DynamicConfig'
 
-import {
-    IConfigOptions,
-} from './types'
-
 import * as SettingsLoader from './SettingsLoader'
 import { ObjectUtils, Utils } from './utils'
+import { IConfigOptions } from './types'
 
 export * from './ConfigLoader'
 export { DynamicConfig } from './DynamicConfig'

@@ -23,7 +23,15 @@ export const CONSUL_NAMESPACE: string = 'CONSUL_NAMESPACE'
  */
 export const CONFIG_PATH: string = 'CONFIG_PATH'
 
+/**
+ * Alternative to CONFIG_PATH compatible with options for `node-config`
+ */
 export const NODE_CONFIG_DIR: string = 'NODE_CONFIG_DIR'
+
+/**
+ * Settings path
+ */
+export const SETTINGS_PATH: string = 'SETTINGS_PATH'
 
 /**
  * Backup environment variable to use for config environment

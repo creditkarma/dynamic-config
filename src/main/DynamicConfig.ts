@@ -125,7 +125,7 @@ export class DynamicConfig implements IDynamicConfig {
             return this.getConfig().then((rootConfig: IRootConfigValue) => {
                 // If the key is not set we return the entire structure
                 if (key === undefined) {
-                    return this.replaceConfigPlaceholders(rootConfig).then(
+                    return this.replaceConfigPlaceholders(rootConfig, []).then(
                         (resolvedConfig: IRootConfigValue): Promise<IRootConfigValue> => {
                             this.setConfig(ObjectUtils.overlayObjects(
                                 this.resolvedConfig,
@@ -147,7 +147,7 @@ export class DynamicConfig implements IDynamicConfig {
 
                     // If the value is a thing we need to resolve any placeholders
                     if (value !== null) {
-                        return this.replaceConfigPlaceholders(value).then(
+                        return this.replaceConfigPlaceholders(value, []).then(
                             (resolvedValue: BaseConfigValue) => {
                                 const baseValue = ConfigUtils.readConfigValue(
                                     resolvedValue,
@@ -219,7 +219,7 @@ export class DynamicConfig implements IDynamicConfig {
             } else {
                 const observer = new Observer<T>((sink: ValueSink<T>) => {
                     this.getConfig().then((rootConfig: IRootConfigValue) => {
-                        return this.replaceConfigPlaceholders(rootConfig).then((resolvedConfig: IRootConfigValue) => {
+                        return this.replaceConfigPlaceholders(rootConfig, []).then((resolvedConfig: IRootConfigValue) => {
                             this.setConfig(ObjectUtils.overlayObjects(
                                 this.resolvedConfig,
                                 resolvedConfig,
@@ -392,8 +392,12 @@ export class DynamicConfig implements IDynamicConfig {
         configValue: ConfigValue,
         path: Array<string>,
         updates: Array<PromisedUpdate>,
+        whitelist: Array<string>,
     ): void {
-        if (configValue.type === 'placeholder') {
+        if (
+            configValue.type === 'placeholder' &&
+            (whitelist.length === 0 || whitelist.indexOf(configValue.value._source) > -1)
+        ) {
             const resolvedPlaceholder: IResolvedPlaceholder = ConfigUtils.normalizeConfigPlaceholder(
                 configValue.value,
                 this.resolvers,
@@ -412,7 +416,7 @@ export class DynamicConfig implements IDynamicConfig {
                 ),
             ])
         } else if (configValue.type === 'object') {
-            this.collectConfigPlaceholders(configValue, path, updates)
+            this.collectConfigPlaceholders(configValue, path, updates, whitelist)
         }
     }
 
@@ -420,12 +424,13 @@ export class DynamicConfig implements IDynamicConfig {
         configValue: ConfigValue,
         path: Array<string>,
         updates: Array<PromisedUpdate>,
+        whitelist: Array<string>,
     ): Array<PromisedUpdate> {
         if (configValue.type === 'object' || configValue.type === 'root') {
             for (const key of Object.keys(configValue.properties)) {
                 const objValue: BaseConfigValue = configValue.properties[key]
                 const newPath: Array<string> = [...path, key]
-                this.appendUpdatesForObject(objValue, newPath, updates)
+                this.appendUpdatesForObject(objValue, newPath, updates, whitelist)
             }
 
             return updates
@@ -443,8 +448,12 @@ export class DynamicConfig implements IDynamicConfig {
      */
     private async replaceConfigPlaceholders(
         configValue: ConfigValue,
+        whitelist: Array<string>,
     ): Promise<ConfigValue> {
-        if (configValue.type === 'placeholder') {
+        if (
+            configValue.type === 'placeholder' &&
+            (whitelist.length === 0 || whitelist.indexOf(configValue.value._source) > -1)
+        ) {
             const resolvedPlaceholder: IResolvedPlaceholder = ConfigUtils.normalizeConfigPlaceholder(
                 configValue.value,
                 this.resolvers,
@@ -464,7 +473,7 @@ export class DynamicConfig implements IDynamicConfig {
             configValue.type === 'object' ||
             configValue.type === 'root'
         ) {
-            const unresolved: Array<PromisedUpdate> = this.collectConfigPlaceholders(configValue, [], [])
+            const unresolved: Array<PromisedUpdate> = this.collectConfigPlaceholders(configValue, [], [], whitelist)
             const paths: Array<string> = unresolved.map(
                 (next: PromisedUpdate) => next[0].join('.'),
             )
@@ -556,20 +565,24 @@ export class DynamicConfig implements IDynamicConfig {
     private initializeResolvers(currentConfig: IRootConfigValue): Promise<IRootConfigValue> {
         const allResolvers: Array<ConfigResolver> = [ ...this.resolvers.all.values() ]
         const numResolvers: number = allResolvers.length
-        const remoteOptions: IRemoteOptions = this.remoteOptions
-        const translator: ITranslator = this.translator
         let index: number = 0
 
         return new Promise(async (resolve, reject) => {
-            async function loadNextConfig(): Promise<IRootConfigValue> {
+            const loadNextConfig = async (): Promise<IRootConfigValue> => {
                 if (index < numResolvers) {
                     const nextResolver: ConfigResolver = allResolvers[index]
                     const configStore = new SyncConfig(currentConfig)
-                    const remoteConfig: any = await nextResolver.init(configStore, remoteOptions[nextResolver.name])
-                    const resolvedConfig: IRootConfigValue = ConfigBuilder.createConfigObject({
+                    const remoteConfig: any = await nextResolver.init(configStore, this.remoteOptions[nextResolver.name])
+                    const mergedConfig: IRootConfigValue = ConfigBuilder.createConfigObject({
                         type: nextResolver.type,
                         name: nextResolver.name,
-                    }, translator(remoteConfig))
+                    }, this.translator(remoteConfig))
+
+                    const resolvedConfig: IRootConfigValue = await this.replaceConfigPlaceholders(
+                        mergedConfig,
+                        [ 'env', 'process' ],
+                    ) as IRootConfigValue
+
                     currentConfig = ObjectUtils.overlayObjects(currentConfig, resolvedConfig)
 
                     // Increment index for next resolver
