@@ -567,36 +567,38 @@ export class DynamicConfig implements IDynamicConfig {
         const numResolvers: number = allResolvers.length
         let index: number = 0
 
-        return new Promise(async (resolve, reject) => {
-            const loadNextConfig = async (): Promise<IRootConfigValue> => {
-                if (index < numResolvers) {
-                    const nextResolver: ConfigResolver = allResolvers[index]
-                    const configStore = new SyncConfig(currentConfig)
-                    const remoteConfig: any = await nextResolver.init(configStore, this.remoteOptions[nextResolver.name])
-                    const mergedConfig: IRootConfigValue = ConfigBuilder.createConfigObject({
-                        type: nextResolver.type,
-                        name: nextResolver.name,
-                    }, this.translator(remoteConfig))
+        return this.replaceConfigPlaceholders(currentConfig, [ 'env', 'process' ]).then(
+            (initialConfig: IRootConfigValue) => {
+                const loadNextConfig = async (): Promise<IRootConfigValue> => {
+                    if (index < numResolvers) {
+                        const nextResolver: ConfigResolver = allResolvers[index]
+                        const configStore = new SyncConfig(initialConfig)
+                        const remoteConfig: any = await nextResolver.init(configStore, this.remoteOptions[nextResolver.name])
+                        const mergedConfig: IRootConfigValue = ConfigBuilder.createConfigObject({
+                            type: nextResolver.type,
+                            name: nextResolver.name,
+                        }, this.translator(remoteConfig))
 
-                    const resolvedConfig: IRootConfigValue = await this.replaceConfigPlaceholders(
-                        mergedConfig,
-                        [ 'env', 'process' ],
-                    ) as IRootConfigValue
+                        const resolvedConfig: IRootConfigValue = await this.replaceConfigPlaceholders(
+                            mergedConfig,
+                            [ 'env', 'process' ],
+                        ) as IRootConfigValue
 
-                    currentConfig = ObjectUtils.overlayObjects(currentConfig, resolvedConfig)
+                        initialConfig = ObjectUtils.overlayObjects(initialConfig, resolvedConfig)
 
-                    // Increment index for next resolver
-                    index += 1
+                        // Increment index for next resolver
+                        index += 1
 
-                    return loadNextConfig()
+                        return loadNextConfig()
 
-                } else {
-                    return currentConfig
+                    } else {
+                        return initialConfig
+                    }
                 }
-            }
 
-            resolve(loadNextConfig())
-        })
+                return loadNextConfig()
+            },
+        )
     }
 
     private getValueFromResolver<T>(
