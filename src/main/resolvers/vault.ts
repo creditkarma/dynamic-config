@@ -21,10 +21,10 @@ export function vaultResolver(): ISecretResolver {
         } else {
             if (vaultConfig !== null) {
                 vaultClient = new Just(new VaultClient(vaultConfig))
-                logger.log(`Vault client initialized for secret config store`)
+                logger.log(`Vault client initialized for secret config store.`)
 
             } else {
-                logger.warn(`Unable to find valid configuration for Vault`)
+                logger.warn(`Unable to find valid configuration for Vault.`)
                 vaultClient = new Nothing<VaultClient>()
             }
 
@@ -50,7 +50,7 @@ export function vaultResolver(): ISecretResolver {
                                 return Promise.resolve(value)
                             },
                             (err: any) => {
-                                logger.error(`Error retrieving key[${key}] from Vault: `, err)
+                                logger.error(`Error retrieving key[${key}] from Vault: ${err.message}`)
                                 return Promise.reject(new HVFailed(err.message))
                             },
                         )

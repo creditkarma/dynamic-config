@@ -116,14 +116,14 @@ export function consulResolver(): IRemoteResolver {
                             keys.split(',').map((key: string) => {
                                 return client.kvStore.get({ path: key, dc }).then((val: any) => {
                                     if (val === null) {
-                                        throw new Error(`Unable to find key[${key}] in Consul`)
+                                        throw new Error(`Unable to find key[${key}] in Consul.`)
                                     } else {
                                         return val
                                     }
                                 })
                             }),
                         ).catch((err: any) => {
-                            logger.error(`Unable to read keys[${keys}] from Consul: `, err)
+                            logger.error(`Unable to read keys[${keys}] from Consul: ${err.message}`)
                             return []
                         })
 
@@ -136,12 +136,12 @@ export function consulResolver(): IRemoteResolver {
                         return resolvedConfigs
 
                     } else {
-                        logger.log('No keys to load from Consul')
+                        logger.log('No keys to load from Consul.')
                         return Promise.resolve({})
                     }
                 },
                 () => {
-                    logger.log('Consul is not configured')
+                    logger.log('Consul is not configured.')
                     return Promise.resolve({})
                 },
             )
@@ -166,16 +166,16 @@ export function consulResolver(): IRemoteResolver {
                             return client.catalog.resolveAddress(key).then((address: string) => {
                                 return address
                             }, (err: Error) => {
-                                logger.error(`Error retrieving key[${key}] from Consul: `, err)
+                                logger.error(`Error retrieving key[${key}] from Consul: ${err.message}`)
                                 return Promise.reject(new ConsulFailed(err.message))
                             })
                         }
                     }, (err: any) => {
-                        logger.error(`Error retrieving key[${key}] from Consul: `, err)
+                        logger.error(`Error retrieving key[${key}] from Consul: ${err.message}`)
                         return Promise.reject(new ConsulFailed(err.message))
                     })
             }, () => {
-                logger.error(`Error retrieving key[${key}]: Consul is not configured`)
+                logger.error(`Error retrieving key[${key}]: Consul is not configured.`)
                 return Promise.reject(new ConsulNotConfigured(key))
             })
         },
@@ -198,7 +198,7 @@ export function consulResolver(): IRemoteResolver {
                         })
                 },
                 () => {
-                    logger.error(`Error watching key[${key}]: Consul is not configured`)
+                    logger.error(`Error watching key[${key}]: Consul is not configured.`)
                 },
             )
         },
