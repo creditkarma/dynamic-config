@@ -17,11 +17,11 @@ export function envResolver(): IRemoteResolver {
         type: 'remote',
         name: 'env',
 
-        init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
-            return Promise.resolve({})
+        async init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
+            return {}
         },
 
-        get<T = any>(key: string, type?: ObjectType): Promise<T> {
+        async get<T = any>(key: string, type?: ObjectType): Promise<T> {
             const value: string | undefined = process.env[key]
             if (value !== undefined) {
                 if (type !== undefined) {

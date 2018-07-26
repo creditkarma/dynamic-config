@@ -41,7 +41,7 @@ export function vaultResolver(): ISecretResolver {
             return Promise.resolve({})
         },
 
-        get<T>(key: string): Promise<T> {
+        async get<T>(key: string): Promise<T> {
             return getVaultClient().then((maybeClient: Maybe<VaultClient>) => {
                 return maybeClient.fork(
                     (client: VaultClient) => {

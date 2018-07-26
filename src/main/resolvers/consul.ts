@@ -147,7 +147,7 @@ export function consulResolver(): IRemoteResolver {
             )
         },
 
-        get<T = any>(key: string): Promise<T> {
+        async get<T = any>(key: string): Promise<T> {
             return getConsulClient().fork((client: IConsulClient) => {
                 const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
                     key,

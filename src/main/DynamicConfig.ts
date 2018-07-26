@@ -173,7 +173,7 @@ export class DynamicConfig implements IDynamicConfig {
                     }
                 }
             }, (err: DynamicConfigError) => {
-                logger.error(`Unable to load config: `, err)
+                logger.error(`Unable to load config. ${err.message}`)
                 this.setError(err)
                 throw err
             })
@@ -257,7 +257,7 @@ export class DynamicConfig implements IDynamicConfig {
                         })
 
                     }, (err: DynamicConfigError) => {
-                        logger.error(`Unable to load config: `, err)
+                        logger.error(`Unable to load config. ${err.message}`)
                         this.setError(err)
                     })
                 })
@@ -536,12 +536,12 @@ export class DynamicConfig implements IDynamicConfig {
             case DynamicConfigErrorType.InvalidConfigValue:
             case DynamicConfigErrorType.DynamicConfigInvalidResolver:
             case DynamicConfigErrorType.DynamicConfigMissingDefault:
-                logger.error(`Fatal error encountered. Entering error state and locking config: `, err)
+                logger.error(`Fatal error encountered. Entering error state and locking config. ${err.message}`)
                 this.configState = ConfigState.HAS_ERROR
                 this.error = err
 
             default:
-                logger.warn(`Non-fatal error encountered: `, err)
+                logger.warn(`Non-fatal error encountered. ${err.message}`)
         }
     }
 

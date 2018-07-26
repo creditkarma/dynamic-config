@@ -17,11 +17,11 @@ export function processResolver(): IRemoteResolver {
         type: 'remote',
         name: 'process',
 
-        init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
-            return Promise.resolve({})
+        async init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
+            return {}
         },
 
-        get<T = any>(key: string, type?: ObjectType): Promise<T> {
+        async get<T = any>(key: string, type?: ObjectType): Promise<T> {
             const value = Utils.readValueFromArgs(key, process.argv)
             if (value !== undefined) {
                 if (type !== undefined) {
