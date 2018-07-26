@@ -53,7 +53,7 @@ function loadTypeScript(filePath: string): any {
             return sandbox.exports
         }
     } catch (err) {
-        logger.error(`Error parsing typescript config[${filePath}]: `, err)
+        logger.error(`Error parsing typescript config[${filePath}]: ${err.message}`)
         return {}
     }
 }

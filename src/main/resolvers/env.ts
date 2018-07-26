@@ -32,7 +32,7 @@ export function envResolver(): IRemoteResolver {
                 }
 
             } else {
-                logger.warn(`Unable to retrieve key[${key}] from environment`)
+                logger.warn(`Unable to retrieve key[${key}] from environment.`)
                 return Promise.reject(new MissingEnvironmentVariable(key))
             }
         },

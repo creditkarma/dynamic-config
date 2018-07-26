@@ -30,7 +30,7 @@ export function processResolver(): IRemoteResolver {
                     return Promise.resolve(value) as any
                 }
             } else {
-                logger.error(`Error retrieving key[${key}] from command line arguments`)
+                logger.error(`Error retrieving key[${key}] from command line arguments.`)
                 return Promise.reject(new MissingProcessVariable(key))
             }
         },
