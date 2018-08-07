@@ -464,7 +464,7 @@ describe('DynamicConfig', () => {
                 })
             })
 
-            it('should fallback to returning from local config', async () => {
+            it('should reject with same error for next requested key', async () => {
                 return dynamicConfig.get<object>('project.health').then((actual: object) => {
                     throw new Error('Should reject')
                 }, (err: any) => {
