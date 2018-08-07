@@ -70,11 +70,15 @@ export interface ILoadedFile {
 
 // RESOLVER TYPES
 
-export interface IResolverMap {
+export interface IResolvers {
     env: IRemoteResolver
     process: IRemoteResolver
     remote?: IRemoteResolver
     secret?: ISecretResolver
+}
+
+export interface INamedResolvers {
+    [name: string]: ConfigResolver
 }
 
 export type ConfigResolver =

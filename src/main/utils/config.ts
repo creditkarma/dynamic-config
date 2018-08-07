@@ -19,9 +19,9 @@ import {
     IConfigPlaceholder,
     IConfigProperties,
     IConfigTranslator,
+    INamedResolvers,
     IObjectConfigValue,
     IResolvedPlaceholder,
-    IResolverMap,
     IRootConfigValue,
     ITranslator,
     ObjectType,
@@ -82,16 +82,10 @@ export async function readValueForType(raw: string, type: ObjectType): Promise<a
 
 export function normalizeConfigPlaceholder(
     placeholder: IConfigPlaceholder,
-    resolvers: IResolverMap,
+    resolvers: INamedResolvers,
 ): IResolvedPlaceholder {
     const source: string = placeholder._source
-    const resolver: ConfigResolver | undefined =
-        Object.keys(resolvers).reduce<ConfigResolver | undefined>((acc, next) => {
-            if (source === (resolvers as any)[next].name) {
-                acc = (resolvers as any)[next]
-            }
-            return acc
-        }, undefined)
+    const resolver: ConfigResolver | undefined = resolvers[source]
 
     if (resolver === undefined) {
         throw new ResolverUnavailable(placeholder._key)
