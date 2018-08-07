@@ -12,8 +12,6 @@ import {
 
 import {
     consulResolver,
-    envResolver,
-    processResolver,
     vaultResolver,
 } from './resolvers'
 
@@ -71,13 +69,21 @@ export const configSettingsSchema: object = {
     },
 }
 
-const defaultTranslatorMap: { [name: string]: IConfigTranslator } = {
+interface ITranslatorMap {
+    [name: string]: IConfigTranslator
+}
+
+const defaultTranslatorMap: ITranslatorMap = {
     debug: debugTranslator,
     env: envTranslator,
     consul: consulTranslator,
 }
 
-const defaultLoaderMap: { [name: string]: IFileLoader } = {
+interface ILoaderMap {
+    [name: string]: IFileLoader
+}
+
+const defaultLoaderMap: ILoaderMap = {
     js: jsLoader,
     ts: tsLoader,
     json: jsonLoader,
@@ -85,11 +91,13 @@ const defaultLoaderMap: { [name: string]: IFileLoader } = {
     yaml: ymlLoader,
 }
 
-const defaultResolverMap: { [name: string]: () => ConfigResolver } = {
+interface IResolverMap {
+    [name: string]: () => ConfigResolver
+}
+
+const defaultResolverMap: IResolverMap = {
     consul: consulResolver,
     vault: vaultResolver,
-    env: envResolver,
-    process: processResolver,
 }
 
 function settingsToOptions(settings: IConfigSettings): IConfigOptions {
@@ -117,8 +125,6 @@ function settingsToOptions(settings: IConfigSettings): IConfigOptions {
 
     } else {
         result.resolvers = [
-            envResolver(),
-            processResolver(),
             consulResolver(),
             vaultResolver(),
         ]

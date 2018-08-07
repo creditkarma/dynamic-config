@@ -456,34 +456,35 @@ describe('DynamicConfig', () => {
         })
 
         describe('get', () => {
-            it('should return the value from local config', async () => {
+            it('should reject when config uses consul', async () => {
                 return dynamicConfig.get<string>('database.username').then((actual: string) => {
-                    expect(actual).to.equal('root')
+                    throw new Error('Should reject')
+                }, (err: any) => {
+                    expect(err.message).to.equal('Unable to retrieve key[test-service?dc=dc1]. No resolver found.')
                 })
             })
 
             it('should fallback to returning from local config', async () => {
                 return dynamicConfig.get<object>('project.health').then((actual: object) => {
-                    expect(actual).to.equal({
-                        control: '/javascript',
-                        response: 'BOOYA',
-                    })
+                    throw new Error('Should reject')
+                }, (err: any) => {
+                    expect(err.message).to.equal('Unable to retrieve key[test-service?dc=dc1]. No resolver found.')
                 })
             })
 
             it('should reject for a missing key', async () => {
                 return dynamicConfig.get<object>('fake.path').then((actual: object) => {
-                    throw new Error('Should reject for missing key')
+                    throw new Error('Should reject')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[fake.path].')
+                    expect(err.message).to.equal('Unable to retrieve key[test-service?dc=dc1]. No resolver found.')
                 })
             })
 
             it('should reject if the value does not match specified schema', async () => {
                 return dynamicConfig.get<object>('database').then((actual: object) => {
-                    throw new Error('Should reject for missing key')
+                    throw new Error('Should reject')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Object does not match expected schema[database].')
+                    expect(err.message).to.equal('Unable to retrieve key[test-service?dc=dc1]. No resolver found.')
                 })
             })
         })
@@ -491,7 +492,7 @@ describe('DynamicConfig', () => {
         describe('getSecretValue', () => {
             it('should reject when Vault not configured', async () => {
                 return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
-                    throw new Error(`Unable to retrieve key[test-secret]. Should reject when Vault not configured`)
+                    throw new Error('Should reject')
                 }, (err: any) => {
                     expect(err.message).to.equal('Unable to retrieve key[test-secret]. No resolver found.')
                 })

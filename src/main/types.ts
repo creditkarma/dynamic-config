@@ -71,8 +71,10 @@ export interface ILoadedFile {
 // RESOLVER TYPES
 
 export interface IResolverMap {
-    names: Set<string>
-    all: Map<string, ConfigResolver>
+    env: IRemoteResolver
+    process: IRemoteResolver
+    remote?: IRemoteResolver
+    secret?: ISecretResolver
 }
 
 export type ConfigResolver =

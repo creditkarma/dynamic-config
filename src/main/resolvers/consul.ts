@@ -109,8 +109,10 @@ export function consulResolver(): IRemoteResolver {
             )
 
             return Maybe.all(getConsulClient(), consulDc).fork(
+                // Some case
                 ([client, dc]) => {
                     const keys: string = consulKeys.getOrElse('')
+
                     if (keys !== '') {
                         const rawConfigs: Promise<Array<any>> = Promise.all(
                             keys.split(',').map((key: string) => {
@@ -140,6 +142,7 @@ export function consulResolver(): IRemoteResolver {
                         return {}
                     }
                 },
+                // Nothing case
                 () => {
                     logger.log('Consul is not configured.')
                     return {}
@@ -148,36 +151,49 @@ export function consulResolver(): IRemoteResolver {
         },
 
         async get<T = any>(key: string): Promise<T> {
-            return getConsulClient().fork((client: IConsulClient) => {
-                const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
-                    key,
-                )
+            return getConsulClient().fork(
+                // Some case
+                (client: IConsulClient) => {
+                    const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
+                        key,
+                    )
 
-                return client.kvStore
-                    .get({ path: consulNamespace.fork((val: string) => {
-                        return `${addTrailingSlash(val)}${remoteOptions.key}`
-                    }, () => {
-                        return `${remoteOptions.key}`
-                    }), dc: remoteOptions.dc || consulDc.getOrElse('') }).then((val: any) => {
-                        if (val !== null) {
-                            return val
+                    return client.kvStore
+                        .get({
+                            path: consulNamespace.fork(
+                                // Some case
+                                (val: string) => {
+                                    return `${addTrailingSlash(val)}${remoteOptions.key}`
+                                },
+                                // Nothing case
+                                () => {
+                                    return `${remoteOptions.key}`
+                                },
+                            ),
+                            dc: (remoteOptions.dc || consulDc.getOrElse('')),
+                        }).then((val: any) => {
+                            if (val !== null) {
+                                return val
 
-                        } else {
-                            return client.catalog.resolveAddress(key).then((address: string) => {
-                                return address
-                            }, (err: Error) => {
-                                logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
-                                throw new ConsulFailed(err.message)
-                            })
-                        }
-                    }, (err: any) => {
-                        logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
-                        throw new ConsulFailed(err.message)
-                    })
-            }, () => {
-                logger.warn(`Error retrieving key[${key}]. Consul is not configured.`)
-                throw new ConsulNotConfigured(key)
-            })
+                            } else {
+                                return client.catalog.resolveAddress(key).then((address: string) => {
+                                    return address
+                                }, (err: Error) => {
+                                    logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
+                                    throw new ConsulFailed(err.message)
+                                })
+                            }
+                        }, (err: any) => {
+                            logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
+                            throw new ConsulFailed(err.message)
+                        })
+                },
+                // Nothing case
+                () => {
+                    logger.warn(`Error retrieving key[${key}]. Consul is not configured.`)
+                    throw new ConsulNotConfigured(key)
+                },
+            )
         },
 
         watch<T = any>(key: string, callback: WatchFunction<T>, type?: ObjectType): void {
@@ -188,12 +204,19 @@ export function consulResolver(): IRemoteResolver {
                     )
 
                     client.kvStore
-                        .watch({ path: consulNamespace.fork((val: string) => {
-                            return `${addTrailingSlash(val)}${remoteOptions.key}`
-                        }, () => {
-                            return `${remoteOptions.key}`
-                        }), dc: remoteOptions.dc || consulDc.getOrElse('') })
-                        .onValue((val: any) => {
+                        .watch({
+                            path: consulNamespace.fork(
+                                // Some case
+                                (val: string) => {
+                                    return `${addTrailingSlash(val)}${remoteOptions.key}`
+                                },
+                                // Nothing case
+                                () => {
+                                    return `${remoteOptions.key}`
+                                },
+                            ),
+                            dc: (remoteOptions.dc || consulDc.getOrElse('')),
+                        }).onValue((val: any) => {
                             callback(val)
                         })
                 },
