@@ -28,7 +28,8 @@ import {
 } from '../types'
 
 import {
-    DynamicConfigInvalidType, ResolverUnavailable,
+    DynamicConfigInvalidType,
+    ResolverUnavailable,
 } from '../errors'
 
 import * as logger from '../logger'
