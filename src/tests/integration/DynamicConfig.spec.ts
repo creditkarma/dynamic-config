@@ -1,4 +1,4 @@
-import { KvStore } from '@creditkarma/consul-client'
+import { Catalog, KvStore } from '@creditkarma/consul-client'
 import { expect } from 'code'
 import * as Lab from 'lab'
 import * as path from 'path'
@@ -199,7 +199,8 @@ describe('DynamicConfig', () => {
             ],
         })
 
-        const consulClient = new KvStore('http://localhost:8510')
+        const kvStore = new KvStore('http://localhost:8510')
+        const catalog = new Catalog('http://localhost:8510')
 
         describe('watch', () => {
             it('should return an observer for requested key', (done) => {
@@ -209,15 +210,53 @@ describe('DynamicConfig', () => {
                     if (count === 0) {
                         expect(next).to.equal('Sup3rS3cr3t')
                         count += 1
-                        consulClient.set({ path: 'password', dc: 'dc1' }, '123456')
+                        kvStore.set({ path: 'password', dc: 'dc1' }, '123456')
 
                     } else if (count === 1) {
                         expect(next).to.equal('123456')
                         count += 1
-                        consulClient.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
+                        kvStore.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
 
                     } else if (count === 2) {
                         expect(next).to.equal('Sup3rS3cr3t')
+                        count += 1
+                        done()
+                    }
+                })
+            })
+
+            it('should be able to watch for changes to service address', (done) => {
+                const address = dynamicConfig.watch('test-service.destination')
+                let count: number = 0
+                address.onValue((next: string) => {
+                    if (count === 0) {
+                        expect(next).to.equal('127.0.0.1:3000')
+                        count += 1
+                        catalog.registerEntity({
+                            Node: 'bango',
+                            Address: '192.168.4.19',
+                            Service: {
+                                Service: 'test-service',
+                                Address: '192.145.3.12',
+                                Port: 3000,
+                            },
+                        })
+
+                    } else if (count === 1) {
+                        expect(next).to.equal('192.145.3.12:3000')
+                        count += 1
+                        catalog.registerEntity({
+                            Node: 'bango',
+                            Address: '192.168.4.19',
+                            Service: {
+                                Service: 'test-service',
+                                Address: '127.0.0.1',
+                                Port: 3000,
+                            },
+                        })
+
+                    } else if (count === 2) {
+                        expect(next).to.equal('127.0.0.1:3000')
                         count += 1
                         done()
                     }
@@ -328,12 +367,12 @@ describe('DynamicConfig', () => {
                     if (count === 0) {
                         expect(next).to.equal('Sup3rS3cr3t')
                         count += 1
-                        consulClient.set({ path: 'password', dc: 'dc1' }, '123456')
+                        kvStore.set({ path: 'password', dc: 'dc1' }, '123456')
 
                     } else if (count === 1) {
                         expect(next).to.equal('123456')
                         count += 1
-                        consulClient.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
+                        kvStore.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
 
                     } else if (count === 2) {
                         expect(next).to.equal('Sup3rS3cr3t')

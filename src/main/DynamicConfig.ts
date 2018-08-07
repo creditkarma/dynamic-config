@@ -37,9 +37,10 @@ import {
     IConfigOptions,
     IDynamicConfig,
     ILoadedFile,
+    INamedResolvers,
     IRemoteOptions,
     IResolvedPlaceholder,
-    IResolverMap,
+    IResolvers,
     IRootConfigValue,
     ISchemaMap,
     ITranslator,
@@ -66,7 +67,8 @@ export class DynamicConfig implements IDynamicConfig {
     private resolvedConfig: IRootConfigValue
     private initializedResolvers: Array<string>
 
-    private resolvers: IResolverMap
+    private resolvers: IResolvers
+    private resolversByName: INamedResolvers
     private translator: ITranslator
     private schemas: ISchemaMap
     private error: DynamicConfigError | null
@@ -107,12 +109,15 @@ export class DynamicConfig implements IDynamicConfig {
         }
         this.observerMap = new Map()
         this.initializedResolvers = [ 'env', 'process' ]
+        this.resolversByName = {}
         this.register(...resolvers)
     }
 
     public register(...resolvers: Array<ConfigResolver>): void {
         if (this.configState === ConfigState.INIT) {
             resolvers.forEach((resolver: ConfigResolver) => {
+                this.resolversByName[resolver.name] = resolver
+
                 switch (resolver.type) {
                     case 'remote':
                         this.resolvers.remote = resolver
@@ -180,6 +185,8 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public watch<T>(key: string): IVariable<T> {
+        let previousVal: T | undefined
+
         if (this.observerMap.has(key)) {
             return this.observerMap.get(key)!
 
@@ -196,10 +203,13 @@ export class DynamicConfig implements IDynamicConfig {
 
                     if (resolver !== undefined && resolver.type === 'remote' && value.source.key !== undefined) {
                         resolver.watch(value.source.key, (val: any) => {
-                            const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(value.source, val)
-                            this.setConfig(
-                                ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
-                            )
+                            if (val !== previousVal) {
+                                previousVal = val
+                                const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(value.source, val)
+                                this.setConfig(
+                                    ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
+                                )
+                            }
                         })
 
                     } else {
@@ -231,10 +241,13 @@ export class DynamicConfig implements IDynamicConfig {
 
                             if (resolver !== undefined && resolver.type === 'remote' && rawValue.source.key !== undefined) {
                                 resolver.watch(rawValue.source.key, (val: any) => {
-                                    const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
-                                    this.setConfig(
-                                        ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
-                                    )
+                                    if (val !== previousVal) {
+                                        previousVal = val
+                                        const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
+                                        this.setConfig(
+                                            ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
+                                        )
+                                    }
                                 })
 
                             } else {
@@ -388,7 +401,7 @@ export class DynamicConfig implements IDynamicConfig {
         ) {
             const resolvedPlaceholder: IResolvedPlaceholder = ConfigUtils.normalizeConfigPlaceholder(
                 configValue.value,
-                this.resolvers,
+                this.resolversByName,
             )
 
             updates.push([
@@ -444,7 +457,7 @@ export class DynamicConfig implements IDynamicConfig {
         ) {
             const resolvedPlaceholder: IResolvedPlaceholder = ConfigUtils.normalizeConfigPlaceholder(
                 configValue.value,
-                this.resolvers,
+                this.resolversByName,
             )
 
             return this.resolvePlaceholder(resolvedPlaceholder).then(
@@ -622,14 +635,6 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     private getResolverForValue(value: BaseConfigValue): ConfigResolver | undefined {
-        return Object.keys(this.resolvers).reduce<ConfigResolver | undefined>(
-            (acc: ConfigResolver | undefined, next: string) => {
-                if ((this.resolvers as any)[next].name === value.source.name) {
-                    acc = (this.resolvers as any)[next]
-                }
-
-                return acc
-            }, undefined,
-        )
+        return this.resolversByName[value.source.name]
     }
 }

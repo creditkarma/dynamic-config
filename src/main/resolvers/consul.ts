@@ -203,22 +203,43 @@ export function consulResolver(): IRemoteResolver {
                         key,
                     )
 
-                    client.kvStore
-                        .watch({
-                            path: consulNamespace.fork(
-                                // Some case
-                                (val: string) => {
-                                    return `${addTrailingSlash(val)}${remoteOptions.key}`
-                                },
-                                // Nothing case
-                                () => {
-                                    return `${remoteOptions.key}`
-                                },
-                            ),
-                            dc: (remoteOptions.dc || consulDc.getOrElse('')),
-                        }).onValue((val: any) => {
-                            callback(val)
-                        })
+                    const pathForKey = consulNamespace.fork(
+                        // Some case
+                        (val: string) => {
+                            return `${addTrailingSlash(val)}${remoteOptions.key}`
+                        },
+                        // Nothing case
+                        () => {
+                            return `${remoteOptions.key}`
+                        },
+                    )
+
+                    client.kvStore.get({
+                        path: pathForKey,
+                        dc: (remoteOptions.dc || consulDc.getOrElse('')),
+                    }).then((_val: any) => {
+                        if (_val !== null) {
+                            client.kvStore
+                                .watch({
+                                    path: pathForKey,
+                                    dc: (remoteOptions.dc || consulDc.getOrElse('')),
+                                }).onValue((val: any) => {
+                                    callback(val)
+                                })
+
+                        } else {
+                            client.catalog.resolveAddress(key).then((address: string) => {
+                                client.catalog.watchAddress(key).onValue((val: any) => {
+                                    callback(val)
+                                })
+
+                            }, (err: any) => {
+                                logger.error(`Unable to watch key[${key}]. Value not found in Consul`)
+                            })
+                        }
+                    }, (err: any) => {
+                        logger.error(`Unable to watch key[${key}]. Value not found in Consul`)
+                    })
                 },
                 () => {
                     logger.warn(`Unable to watch changes for key[${key}]. Consul is not configured.`)
