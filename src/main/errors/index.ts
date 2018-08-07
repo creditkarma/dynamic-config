@@ -3,6 +3,7 @@ export const enum DynamicConfigErrorType {
     DynamicConfigMissingKey = 'DynamicConfigMissingKey',
     DynamicConfigInvalidObject = 'DynamicConfigInvalidObject',
     DynamicConfigInvalidResolver = 'DynamicConfigInvalidResolver',
+    DynamicConfigInvalidType = 'DynamicConfigInvalidType',
     DynamicConfigMissingDefault = 'DynamicConfigMissingDefault',
     UnknownError = 'UnkownError',
     HVNotConfigured = 'HVNotConfigured',
@@ -19,7 +20,8 @@ export type DynamicConfigError =
     MissingConfigPlaceholder | DynamicConfigMissingKey | DynamicConfigInvalidObject |
     DynamicConfigInvalidResolver | HVNotConfigured | HVFailed | ConsulFailed |
     ResolverUnavailable | InvalidConfigValue | MissingEnvironmentVariable |
-    MissingProcessVariable | UnknownError | DynamicConfigMissingDefault
+    MissingProcessVariable | UnknownError | DynamicConfigMissingDefault |
+    DynamicConfigInvalidType
 
 export class InvalidConfigValue extends Error {
     public readonly type = DynamicConfigErrorType.InvalidConfigValue
@@ -53,6 +55,13 @@ export class DynamicConfigInvalidObject extends Error {
     public readonly type = DynamicConfigErrorType.DynamicConfigInvalidObject
     constructor(key: string) {
         super(`Object does not match expected schema[${key}].`)
+    }
+}
+
+export class DynamicConfigInvalidType extends Error {
+    public readonly type = DynamicConfigErrorType.DynamicConfigInvalidType
+    constructor(type: string) {
+        super(`Value cannot parse as expected type[${type}]`)
     }
 }
 

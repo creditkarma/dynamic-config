@@ -23,7 +23,7 @@
     "precopy-test-config": "rimraf dist/tests/integration/config",
     "copy-test-config": "cp -r src/tests/integration/config dist/tests/integration/config && cp -r src/tests/integration/nested dist/tests/integration/nested",
     "pretest": "npm run docker:kill && npm run build && npm run copy-test-config",
-    "test": "npm run test:unit && npm run test:integration",
+    "test": "npm run test:integration",
     "test:unit": "lab --timeout 10000 --verbose -l -S -P spec dist/tests/unit",
     "pretest:integration": "npm run docker",
     "test:integration": "wait-on --timeout 20000 http://localhost:8510 http://localhost:8211 && node dist/tests/integration/bootstrap.js && lab --timeout 15000 --verbose -l -S -P spec dist/tests/integration",

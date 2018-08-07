@@ -14,6 +14,7 @@ import {
 
 import {
     BaseConfigValue,
+    ConfigResolver,
     ConfigValue,
     IConfigPlaceholder,
     IConfigProperties,
@@ -25,6 +26,10 @@ import {
     ITranslator,
     ObjectType,
 } from '../types'
+
+import {
+    DynamicConfigInvalidType, ResolverUnavailable,
+} from '../errors'
 
 import * as logger from '../logger'
 
@@ -66,7 +71,7 @@ export async function readValueForType(raw: string, type: ObjectType): Promise<a
             }
         } catch (err) {
             logger.error(`Unable to parse value as type[${type}]`)
-            throw new Error(`Unable to parse value as type[${type}]`)
+            throw new DynamicConfigInvalidType(type)
         }
     } else {
         logger.log(`Raw value of type[${rawType}] being returned as is`)
@@ -79,8 +84,18 @@ export function normalizeConfigPlaceholder(
     resolvers: IResolverMap,
 ): IResolvedPlaceholder {
     const source: string = placeholder._source
-    const resolver = resolvers.all.get(source)
-    if (resolver !== undefined) {
+    const resolver: ConfigResolver | undefined =
+        Object.keys(resolvers).reduce<ConfigResolver | undefined>((acc, next) => {
+            if (source === (resolvers as any)[next].name) {
+                acc = (resolvers as any)[next]
+            }
+            return acc
+        }, undefined)
+
+    if (resolver === undefined) {
+        throw new ResolverUnavailable(placeholder._key)
+
+    } else {
         return {
             key: placeholder._key,
             resolver: {
@@ -91,8 +106,6 @@ export function normalizeConfigPlaceholder(
             default: placeholder._default,
         }
     }
-
-    throw new Error(`No resolver found for remote[${source}]`)
 }
 
 export function isValidRemote(name: string, resolvers: Set<string>): boolean {

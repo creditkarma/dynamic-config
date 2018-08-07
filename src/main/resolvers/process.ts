@@ -26,9 +26,11 @@ export function processResolver(): IRemoteResolver {
             if (value !== undefined) {
                 if (type !== undefined) {
                     return ConfigUtils.readValueForType(value, type)
+
                 } else {
                     return Promise.resolve(value) as any
                 }
+
             } else {
                 logger.error(`Error retrieving key[${key}] from command line arguments.`)
                 return Promise.reject(new MissingProcessVariable(key))
