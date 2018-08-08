@@ -19,7 +19,6 @@ import {
     DynamicConfigError,
     DynamicConfigErrorType,
     DynamicConfigInvalidObject,
-    DynamicConfigInvalidResolver,
     DynamicConfigMissingKey,
     MissingConfigPlaceholder,
     ResolverUnavailable,
@@ -32,13 +31,13 @@ import {
 
 import {
     BaseConfigValue,
-    ConfigResolver,
     ConfigValue,
     IConfigOptions,
     IDynamicConfig,
     ILoadedFile,
     INamedResolvers,
     IRemoteOptions,
+    IRemoteResolver,
     IResolvedPlaceholder,
     IResolvers,
     IRootConfigValue,
@@ -82,7 +81,8 @@ export class DynamicConfig implements IDynamicConfig {
         configPath,
         configEnv = Utils.readFirstMatch(CONFIG_ENV, 'NODE_ENV'),
         remoteOptions = {},
-        resolvers = [],
+        remoteResolver,
+        secretResolver,
         loaders = [],
         translators = [],
         schemas = {},
@@ -104,21 +104,31 @@ export class DynamicConfig implements IDynamicConfig {
         })
         this.remoteOptions = remoteOptions
         this.observerMap = new Map()
-        this.initializedResolvers = [ 'env', 'process' ]
+
         this.resolversByName = {
             env: envResolver(),
             process: processResolver(),
         }
+
+        this.initializedResolvers = Object.keys(this.resolversByName)
+
         this.resolvers = {
             env: this.resolversByName.env,
             process: this.resolversByName.process,
         }
-        this.register(...resolvers)
+
+        if (remoteResolver !== undefined) {
+            this.register(remoteResolver)
+        }
+
+        if (secretResolver !== undefined) {
+            this.register(secretResolver)
+        }
     }
 
-    public register(...resolvers: Array<ConfigResolver>): void {
+    public register(...resolvers: Array<IRemoteResolver>): void {
         if (this.configState === ConfigState.INIT) {
-            resolvers.forEach((resolver: ConfigResolver) => {
+            resolvers.forEach((resolver: IRemoteResolver) => {
                 this.resolversByName[resolver.name] = resolver
 
                 switch (resolver.type) {
@@ -131,8 +141,7 @@ export class DynamicConfig implements IDynamicConfig {
                         break
 
                     default:
-                        const _exhaustiveCheck: never = resolver
-                        throw new Error(`Unknown resolver type: ${_exhaustiveCheck}`)
+                        throw new Error(`Unknown resolver type: ${resolver.type}`)
                 }
             })
 
@@ -200,7 +209,7 @@ export class DynamicConfig implements IDynamicConfig {
                         sink(val)
                     }
 
-                    const resolver: ConfigResolver | undefined = this.getResolverForValue(value)
+                    const resolver: IRemoteResolver | undefined = this.getResolverForValue(value)
 
                     if (resolver !== undefined && resolver.type === 'remote' && value.source.key !== undefined) {
                         resolver.watch(value.source.key, (val: any) => {
@@ -235,7 +244,7 @@ export class DynamicConfig implements IDynamicConfig {
                                 sink(val)
                             }
 
-                            const resolver: ConfigResolver | undefined = this.getResolverForValue(rawValue)
+                            const resolver: IRemoteResolver | undefined = this.getResolverForValue(rawValue)
 
                             if (resolver !== undefined && resolver.type === 'remote' && rawValue.source.key !== undefined) {
                                 resolver.watch(rawValue.source.key, (val: any) => {
@@ -328,55 +337,37 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     /**
-     * Given a ConfigPlaceholder attempt to find the value in Vault
-     */
-    private async getSecretPlaceholder(placeholder: IResolvedPlaceholder): Promise<any> {
-        return this.getSecretValue(placeholder.key).catch((err: any) => {
-            if (err instanceof DynamicConfigMissingKey) {
-                return Promise.reject(
-                    new MissingConfigPlaceholder(placeholder.key),
-                )
-
-            } else {
-                return Promise.reject(err)
-            }
-        })
-    }
-
-    /**
      * Given a ConfigPlaceholder attempt to find the value in Consul
      */
     private async getRemotePlaceholder(placeholder: IResolvedPlaceholder): Promise<any> {
-        return this.getRemoteValue(placeholder.key).then(
-            (remoteValue: any) => {
-                return Promise.resolve(remoteValue)
-            },
-            (err: any) => {
-                if (placeholder.default !== undefined) {
-                    return Promise.resolve(placeholder.default)
+        const resolver: IRemoteResolver | undefined = this.resolversByName[placeholder.resolver.name]
 
-                } else if (err instanceof DynamicConfigMissingKey) {
-                    return Promise.reject(
-                        new MissingConfigPlaceholder(placeholder.key),
-                    )
+        if (resolver === undefined) {
+            if (placeholder.default !== undefined) {
+                return placeholder.default
+            } else {
+                throw new ResolverUnavailable(placeholder.key)
+            }
 
-                } else {
-                    return Promise.reject(err)
-                }
-            },
-        )
-    }
+        } else {
+            return resolver.get(placeholder.key).then(
+                (remoteValue: any) => {
+                    return Promise.resolve(remoteValue)
+                },
+                (err: any) => {
+                    if (placeholder.default !== undefined) {
+                        return Promise.resolve(placeholder.default)
 
-    private async resolvePlaceholder(placeholder: IResolvedPlaceholder): Promise<any> {
-        switch (placeholder.resolver.type) {
-            case 'remote':
-                return this.getRemotePlaceholder(placeholder)
+                    } else if (err instanceof DynamicConfigMissingKey) {
+                        return Promise.reject(
+                            new MissingConfigPlaceholder(placeholder.key),
+                        )
 
-            case 'secret':
-                return this.getSecretPlaceholder(placeholder)
-
-            default:
-                throw new DynamicConfigInvalidResolver(placeholder.resolver.type)
+                    } else {
+                        return Promise.reject(err)
+                    }
+                },
+            )
         }
     }
 
@@ -401,7 +392,7 @@ export class DynamicConfig implements IDynamicConfig {
 
             updates.push([
                 path,
-                this.resolvePlaceholder(resolvedPlaceholder).then(
+                this.getRemotePlaceholder(resolvedPlaceholder).then(
                     (value: any) => {
                         return ConfigBuilder.buildBaseConfigValue({
                             type: resolvedPlaceholder.resolver.type,
@@ -455,7 +446,7 @@ export class DynamicConfig implements IDynamicConfig {
                 this.resolversByName,
             )
 
-            return this.resolvePlaceholder(resolvedPlaceholder).then(
+            return this.getRemotePlaceholder(resolvedPlaceholder).then(
                 (value: any) => {
                     return ConfigBuilder.buildBaseConfigValue({
                         type: resolvedPlaceholder.resolver.type,
@@ -562,10 +553,10 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     private async initializeResolvers(currentConfig: IRootConfigValue): Promise<IRootConfigValue> {
-        const allResolvers: Array<ConfigResolver> = [
+        const allResolvers: Array<IRemoteResolver> = [
             this.resolvers.remote,
             this.resolvers.secret,
-        ].filter((next) => next !== undefined) as Array<ConfigResolver>
+        ].filter((next) => next !== undefined) as Array<IRemoteResolver>
         const numResolvers: number = allResolvers.length
         let index: number = 0
 
@@ -573,7 +564,7 @@ export class DynamicConfig implements IDynamicConfig {
             (initialConfig: IRootConfigValue) => {
                 const loadNextConfig = async (): Promise<IRootConfigValue> => {
                     if (index < numResolvers) {
-                        const nextResolver: ConfigResolver = allResolvers[index]
+                        const nextResolver: IRemoteResolver = allResolvers[index]
                         const configStore = new SyncConfig(initialConfig)
                         const remoteConfig: any = await nextResolver.init(configStore, this.remoteOptions[nextResolver.name])
                         const mergedConfig: IRootConfigValue = ConfigBuilder.createConfigObject({
@@ -608,7 +599,7 @@ export class DynamicConfig implements IDynamicConfig {
         key: string,
         type: ResolverType,
     ): Promise<T> {
-        const resolver: ConfigResolver | undefined = this.resolvers[type]
+        const resolver: IRemoteResolver | undefined = this.resolvers[type]
 
         if (resolver !== undefined) {
             return resolver.get<T>(key).then((remoteValue: T) => {
@@ -629,7 +620,7 @@ export class DynamicConfig implements IDynamicConfig {
         }
     }
 
-    private getResolverForValue(value: BaseConfigValue): ConfigResolver | undefined {
+    private getResolverForValue(value: BaseConfigValue): IRemoteResolver | undefined {
         return this.resolversByName[value.source.name]
     }
 }

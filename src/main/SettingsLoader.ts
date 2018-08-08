@@ -1,7 +1,15 @@
 import {  } from 'ajv'
 import * as fs from 'fs'
 import * as logger from './logger'
-import { ConfigResolver, IConfigOptions, IConfigTranslator, IFileLoader, IRemoteOptions } from './types'
+
+import {
+    IConfigOptions,
+    IConfigTranslator,
+    IFileLoader,
+    IRemoteOptions,
+    IRemoteResolver,
+} from './types'
+
 import { FileUtils, JSONUtils } from './utils'
 
 import {
@@ -92,7 +100,7 @@ const defaultLoaderMap: ILoaderMap = {
 }
 
 interface IResolverMap {
-    [name: string]: () => ConfigResolver
+    [name: string]: () => IRemoteResolver
 }
 
 const defaultResolverMap: IResolverMap = {
@@ -116,18 +124,17 @@ function settingsToOptions(settings: IConfigSettings): IConfigOptions {
     }
 
     if (settings.resolvers !== undefined) {
-        result.resolvers = settings.resolvers.reduce((acc: Array<ConfigResolver>, next: string) => {
-            if (defaultResolverMap[next] !== undefined) {
-                acc.push(defaultResolverMap[next]())
-            }
-            return acc
-        }, [])
+        if (settings.resolvers.indexOf('consul') > -1) {
+            result.remoteResolver = defaultResolverMap.consul()
+        }
+
+        if (settings.resolvers.indexOf('vault') > -1) {
+            result.secretResolver = defaultResolverMap.vault()
+        }
 
     } else {
-        result.resolvers = [
-            consulResolver(),
-            vaultResolver(),
-        ]
+        result.remoteResolver = consulResolver()
+        result.secretResolver = vaultResolver()
     }
 
     if (settings.loaders !== undefined) {

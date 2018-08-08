@@ -14,13 +14,13 @@ import {
 
 import {
     BaseConfigValue,
-    ConfigResolver,
     ConfigValue,
     IConfigPlaceholder,
     IConfigProperties,
     IConfigTranslator,
     INamedResolvers,
     IObjectConfigValue,
+    IRemoteResolver,
     IResolvedPlaceholder,
     IRootConfigValue,
     ITranslator,
@@ -85,7 +85,7 @@ export function normalizeConfigPlaceholder(
     resolvers: INamedResolvers,
 ): IResolvedPlaceholder {
     const source: string = placeholder._source
-    const resolver: ConfigResolver | undefined = resolvers[source]
+    const resolver: IRemoteResolver | undefined = resolvers[source]
 
     if (resolver === undefined) {
         throw new ResolverUnavailable(placeholder._key)
