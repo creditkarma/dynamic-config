@@ -14,8 +14,7 @@ export interface IConfigOptions {
     configPath?: string
     configEnv?: string
     remoteOptions?: IRemoteOptions
-    remoteResolver?: IRemoteResolver
-    secretResolver?: IRemoteResolver
+    resolvers?: IResolverMap
     loaders?: Array<IFileLoader>
     translators?: Array<IConfigTranslator>
     schemas?: ISchemaMap
@@ -74,6 +73,11 @@ export interface ILoadedFile {
 export interface IResolvers {
     env: IRemoteResolver
     process: IRemoteResolver
+    remote?: IRemoteResolver
+    secret?: IRemoteResolver
+}
+
+export interface IResolverMap {
     remote?: IRemoteResolver
     secret?: IRemoteResolver
 }

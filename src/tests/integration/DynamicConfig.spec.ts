@@ -38,8 +38,10 @@ describe('DynamicConfig', () => {
                     consulDc: 'dc1',
                 },
             },
-            remoteResolver: consulResolver(),
-            secretResolver: vaultResolver(),
+            resolvers: {
+                remote: consulResolver(),
+                secret: vaultResolver(),
+            },
             loaders: [
                 jsonLoader,
                 ymlLoader,
@@ -180,8 +182,10 @@ describe('DynamicConfig', () => {
                     consulDc: 'dc1',
                 },
             },
-            remoteResolver: consulResolver(),
-            secretResolver: vaultResolver(),
+            resolvers: {
+                remote: consulResolver(),
+                secret: vaultResolver(),
+            },
             loaders: [
                 jsonLoader,
                 ymlLoader,
@@ -390,8 +394,10 @@ describe('DynamicConfig', () => {
                     consulDc: 'dc1',
                 },
             },
-            remoteResolver: consulResolver(),
-            secretResolver: vaultResolver(),
+            resolvers: {
+                remote: consulResolver(),
+                secret: vaultResolver(),
+            },
             loaders: [
                 jsonLoader,
                 ymlLoader,

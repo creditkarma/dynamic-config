@@ -81,8 +81,7 @@ export class DynamicConfig implements IDynamicConfig {
         configPath,
         configEnv = Utils.readFirstMatch(CONFIG_ENV, 'NODE_ENV'),
         remoteOptions = {},
-        remoteResolver,
-        secretResolver,
+        resolvers = {},
         loaders = [],
         translators = [],
         schemas = {},
@@ -117,12 +116,12 @@ export class DynamicConfig implements IDynamicConfig {
             process: this.resolversByName.process,
         }
 
-        if (remoteResolver !== undefined) {
-            this.register(remoteResolver)
+        if (resolvers.remote !== undefined) {
+            this.register(resolvers.remote)
         }
 
-        if (secretResolver !== undefined) {
-            this.register(secretResolver)
+        if (resolvers.secret !== undefined) {
+            this.register(resolvers.secret)
         }
     }
 

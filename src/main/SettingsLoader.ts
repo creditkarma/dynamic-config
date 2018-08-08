@@ -124,17 +124,21 @@ function settingsToOptions(settings: IConfigSettings): IConfigOptions {
     }
 
     if (settings.resolvers !== undefined) {
+        result.resolvers = {}
+
         if (settings.resolvers.indexOf('consul') > -1) {
-            result.remoteResolver = defaultResolverMap.consul()
+            result.resolvers.remote = defaultResolverMap.consul()
         }
 
         if (settings.resolvers.indexOf('vault') > -1) {
-            result.secretResolver = defaultResolverMap.vault()
+            result.resolvers.secret = defaultResolverMap.vault()
         }
 
     } else {
-        result.remoteResolver = consulResolver()
-        result.secretResolver = vaultResolver()
+        result.resolvers = {
+            remote: consulResolver(),
+            secret: vaultResolver(),
+        }
     }
 
     if (settings.loaders !== undefined) {
