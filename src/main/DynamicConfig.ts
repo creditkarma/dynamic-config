@@ -103,13 +103,16 @@ export class DynamicConfig implements IDynamicConfig {
             configEnv,
         })
         this.remoteOptions = remoteOptions
-        this.resolvers = {
+        this.observerMap = new Map()
+        this.initializedResolvers = [ 'env', 'process' ]
+        this.resolversByName = {
             env: envResolver(),
             process: processResolver(),
         }
-        this.observerMap = new Map()
-        this.initializedResolvers = [ 'env', 'process' ]
-        this.resolversByName = {}
+        this.resolvers = {
+            env: this.resolversByName.env,
+            process: this.resolversByName.process,
+        }
         this.register(...resolvers)
     }
 
@@ -185,8 +188,6 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public watch<T>(key: string): IVariable<T> {
-        let previousVal: T | undefined
-
         if (this.observerMap.has(key)) {
             return this.observerMap.get(key)!
 
@@ -203,13 +204,10 @@ export class DynamicConfig implements IDynamicConfig {
 
                     if (resolver !== undefined && resolver.type === 'remote' && value.source.key !== undefined) {
                         resolver.watch(value.source.key, (val: any) => {
-                            if (val !== previousVal) {
-                                previousVal = val
-                                const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(value.source, val)
-                                this.setConfig(
-                                    ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
-                                )
-                            }
+                            const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(value.source, val)
+                            this.setConfig(
+                                ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
+                            )
                         })
 
                     } else {
@@ -241,13 +239,10 @@ export class DynamicConfig implements IDynamicConfig {
 
                             if (resolver !== undefined && resolver.type === 'remote' && rawValue.source.key !== undefined) {
                                 resolver.watch(rawValue.source.key, (val: any) => {
-                                    if (val !== previousVal) {
-                                        previousVal = val
-                                        const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
-                                        this.setConfig(
-                                            ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
-                                        )
-                                    }
+                                    const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
+                                    this.setConfig(
+                                        ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
+                                    )
                                 })
 
                             } else {

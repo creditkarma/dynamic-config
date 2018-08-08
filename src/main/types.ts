@@ -71,10 +71,10 @@ export interface ILoadedFile {
 // RESOLVER TYPES
 
 export interface IResolvers {
-    env: IRemoteResolver
-    process: IRemoteResolver
-    remote?: IRemoteResolver
-    secret?: ISecretResolver
+    env: ConfigResolver
+    process: ConfigResolver
+    remote?: ConfigResolver
+    secret?: ConfigResolver
 }
 
 export interface INamedResolvers {
