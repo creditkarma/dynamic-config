@@ -6,11 +6,16 @@ import { Just, Maybe, Nothing } from '../Maybe'
 
 import { HVFailed, HVNotConfigured } from '../errors'
 
-import { IConfigStore, ISecretResolver } from '../types'
+import {
+    IConfigStore,
+    IRemoteResolver,
+    ObjectType,
+    WatchFunction,
+} from '../types'
 
 import * as logger from '../logger'
 
-export function vaultResolver(): ISecretResolver {
+export function vaultResolver(): IRemoteResolver {
     let vaultClient: Maybe<VaultClient> | null = null
     let vaultConfig: IHVConfig | null = null
 
@@ -61,6 +66,10 @@ export function vaultResolver(): ISecretResolver {
                     },
                 )
             })
+        },
+
+        watch<T = any>(key: string, cb: WatchFunction<T>, type?: ObjectType): void {
+            // Nothing to do. Can't watch environment variables.
         },
     }
 }

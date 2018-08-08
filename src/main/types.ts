@@ -14,7 +14,8 @@ export interface IConfigOptions {
     configPath?: string
     configEnv?: string
     remoteOptions?: IRemoteOptions
-    resolvers?: Array<ConfigResolver>
+    remoteResolver?: IRemoteResolver
+    secretResolver?: IRemoteResolver
     loaders?: Array<IFileLoader>
     translators?: Array<IConfigTranslator>
     schemas?: ISchemaMap
@@ -39,7 +40,7 @@ export interface IConfigStore {
 }
 
 export interface IDynamicConfig {
-    register(...resolvers: Array<ConfigResolver>): void
+    register(...resolvers: Array<IRemoteResolver>): void
     get<T = any>(key?: string): Promise<T>
     watch<T = any>(key?: string): IVariable<T>
     getAll(...args: Array<string>): Promise<Array<any>>
@@ -71,36 +72,29 @@ export interface ILoadedFile {
 // RESOLVER TYPES
 
 export interface IResolvers {
-    env: ConfigResolver
-    process: ConfigResolver
-    remote?: ConfigResolver
-    secret?: ConfigResolver
+    env: IRemoteResolver
+    process: IRemoteResolver
+    remote?: IRemoteResolver
+    secret?: IRemoteResolver
 }
 
 export interface INamedResolvers {
-    [name: string]: ConfigResolver
+    [name: string]: IRemoteResolver
 }
-
-export type ConfigResolver =
-    IRemoteResolver | ISecretResolver
 
 export type SetFunction<T = any> = (key: string, value: T) => void
 
 export type RemoteInitializer = (config: IConfigStore, remoteOptions?: IRemoteOptions) => Promise<any>
 
+export type ResolverType =
+    'remote' | 'secret'
+
 export interface IRemoteResolver {
-    type: 'remote'
+    type: ResolverType
     name: string
     init: RemoteInitializer
     get<T>(key: string, type?: ObjectType): Promise<T>
     watch<T>(key: string, cb: WatchFunction<T>, type?: ObjectType): void
-}
-
-export interface ISecretResolver {
-    type: 'secret'
-    name: string
-    init: RemoteInitializer
-    get<T>(key: string, type?: ObjectType): Promise<T>
 }
 
 // CONFIG TYPES
@@ -177,9 +171,6 @@ export interface IPlaceholderConfigValue extends IBaseConfigValue {
 }
 
 // CONFIG PLACEHOLDER TYPES
-
-export type ResolverType =
-    'remote' | 'secret'
 
 export interface IResolver {
     name: string

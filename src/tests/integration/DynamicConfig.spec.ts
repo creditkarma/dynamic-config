@@ -7,7 +7,6 @@ import {
     consulResolver,
     consulTranslator,
     DynamicConfig,
-    envResolver,
     envTranslator,
     jsLoader,
     jsonLoader,
@@ -39,10 +38,8 @@ describe('DynamicConfig', () => {
                     consulDc: 'dc1',
                 },
             },
-            resolvers: [
-                consulResolver(),
-                vaultResolver(),
-            ],
+            remoteResolver: consulResolver(),
+            secretResolver: vaultResolver(),
             loaders: [
                 jsonLoader,
                 ymlLoader,
@@ -183,10 +180,8 @@ describe('DynamicConfig', () => {
                     consulDc: 'dc1',
                 },
             },
-            resolvers: [
-                consulResolver(),
-                vaultResolver(),
-            ],
+            remoteResolver: consulResolver(),
+            secretResolver: vaultResolver(),
             loaders: [
                 jsonLoader,
                 ymlLoader,
@@ -395,10 +390,8 @@ describe('DynamicConfig', () => {
                     consulDc: 'dc1',
                 },
             },
-            resolvers: [
-                consulResolver(),
-                vaultResolver(),
-            ],
+            remoteResolver: consulResolver(),
+            secretResolver: vaultResolver(),
             loaders: [
                 jsonLoader,
                 ymlLoader,
@@ -543,9 +536,6 @@ describe('DynamicConfig', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'production',
             configPath: path.resolve(__dirname, './config'),
-            resolvers: [
-                envResolver(),
-            ],
             loaders: [
                 jsonLoader,
                 ymlLoader,
@@ -612,9 +602,6 @@ describe('DynamicConfig', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'production',
             configPath: path.resolve(__dirname, './config'),
-            resolvers: [
-                envResolver(),
-            ],
             loaders: [
                 jsonLoader,
                 ymlLoader,
@@ -654,9 +641,6 @@ describe('DynamicConfig', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'default',
             configPath: path.resolve(__dirname, './config'),
-            resolvers: [
-                envResolver(),
-            ],
             loaders: [
                 jsonLoader,
                 ymlLoader,
@@ -698,9 +682,6 @@ describe('DynamicConfig', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'default',
             configPath: path.resolve(__dirname, './config'),
-            resolvers: [
-                envResolver(),
-            ],
             loaders: [
                 jsonLoader,
                 ymlLoader,
