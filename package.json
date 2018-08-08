@@ -31,6 +31,10 @@
     "release:patch": "npm version patch && npm run release:publish",
     "release:minor": "npm version minor && npm run release:publish",
     "release:major": "npm version major && npm run release:publish",
+    "release:prepatch": "npm version prepatch && npm run release:publish",
+    "release:preminor": "npm version preminor && npm run release:publish",
+    "release:premajor": "npm version premajor && npm run release:publish",
+    "release:prerelease": "npm version prerelease && npm run release:publish",
     "release:publish": "git push --follow-tags"
   },
   "author": "Credit Karma",
