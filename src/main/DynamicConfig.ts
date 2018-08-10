@@ -536,9 +536,7 @@ export class DynamicConfig implements IDynamicConfig {
 
     private getConfig(): Promise<IRootConfigValue> {
         if (this.promisedConfig === null) {
-            this.promisedConfig = this.loadConfigs()
-
-            return this.promisedConfig.then(async (loadedConfigs: IRootConfigValue) => {
+            this.promisedConfig = this.loadConfigs().then(async (loadedConfigs: IRootConfigValue) => {
                 const resolvedConfig = await this.replaceConfigPlaceholders(loadedConfigs) as IRootConfigValue
                 this.setConfig(resolvedConfig)
                 return resolvedConfig
