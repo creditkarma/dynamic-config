@@ -7,10 +7,23 @@ import { ObjectUtils, Utils } from './utils'
 export * from './ConfigLoader'
 export { DynamicConfig } from './DynamicConfig'
 export * from './constants'
-export * from './types'
 export * from './resolvers'
 export * from './loaders'
 export * from './translators'
+
+export {
+    IConfigOptions,
+    IConfigStore,
+    IDynamicConfig,
+    ISchemaMap,
+    IConfigTranslator,
+    IRemoteOptions,
+    IFileLoader,
+    IRemoteResolver,
+    ResolverType,
+    RemoteInitializer,
+    IVariable,
+} from './types'
 
 // DEFAULT CONFIG CLIENT
 

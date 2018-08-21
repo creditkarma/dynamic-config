@@ -3,7 +3,7 @@ import * as Lab from 'lab'
 
 import {
     IRootConfigValue,
-} from '../../../main'
+} from '../../../main/types'
 
 import {
     ConfigBuilder,

@@ -11,7 +11,7 @@ import {
     ConfigValue,
     IRootConfigValue,
     ISource,
-} from '../../../main'
+} from '../../../main/types'
 
 export const lab = Lab.script()
 

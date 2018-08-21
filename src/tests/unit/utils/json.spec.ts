@@ -1,7 +1,7 @@
 import { expect } from 'code'
 import * as Lab from 'lab'
 
-import { ISchema } from '../../../main'
+import { ISchema } from '../../../main/types'
 
 import { JSONUtils } from '../../../main/utils'
 
