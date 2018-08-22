@@ -984,6 +984,18 @@ However, in your config, you will more often want to write something like this:
 
 The `envTranslator` bundled with dynamic config will look at this and replace `${HOSTNAME}` with the environment variable `HOSTNAME` before inserting the value into the resolved config object.
 
+### Default Values
+
+When using the `envTranslator` you can also provide an inline default value for when the environment variable is missing. This is done with the double pipe `||` operator.
+
+```json
+{
+    "destination": "http://${HOSTNAME||localhost}:9000"
+}
+```
+
+In this case `localhost` will be used if `HOSTNAME` is not found in the current environment.
+
 [back to top](#table-of-contents)
 
 ## Plugin Support
