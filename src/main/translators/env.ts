@@ -57,10 +57,10 @@ class Interpolater {
                     }
 
                     // These handle the end of our parse
-                    if (this.current() === '}' && process.env[this.match] !== undefined) {
+                    if (this.current() === '}' && process.env[this.match.trim()] !== undefined) {
                         // Match found
                         this.advance() // advance past }
-                        result += process.env[this.match]
+                        result += process.env[this.match.trim()]
                         this.match = ''
 
                     } else if (this.current() === '}' && defaultVal !== '') {
@@ -90,7 +90,7 @@ class Interpolater {
             this.advance()
         }
 
-        return result
+        return result.trim()
     }
 
     private current(): string {
