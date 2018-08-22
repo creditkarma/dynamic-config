@@ -573,7 +573,7 @@ describe('DynamicConfig', () => {
 
             it('should return value stored in environment variable when providing default', async () => {
                 return dynamicConfig.get<string>('test-service.destination').then((actual: string) => {
-                    expect(actual).to.equal('testmyhost:8080')
+                    expect(actual).to.equal('http://testmyhost:8080')
                 })
             })
 
