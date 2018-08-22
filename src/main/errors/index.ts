@@ -117,8 +117,8 @@ export class ResolverUnavailable extends Error {
 
 export class InvalidCharacter extends Error {
     public readonly type = DynamicConfigErrorType.InvalidCharacter
-    constructor(key: string) {
-        super(`Environment variable must contain only characters A-Z and '_'`)
+    constructor(char: string) {
+        super(`Environment variable must contain only characters A-Z and '_', found ${char}`)
     }
 }
 
