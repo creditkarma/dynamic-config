@@ -114,6 +114,13 @@ export class ResolverUnavailable extends Error {
     }
 }
 
+export class InvalidCharacter extends Error {
+    public readonly type = DynamicConfigErrorType.MissingEnvironmentVariable
+    constructor(key: string) {
+        super(`Environment variable must contain only characters A-Z and '_'`)
+    }
+}
+
 export class MissingEnvironmentVariable extends Error {
     public readonly type = DynamicConfigErrorType.MissingEnvironmentVariable
     constructor(key: string) {

@@ -556,16 +556,24 @@ describe('DynamicConfig', () => {
 
         before(async () => {
             process.env.TEST_USERNAME = 'foobarwilly'
+            process.env.HOST_NAME = 'testmyhost'
         })
 
         after(async () => {
             delete process.env.TEST_USERNAME
+            delete process.env.HOST_NAME
         })
 
         describe('get', () => {
             it('should return value stored in environment variable', async () => {
                 return dynamicConfig.get<string>('database.username').then((actual: string) => {
                     expect(actual).to.equal('foobarwilly')
+                })
+            })
+
+            it('should return value stored in environment variable when providing default', async () => {
+                return dynamicConfig.get<string>('test-service.destination').then((actual: string) => {
+                    expect(actual).to.equal('testmyhost:8080')
                 })
             })
 

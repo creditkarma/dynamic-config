@@ -3,15 +3,18 @@
  *
  * http://${HOSTNAME}:9000
  */
-import { MissingEnvironmentVariable } from '../errors'
 import {
-    IConfigTranslator,
-} from '../types'
+    InvalidCharacter,
+    MissingEnvironmentVariable,
+} from '../errors'
+
+import { IConfigTranslator } from '../types'
 
 function isValidChar(char: string): boolean {
     return (
         (char >= 'A' && char <= 'Z') ||
-        (char === '_')
+        (char === '_') ||
+        (char === '|')
     )
 }
 
@@ -27,6 +30,7 @@ class Interpolater {
         this.index = 0
         this.match = ''
         let result: string = ''
+        let defaultVal: string = ''
 
         while (this.index < this.len) {
             const char = this.current()
@@ -35,14 +39,32 @@ class Interpolater {
                 this.advance() // advance past $
                 this.advance() // advance path {
                 while (!this.isAtEnd() && this.current() !== '}' && isValidChar(this.current())) {
-                    this.match += this.current()
-                    this.advance()
+                    // Check if we are handling a default value
+                    if (this.current() === '|' && this.peek() === '|') {
+                        this.advance() // advance past first |
+                        this.advance() // advance past second |
+                        defaultVal = this.parseDefault()
 
+                    // Don't allow random pipe characters
+                    } else if (this.current() === '|') {
+                        // pipe is invalid unless defining default value
+                        throw new InvalidCharacter(this.current())
+
+                    // Otherwise we're still parsing the name match
+                    } else {
+                        this.match += this.current()
+                        this.advance()
+                    }
+
+                    // These handle the end of our parse
                     if (this.current() === '}' && process.env[this.match] !== undefined) {
                         // Match found
                         this.advance() // advance past }
                         result += process.env[this.match]
                         this.match = ''
+
+                    } else if (this.current() === '}' && defaultVal !== '') {
+                        result += defaultVal
 
                     } else if (this.current() === '}') {
                         throw new MissingEnvironmentVariable(this.match)
@@ -56,6 +78,16 @@ class Interpolater {
                 result += char
                 this.advance()
             }
+        }
+
+        return result
+    }
+
+    private parseDefault(): string {
+        let result: string = ''
+        while (!this.isAtEnd() && this.current() !== '}') {
+            result += this.current()
+            this.advance()
         }
 
         return result
