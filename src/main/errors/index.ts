@@ -14,6 +14,7 @@ export const enum DynamicConfigErrorType {
     MissingEnvironmentVariable = 'MissingEnvironmentVariable',
     MissingProcessVariable = 'MissingProcessVariable',
     InvalidConfigValue = 'InvalidConfigValue',
+    InvalidCharacter = 'InvalidCharacter',
 }
 
 export type DynamicConfigError =
@@ -21,7 +22,7 @@ export type DynamicConfigError =
     DynamicConfigInvalidResolver | HVNotConfigured | HVFailed | ConsulFailed |
     ResolverUnavailable | InvalidConfigValue | MissingEnvironmentVariable |
     MissingProcessVariable | UnknownError | DynamicConfigMissingDefault |
-    DynamicConfigInvalidType
+    DynamicConfigInvalidType | InvalidCharacter
 
 export class InvalidConfigValue extends Error {
     public readonly type = DynamicConfigErrorType.InvalidConfigValue
@@ -115,7 +116,7 @@ export class ResolverUnavailable extends Error {
 }
 
 export class InvalidCharacter extends Error {
-    public readonly type = DynamicConfigErrorType.MissingEnvironmentVariable
+    public readonly type = DynamicConfigErrorType.InvalidCharacter
     constructor(key: string) {
         super(`Environment variable must contain only characters A-Z and '_'`)
     }
