@@ -1,4 +1,8 @@
 {
+    "version": {
+        "_source": "package",
+        "_key": "version"
+    },
     "project": {
         "id": {
             "name": "test-project",

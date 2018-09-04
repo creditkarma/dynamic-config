@@ -15,6 +15,7 @@ export const enum DynamicConfigErrorType {
     MissingProcessVariable = 'MissingProcessVariable',
     InvalidConfigValue = 'InvalidConfigValue',
     InvalidCharacter = 'InvalidCharacter',
+    MissingPackageProperty = 'MissingPackageProperty',
 }
 
 export type DynamicConfigError =
@@ -22,7 +23,7 @@ export type DynamicConfigError =
     DynamicConfigInvalidResolver | HVNotConfigured | HVFailed | ConsulFailed |
     ResolverUnavailable | InvalidConfigValue | MissingEnvironmentVariable |
     MissingProcessVariable | UnknownError | DynamicConfigMissingDefault |
-    DynamicConfigInvalidType | InvalidCharacter
+    DynamicConfigInvalidType | InvalidCharacter | MissingPackageProperty
 
 export class InvalidConfigValue extends Error {
     public readonly type = DynamicConfigErrorType.InvalidConfigValue
@@ -133,5 +134,12 @@ export class MissingProcessVariable extends Error {
     public readonly type = DynamicConfigErrorType.MissingProcessVariable
     constructor(key: string) {
         super(`Unable to retrieve key[${key}]. Argument not provided.`)
+    }
+}
+
+export class MissingPackageProperty extends Error {
+    public readonly type = DynamicConfigErrorType.MissingPackageProperty
+    constructor(key: string) {
+        super(`Unable to retrieve key[${key}] from package.json.`)
     }
 }

@@ -20,6 +20,7 @@ import {
 
 import {
     consulResolver,
+    packageResolver,
     vaultResolver,
 } from './resolvers'
 
@@ -104,6 +105,7 @@ interface IResolverMap {
 }
 
 const defaultResolverMap: IResolverMap = {
+    package: packageResolver,
     consul: consulResolver,
     vault: vaultResolver,
 }

@@ -26,6 +26,7 @@ import {
 
 import {
     envResolver,
+    packageResolver,
     processResolver,
 } from './resolvers'
 
@@ -48,8 +49,10 @@ import {
     ResolverType,
 } from './types'
 
+import { jsonLoader } from './loaders'
 import * as logger from './logger'
 import { SyncConfig } from './SyncConfig'
+import { envTranslator } from './translators'
 
 const enum ConfigState {
     INIT,
@@ -82,8 +85,8 @@ export class DynamicConfig implements IDynamicConfig {
         configEnv = Utils.readFirstMatch(CONFIG_ENV, 'NODE_ENV'),
         remoteOptions = {},
         resolvers = {},
-        loaders = [],
-        translators = [],
+        loaders = [ jsonLoader ],
+        translators = [ envTranslator ],
         schemas = {},
     }: IConfigOptions = {}) {
         this.error = null
@@ -107,6 +110,7 @@ export class DynamicConfig implements IDynamicConfig {
         this.resolversByName = {
             env: envResolver(),
             process: processResolver(),
+            package: packageResolver(),
         }
 
         this.initializedResolvers = Object.keys(this.resolversByName)
@@ -344,6 +348,7 @@ export class DynamicConfig implements IDynamicConfig {
         if (resolver === undefined) {
             if (placeholder.default !== undefined) {
                 return placeholder.default
+
             } else {
                 throw new ResolverUnavailable(placeholder.key)
             }
@@ -521,6 +526,7 @@ export class DynamicConfig implements IDynamicConfig {
             case DynamicConfigErrorType.ResolverUnavailable:
             case DynamicConfigErrorType.MissingEnvironmentVariable:
             case DynamicConfigErrorType.MissingProcessVariable:
+            case DynamicConfigErrorType.MissingPackageProperty:
             case DynamicConfigErrorType.InvalidConfigValue:
             case DynamicConfigErrorType.DynamicConfigInvalidResolver:
             case DynamicConfigErrorType.DynamicConfigMissingDefault:
