@@ -46,6 +46,10 @@ describe('ConfigLoader', () => {
             const expected: object = {
                 name: 'default',
                 config: {
+                    version: {
+                        _source: 'package',
+                        _key: 'version',
+                    },
                     project: {
                         id: {
                             name: 'test-project',
