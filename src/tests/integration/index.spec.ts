@@ -40,6 +40,47 @@ describe('DynamicConfig Singleton', () => {
         })
 
         describe('get', () => {
+            it('should return the full config with empty call to get', async () => {
+                return config().get()
+                    .then((actual: any) => {
+                        expect(actual).to.equal({
+                            version: '2.0.1',
+                            server: {
+                                port: 8000,
+                                host: 'localhost',
+                            },
+                            database: {
+                                username: 'testUser',
+                                password: 'K1ndaS3cr3t',
+                            },
+                            project: {
+                                id: {
+                                    name: 'test-project',
+                                    ref: 987860,
+                                },
+                                health: {
+                                    control: '/test',
+                                    response: 'PASS',
+                                },
+                            },
+                            names: {
+                                first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
+                                last: [ 'Smith', 'Warren', 'Malick' ],
+                            },
+                            'hashicorp-vault': {
+                                apiVersion: 'v1',
+                                protocol: 'http',
+                                destination: 'localhost:8210',
+                                mount: 'secret',
+                                tokenPath: './tmp/token',
+                            },
+                            'test-service': {
+                                destination: 'http://localhost:8080',
+                            },
+                        })
+                    })
+            })
+
             it('should return the value from Consul if available', async () => {
                 return config()
                     .get<string>('database.username')

@@ -65,6 +65,7 @@ class Interpolater {
 
                     } else if (this.current() === '}' && defaultVal !== '') {
                         result += defaultVal
+                        this.advance() // advance past }
 
                     } else if (this.current() === '}') {
                         throw new MissingEnvironmentVariable(this.match)
