@@ -1,4 +1,4 @@
-## Plugin Support
+# Plugin Support
 
 There are three kinds of plugins:
 
@@ -6,7 +6,7 @@ There are three kinds of plugins:
 - *Remote Resolvers* - For reading remote data sources
 - *Translators* - For transforming raw data
 
-### File Loaders
+## File Loaders
 
 File loaders are plugins that allow Dynamic Config to read local configuration files.
 
@@ -42,7 +42,7 @@ By the time a loader is called with a `filePath` the path is gauranteed to exist
 
 Loaders are given priority in the order in which they are added. Meaning the most recently added loader has the highest priority. With the default settings this order is json, yaml, js then ts. Therefore, TypeScript files have the highest priority. If there is both a `default.json` file and a `default.ts` file the values from the `default.ts` file will have presidence.
 
-### Remote Resolvers
+## Remote Resolvers
 
 Remote resolvers are plugins that know how to read data from data sources outside the filesystem.
 
@@ -58,15 +58,15 @@ interface IRemoteResolver {
 }
 ```
 
-#### `type`
+### `type`
 
 The type parameter can be set to either `remote` or `secret`. The only difference is that `remote` allows for default values.
 
-#### `name`
+### `name`
 
 The name for this remote. This is used to lookup config placeholders, the `_source` property of a placeholder.
 
-#### `init`
+### `init`
 
 The init method is called and resolved before any request to `conifg().get` can be completed. The init method returns a Promise. The resolved value of this Promise is deeply merged with the local config. This is where you load remote configuration that should be available on application startup.
 
@@ -107,19 +107,58 @@ interface IRemoteOptions {
 }
 ```
 
-#### `get`
+### `get`
 
 This is easy, given a string key return a value for it. This method is called when a value in the config needs to be resolved remotely. Usually this will be because of a config placeholder. Once this method resolves, the return value will be cached in the config object and this method will not be called for that same key again.
 
-#### `watch`
+### `watch`
 
 This alerts the remote that the user is watching a value. If there is machinery to set up to support this do it here. You get the key the user is watching and a callback to use when the value changes.
 
 If your remote doesn't support watching just supply an empty function.
 
-### Translators
+## Translators
 
 Translators are essentially mapping functions that can be used to transform raw values before they are added to the resolved config.
+
+### Usage
+
+When data is loaded from a local file or remote source it is parsed, usually `JSON.parse`, and then added to the resolved config object that you request values from. Sometimes, particularly when dealing with remote sources, the data coming in may not be exactly the shape you want, or it may be somewhat unreliable. Translators allow you to rewrite this data before it is added to the resolved config.
+
+As a concrete example of this we will look at environment variables. A config placeholder, as we've seen earlier, is an object that looks something like this:
+
+```json
+{
+    "host": {
+        "_source": "env",
+        "_key": "HOSTNAME"
+    }
+}
+```
+
+However, in your config, you will more often want to write something like this:
+
+```json
+{
+    "destination": "http://${HOSTNAME}:9000"
+}
+```
+
+The `envTranslator` bundled with dynamic config will look at this and replace `${HOSTNAME}` with the environment variable `HOSTNAME` before inserting the value into the resolved config object.
+
+### Default Values
+
+When using the `envTranslator` you can also provide an inline default value for when the environment variable is missing. This is done with the double pipe `||` operator.
+
+```json
+{
+    "destination": "http://${HOSTNAME||localhost}:9000"
+}
+```
+
+In this case `localhost` will be used if `HOSTNAME` is not found in the current environment.
+
+### API
 
 They are defined by this interface:
 

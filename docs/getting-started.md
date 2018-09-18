@@ -296,4 +296,4 @@ At this point our config resolution chain is doing quite a lot.
 3. Load the key `consul-config` from Consul and overlay values in the current configuration.
 4. Recognize the placeholder for `port`, load the key `server-port` from Consul and replace the value in configuration.
 
-This shows us one working flow, but how do we add additional remotes? How do we read envirnoment variables? How do we add file support? Wait, what is even the full API? We will be going through all of this and more in the rest of this document.
+This shows us one working flow, but how do we add additional remotes? How do we read envirnoment variables? How do we add file support? Wait, what is even the full API? Go back to the [README](../README.md) and continue through the documentation.
