@@ -172,13 +172,14 @@ export class DynamicConfig implements IDynamicConfig {
 
                     if (value !== null) {
                         const baseValue = ConfigUtils.readConfigValue(value)
-                        const schema: object | undefined = this.schemas[key]
 
-                        if (schema !== undefined && !JSONUtils.objectMatchesSchema(schema, baseValue)) {
-                            throw new errors.DynamicConfigInvalidObject(key)
-
-                        } else if (baseValue !== null) {
-                            return Promise.resolve(baseValue)
+                        if (baseValue !== null) {
+                            const schema: object | undefined = this.schemas[key]
+                            if (schema !== undefined && !JSONUtils.objectMatchesSchema(schema, baseValue)) {
+                                throw new errors.DynamicConfigInvalidObject(key)
+                            } else {
+                                return Promise.resolve(baseValue)
+                            }
 
                         } else if (value.nullable) {
                             return Promise.resolve(null)
