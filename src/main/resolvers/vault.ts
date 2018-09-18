@@ -55,13 +55,11 @@ export function vaultResolver(): IRemoteResolver {
                                 return Promise.resolve(value)
                             },
                             (err: any) => {
-                                logger.error(`Unable to get key[${key}] from Vault. ${err.message}`)
                                 throw new HVFailed(err.message)
                             },
                         )
                     },
                     () => {
-                        logger.error(`Unable to get key[${key}]. Vault is not configured.`)
                         throw new HVNotConfigured(key)
                     },
                 )

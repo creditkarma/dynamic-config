@@ -190,7 +190,6 @@ export function consulResolver(): IRemoteResolver {
                 },
                 // Nothing case
                 () => {
-                    logger.warn(`Error retrieving key[${key}]. Consul is not configured.`)
                     throw new ConsulNotConfigured(key)
                 },
             )

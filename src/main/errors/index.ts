@@ -1,3 +1,7 @@
+export interface IConfigErrorMap {
+    [path: string]: Error
+}
+
 export const enum DynamicConfigErrorType {
     MissingConfigPlaceholder = 'MissingConfigPlaceholder',
     DynamicConfigMissingKey = 'DynamicConfigMissingKey',

@@ -10,8 +10,6 @@ import { MissingEnvironmentVariable } from '../errors'
 
 import { ConfigUtils } from '../utils'
 
-import * as logger from '../logger'
-
 export function envResolver(): IRemoteResolver {
     return {
         type: 'remote',
@@ -32,8 +30,7 @@ export function envResolver(): IRemoteResolver {
                 }
 
             } else {
-                logger.warn(`Unable to retrieve key[${key}] from environment.`)
-                return Promise.reject(new MissingEnvironmentVariable(key))
+                throw new MissingEnvironmentVariable(key)
             }
         },
 

@@ -15,14 +15,7 @@ import {
     Utils,
 } from './utils'
 
-import {
-    DynamicConfigError,
-    DynamicConfigErrorType,
-    DynamicConfigInvalidObject,
-    DynamicConfigMissingKey,
-    MissingConfigPlaceholder,
-    ResolverUnavailable,
-} from './errors'
+import * as errors from './errors'
 
 import {
     envResolver,
@@ -73,7 +66,7 @@ export class DynamicConfig implements IDynamicConfig {
     private resolversByName: INamedResolvers
     private translator: ITranslator
     private schemas: ISchemaMap
-    private error: DynamicConfigError | null
+    private errorMap: errors.IConfigErrorMap
     /**
      * The observerMap is a cache of the Observer for a specified key. There is no need to create
      * more than one Observer for a given key.
@@ -89,7 +82,7 @@ export class DynamicConfig implements IDynamicConfig {
         translators = [ envTranslator ],
         schemas = {},
     }: IConfigOptions = {}) {
-        this.error = null
+        this.errorMap = {}
         this.configState = ConfigState.INIT
         this.promisedConfig = null
         this.resolvedConfig = {
@@ -158,10 +151,14 @@ export class DynamicConfig implements IDynamicConfig {
      * loaded, so we must return a Promise.
      */
     public async get<T = any>(key?: string): Promise<T> {
-        if (this.error === null) {
-            this.configState = ConfigState.RUNNING
+        this.configState = ConfigState.RUNNING
+        return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
+            const error = ConfigUtils.getErrorForKey(key, this.errorMap)
 
-            return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
+            if (error) {
+                throw error
+
+            } else {
                 // If the key is not set we return the entire structure
                 if (key === undefined) {
                     return Promise.resolve(ConfigUtils.readConfigValue(resolvedConfig))
@@ -173,30 +170,28 @@ export class DynamicConfig implements IDynamicConfig {
                         resolvedConfig,
                     )
 
-                    // If the value is a thing we need to resolve any placeholders
                     if (value !== null) {
                         const baseValue = ConfigUtils.readConfigValue(value)
                         const schema: object | undefined = this.schemas[key]
 
                         if (schema !== undefined && !JSONUtils.objectMatchesSchema(schema, baseValue)) {
-                            throw new DynamicConfigInvalidObject(key)
+                            throw new errors.DynamicConfigInvalidObject(key)
+
+                        } else if (baseValue !== null) {
+                            return Promise.resolve(baseValue)
+
+                        } else if (value.nullable) {
+                            return Promise.resolve(null)
 
                         } else {
-                            return Promise.resolve(baseValue)
+                            throw new errors.DynamicConfigMissingKey(key)
                         }
                     } else {
-                        logger.warn(`Value for key[${key}] not found in config`)
-                        throw new DynamicConfigMissingKey(key)
+                        throw new errors.DynamicConfigMissingKey(key)
                     }
                 }
-            }, (err: DynamicConfigError) => {
-                logger.error(`Unable to load config. ${err.message}`)
-                this.setError(err)
-                throw err
-            })
-        } else {
-            throw this.error
-        }
+            }
+        })
     }
 
     public watch<T>(key: string): IVariable<T> {
@@ -263,12 +258,11 @@ export class DynamicConfig implements IDynamicConfig {
 
                         } else {
                             logger.warn(`Value for key[${key}] not found in config`)
-                            throw new DynamicConfigMissingKey(key)
+                            throw new errors.DynamicConfigMissingKey(key)
                         }
 
-                    }, (err: DynamicConfigError) => {
+                    }, (err: errors.DynamicConfigError) => {
                         logger.error(`Unable to load config. ${err.message}`)
-                        this.setError(err)
                     })
                 })
 
@@ -280,9 +274,13 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public async source(key: string): Promise<string> {
-        if (this.error === null) {
-            this.configState = ConfigState.RUNNING
+        this.configState = ConfigState.RUNNING
+        const error = ConfigUtils.getErrorForKey(key, this.errorMap)
 
+        if (error) {
+            throw error
+
+        } else {
             return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
                 const value: BaseConfigValue | null = ConfigUtils.getConfigForKey(
                     key,
@@ -293,14 +291,11 @@ export class DynamicConfig implements IDynamicConfig {
                     return value.source.name
 
                 } else {
-                    throw new DynamicConfigMissingKey(key)
+                    throw new errors.DynamicConfigMissingKey(key)
                 }
-            }, (err: DynamicConfigError) => {
-                this.setError(err)
+            }, (err: errors.DynamicConfigError) => {
                 throw err
             })
-        } else {
-           throw this.error
         }
     }
 
@@ -342,34 +337,44 @@ export class DynamicConfig implements IDynamicConfig {
     /**
      * Given a ConfigPlaceholder attempt to find the value in Consul
      */
-    private async getRemotePlaceholder(placeholder: IResolvedPlaceholder): Promise<any> {
+    private buildDefaultForPlaceholder(placeholder: IResolvedPlaceholder, err?: errors.DynamicConfigError): BaseConfigValue {
+        if (placeholder.default !== undefined) {
+            return ConfigBuilder.buildBaseConfigValue({
+                type: placeholder.resolver.type,
+                name: placeholder.resolver.name,
+                key: placeholder.key,
+            }, this.translator(placeholder.default))
+
+        } else if (placeholder.nullable) {
+            return ConfigBuilder.nullValueForPlaceholder(placeholder)
+
+        } else if (err !== undefined) {
+            this.errorMap = ConfigUtils.setErrorForKey(placeholder.path, err, this.errorMap)
+            return ConfigBuilder.invalidValueForPlaceholder(placeholder)
+
+        } else {
+            this.errorMap = ConfigUtils.setErrorForKey(placeholder.path, new errors.MissingConfigPlaceholder(placeholder.path), this.errorMap)
+            return ConfigBuilder.invalidValueForPlaceholder(placeholder)
+        }
+    }
+
+    private async getRemotePlaceholder(placeholder: IResolvedPlaceholder): Promise<BaseConfigValue> {
         const resolver: IRemoteResolver | undefined = this.resolversByName[placeholder.resolver.name]
 
         if (resolver === undefined) {
-            if (placeholder.default !== undefined) {
-                return placeholder.default
-
-            } else {
-                throw new ResolverUnavailable(placeholder.key)
-            }
+            return this.buildDefaultForPlaceholder(placeholder)
 
         } else {
             return resolver.get(placeholder.key).then(
                 (remoteValue: any) => {
-                    return Promise.resolve(remoteValue)
+                    return ConfigBuilder.buildBaseConfigValue({
+                        type: placeholder.resolver.type,
+                        name: placeholder.resolver.name,
+                        key: placeholder.key,
+                    }, this.translator(remoteValue))
                 },
                 (err: any) => {
-                    if (placeholder.default !== undefined) {
-                        return Promise.resolve(placeholder.default)
-
-                    } else if (err instanceof DynamicConfigMissingKey) {
-                        return Promise.reject(
-                            new MissingConfigPlaceholder(placeholder.key),
-                        )
-
-                    } else {
-                        return Promise.reject(err)
-                    }
+                    return this.buildDefaultForPlaceholder(placeholder, err)
                 },
             )
         }
@@ -390,21 +395,14 @@ export class DynamicConfig implements IDynamicConfig {
             (whitelist === undefined || whitelist.indexOf(configValue.value._source) > -1)
         ) {
             const resolvedPlaceholder: IResolvedPlaceholder = ConfigUtils.normalizeConfigPlaceholder(
+                path,
                 configValue.value,
                 this.resolversByName,
             )
 
             updates.push([
                 path,
-                this.getRemotePlaceholder(resolvedPlaceholder).then(
-                    (value: any) => {
-                        return ConfigBuilder.buildBaseConfigValue({
-                            type: resolvedPlaceholder.resolver.type,
-                            name: resolvedPlaceholder.resolver.name,
-                            key: resolvedPlaceholder.key,
-                        }, this.translator(value))
-                    },
-                ),
+                this.getRemotePlaceholder(resolvedPlaceholder),
             ])
         } else if (configValue.type === 'object') {
             this.collectConfigPlaceholders(configValue, path, updates, whitelist)
@@ -420,7 +418,7 @@ export class DynamicConfig implements IDynamicConfig {
         if (configValue.type === 'object' || configValue.type === 'root') {
             for (const key of Object.keys(configValue.properties)) {
                 const objValue: BaseConfigValue = configValue.properties[key]
-                const newPath: Array<string> = [...path, key]
+                const newPath: Array<string> = [ ...path, key ]
                 this.appendUpdatesForObject(objValue, newPath, updates, whitelist)
             }
 
@@ -438,62 +436,29 @@ export class DynamicConfig implements IDynamicConfig {
      * any placeholders that remain in the config
      */
     private async replaceConfigPlaceholders(
-        configValue: ConfigValue,
+        rootConfig: IRootConfigValue,
         whitelist?: Array<string>,
     ): Promise<ConfigValue> {
-        if (
-            configValue.type === 'placeholder' &&
-            (whitelist === undefined || whitelist.indexOf(configValue.value._source) > -1)
-        ) {
-            const resolvedPlaceholder: IResolvedPlaceholder = ConfigUtils.normalizeConfigPlaceholder(
-                configValue.value,
-                this.resolversByName,
-            )
+        const unresolved: Array<PromisedUpdate> = this.collectConfigPlaceholders(rootConfig, [], [], whitelist)
+        const paths: Array<string> = unresolved.map((next: PromisedUpdate) => next[0].join('.'))
+        const promises: Array<Promise<BaseConfigValue>> = unresolved.map((next: PromisedUpdate) => next[1])
+        const resolvedPromises: Array<BaseConfigValue> = await Promise.all(promises)
+        const newObj: ConfigValue = resolvedPromises.reduce(
+            (
+                acc: ConfigValue,
+                next: BaseConfigValue,
+                currentIndex: number,
+            ) => {
+                return ConfigUtils.setValueForKey(
+                    paths[currentIndex],
+                    next,
+                    acc,
+                )
+            },
+            rootConfig,
+        )
 
-            return this.getRemotePlaceholder(resolvedPlaceholder).then(
-                (value: any) => {
-                    return ConfigBuilder.buildBaseConfigValue({
-                        type: resolvedPlaceholder.resolver.type,
-                        name: resolvedPlaceholder.resolver.name,
-                        key: resolvedPlaceholder.key,
-                    }, this.translator(value))
-                },
-            )
-
-        } else if (
-            configValue.type === 'object' ||
-            configValue.type === 'root'
-        ) {
-            const unresolved: Array<PromisedUpdate> = this.collectConfigPlaceholders(configValue, [], [], whitelist)
-            const paths: Array<string> = unresolved.map(
-                (next: PromisedUpdate) => next[0].join('.'),
-            )
-            const promises: Array<Promise<BaseConfigValue>> = unresolved.map(
-                (next: PromisedUpdate) => next[1],
-            )
-            const resolvedPromises: Array<BaseConfigValue> = await Promise.all(
-                promises,
-            )
-            const newObj: ConfigValue = resolvedPromises.reduce(
-                (
-                    acc: ConfigValue,
-                    next: BaseConfigValue,
-                    currentIndex: number,
-                ) => {
-                    return ConfigUtils.setValueForKey(
-                        paths[currentIndex],
-                        next,
-                        acc,
-                    )
-                },
-                configValue,
-            )
-
-            return ConfigPromises.resolveConfigPromises(newObj)
-
-        } else {
-            return Promise.resolve(configValue)
-        }
+        return ConfigPromises.resolveConfigPromises(newObj)
     }
 
     private async loadConfigs(): Promise<IRootConfigValue> {
@@ -519,36 +484,12 @@ export class DynamicConfig implements IDynamicConfig {
         this.promisedConfig = Promise.resolve(this.resolvedConfig)
     }
 
-    private setError(err: DynamicConfigError): void {
-        switch (err.type) {
-            case DynamicConfigErrorType.MissingConfigPlaceholder:
-            case DynamicConfigErrorType.DynamicConfigInvalidObject:
-            case DynamicConfigErrorType.ResolverUnavailable:
-            case DynamicConfigErrorType.MissingEnvironmentVariable:
-            case DynamicConfigErrorType.MissingProcessVariable:
-            case DynamicConfigErrorType.MissingPackageProperty:
-            case DynamicConfigErrorType.InvalidConfigValue:
-            case DynamicConfigErrorType.DynamicConfigInvalidResolver:
-            case DynamicConfigErrorType.DynamicConfigMissingDefault:
-            case DynamicConfigErrorType.DynamicConfigInvalidType:
-                logger.error(`Fatal error encountered. Entering error state and locking config. ${err.message}`)
-                this.configState = ConfigState.HAS_ERROR
-                this.error = err
-
-            default:
-            logger.warn(`Non-fatal error encountered. ${err.message}`)
-        }
-    }
-
     private getConfig(): Promise<IRootConfigValue> {
         if (this.promisedConfig === null) {
             this.promisedConfig = this.loadConfigs().then(async (loadedConfigs: IRootConfigValue) => {
                 const resolvedConfig = await this.replaceConfigPlaceholders(loadedConfigs) as IRootConfigValue
                 this.setConfig(resolvedConfig)
                 return resolvedConfig
-            }).catch((err: DynamicConfigError) => {
-                this.setError(err)
-                throw err
             })
         }
 
@@ -610,16 +551,13 @@ export class DynamicConfig implements IDynamicConfig {
                     return Promise.resolve(remoteValue)
 
                 } else {
-                    logger.warn(`Unable to resolve ${type} value for key[${key}]`)
-                    return Promise.reject(new DynamicConfigMissingKey(key))
+                    return Promise.reject(new errors.DynamicConfigMissingKey(key))
                 }
             }, (err: any) => {
-                logger.warn(`Unable to resolve ${type} value for key[${key}]`)
-                return Promise.reject(new DynamicConfigMissingKey(key))
+                return Promise.reject(new errors.DynamicConfigMissingKey(key))
             })
         } else {
-            logger.error(`There are no remote resolvers for key[${key}]`)
-            return Promise.reject(new ResolverUnavailable(key))
+            return Promise.reject(new errors.ResolverUnavailable(key))
         }
     }
 

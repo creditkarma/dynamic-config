@@ -29,14 +29,16 @@ describe('DynamicConfig Singleton', () => {
             process.env[CONSUL_ADDRESS] = 'http://localhost:8510'
             process.env[CONSUL_DC] = 'dc1'
             process.env[CONSUL_KEYS] = 'test-config-one,with-vault'
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
         })
 
         after(async () => {
             // Reset environment options for DynamicConfig
-            process.env[CONFIG_PATH] = undefined
-            process.env[CONSUL_ADDRESS] = undefined
-            process.env[CONSUL_DC] = undefined
-            process.env[CONSUL_KEYS] = undefined
+            delete process.env[CONFIG_PATH]
+            delete process.env[CONSUL_ADDRESS]
+            delete process.env[CONSUL_DC]
+            delete process.env[CONSUL_KEYS]
+            delete process.env.NOT_NULLABLE
         })
 
         describe('get', () => {
@@ -44,6 +46,8 @@ describe('DynamicConfig Singleton', () => {
                 return config().get()
                     .then((actual: any) => {
                         expect(actual).to.equal({
+                            nullable: null,
+                            not_nullable: 'NOT_NULLABLE',
                             version: '2.0.1',
                             server: {
                                 port: 8000,

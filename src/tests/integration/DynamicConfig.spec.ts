@@ -54,10 +54,20 @@ describe('DynamicConfig', () => {
             ],
         })
 
+        before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.NOT_NULLABLE
+        })
+
         describe('get', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get().then((actual: any) => {
                     expect(actual).to.equal({
+                        nullable: null,
+                        not_nullable: 'NOT_NULLABLE',
                         version: '2.0.1',
                         server: {
                             port: 8000,
@@ -92,6 +102,12 @@ describe('DynamicConfig', () => {
                             destination: '127.0.0.1:3000',
                         },
                     })
+                })
+            })
+
+            it('should return null for a nullable key', async () => {
+                return dynamicConfig.get<null>('nullable').then((actual: null) => {
+                    expect(actual).to.equal(null)
                 })
             })
 
@@ -172,6 +188,52 @@ describe('DynamicConfig', () => {
         })
     })
 
+    describe('Configured with Consul and Vault with missing Environemnt variables', () => {
+        const dynamicConfig: DynamicConfig = new DynamicConfig({
+            configEnv: 'development',
+            configPath: path.resolve(__dirname, './config'),
+            remoteOptions: {
+                consul: {
+                    consulAddress: 'http://localhost:8510',
+                    consulKeys: 'test-config-one,with-vault',
+                    consulDc: 'dc1',
+                },
+            },
+            resolvers: {
+                remote: consulResolver(),
+                secret: vaultResolver(),
+            },
+            loaders: [
+                jsonLoader,
+                ymlLoader,
+                jsLoader,
+                tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
+        })
+
+        describe('get', () => {
+            it('should reject with empty call to get if any errors exist', async () => {
+                return dynamicConfig.get().then((val: any) => {
+                    throw new Error('Should reject')
+                }, (err: any) => {
+                    expect(err.message).to.equal(`Environment variable 'NOT_NULLABLE' not set.`)
+                })
+            })
+
+            it('should reject for missing non-nullable keys', async () => {
+                return dynamicConfig.get<null>('not_nullable').then((actual: null) => {
+                    throw new Error('Should reject')
+                }, (err: any) => {
+                    expect(err.message).to.equal(`Environment variable 'NOT_NULLABLE' not set.`)
+                })
+            })
+        })
+    })
+
     describe('Configured with Consul', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'development',
@@ -201,6 +263,14 @@ describe('DynamicConfig', () => {
 
         const kvStore = new KvStore('http://localhost:8510')
         const catalog = new Catalog('http://localhost:8510')
+
+        before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.NOT_NULLABLE
+        })
 
         describe('watch', () => {
             it('should return an observer for requested key', (done) => {
@@ -268,6 +338,8 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        nullable: null,
+                        not_nullable: 'NOT_NULLABLE',
                         version: '2.0.1',
                         server: {
                             port: 8000,
@@ -313,6 +385,8 @@ describe('DynamicConfig', () => {
             it('should mutate config after getting new data from Consul', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        nullable: null,
+                        not_nullable: 'NOT_NULLABLE',
                         version: '2.0.1',
                         server: {
                             port: 8000,
@@ -413,10 +487,20 @@ describe('DynamicConfig', () => {
             ],
         })
 
+        before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.NOT_NULLABLE
+        })
+
         describe('get', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        nullable: null,
+                        not_nullable: 'NOT_NULLABLE',
                         version: '2.0.1',
                         server: {
                             port: 8000,
@@ -497,6 +581,14 @@ describe('DynamicConfig', () => {
             },
         })
 
+        before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.NOT_NULLABLE
+        })
+
         describe('get', () => {
             it('should reject when config uses consul', async () => {
                 return dynamicConfig.get<string>('database.username').then((actual: string) => {
@@ -559,6 +651,7 @@ describe('DynamicConfig', () => {
         })
 
         before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
             process.env.TEST_USERNAME = 'foobarwilly'
             process.env.HOST_NAME = 'testmyhost'
         })
@@ -566,6 +659,7 @@ describe('DynamicConfig', () => {
         after(async () => {
             delete process.env.TEST_USERNAME
             delete process.env.HOST_NAME
+            delete process.env.NOT_NULLABLE
         })
 
         describe('get', () => {
@@ -671,6 +765,14 @@ describe('DynamicConfig', () => {
             ],
         })
 
+        before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.NOT_NULLABLE
+        })
+
         describe('get', () => {
             it('should return value stored in environment variable', async () => {
                 return dynamicConfig.get<string>('project.health.response').then((actual: string) => {
@@ -713,13 +815,15 @@ describe('DynamicConfig', () => {
         })
 
         before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
             process.env.HEALTH_RESPONSE = 'WHAM BAM!'
             process.env.TEST_USERNAME = 'foobarwilly'
         })
 
         after(async () => {
-            process.env.HEALTH_RESPONSE = undefined
-            process.env.TEST_USERNAME = undefined
+            delete process.env.NOT_NULLABLE
+            delete process.env.HEALTH_RESPONSE
+            delete process.env.TEST_USERNAME
         })
 
         describe('get', () => {

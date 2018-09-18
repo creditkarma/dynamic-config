@@ -28,13 +28,38 @@ import {
 } from '../types'
 
 import {
+    DynamicConfigError,
     DynamicConfigInvalidType,
+    IConfigErrorMap,
     ResolverUnavailable,
 } from '../errors'
 
 import * as logger from '../logger'
 
 import { InvalidConfigValue } from '../errors'
+
+export function getErrorForKey(key: string | undefined, errorMap: IConfigErrorMap): Error | undefined {
+    if (key !== undefined) {
+        return errorMap[key]
+    } else {
+        const keys = Object.keys(errorMap)
+        if (keys.length > 0) {
+            return errorMap[keys[0]]
+        } else {
+            return
+        }
+    }
+}
+
+export function setErrorForKey(key: string, error: DynamicConfigError, errorMap: IConfigErrorMap): IConfigErrorMap {
+    const parts = key.split('.').map((next: string) => next.trim()).filter((next: string) => next !== '')
+    let soFar: string = ''
+    for (const part of parts) {
+        soFar = (soFar !== '') ? `${soFar}.${part}` : part
+        errorMap[soFar] = error
+    }
+    return errorMap
+}
 
 export function makeTranslator(translators: Array<IConfigTranslator>): ITranslator {
     return function applyTranslators(obj: any): any {
@@ -81,6 +106,7 @@ export async function readValueForType(raw: string, type: ObjectType): Promise<a
 }
 
 export function normalizeConfigPlaceholder(
+    path: Array<string>,
     placeholder: IConfigPlaceholder,
     resolvers: INamedResolvers,
 ): IResolvedPlaceholder {
@@ -92,12 +118,14 @@ export function normalizeConfigPlaceholder(
 
     } else {
         return {
+            path: path.join('.'),
             key: placeholder._key,
             resolver: {
                 name: source,
                 type: resolver.type,
             },
             type: (placeholder._type || 'string'),
+            nullable: placeholder._nullable || false,
             default: placeholder._default,
         }
     }
@@ -120,6 +148,9 @@ export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
             '_type': {
                 type: 'string',
             },
+            '_nullable': {
+                type: 'boolean',
+            },
             '_default': {},
         },
         required: [ '_key', '_source' ],
@@ -137,20 +168,25 @@ function newConfigValue(
                 type: newValue.type,
                 items: newValue.items,
                 watcher: oldValue.watcher,
+                nullable: newValue.nullable,
             }
-        case 'object':
+
+            case 'object':
             return {
                 source: newValue.source,
                 type: newValue.type,
                 properties: newValue.properties,
                 watcher: oldValue.watcher,
+                nullable: newValue.nullable,
             }
+
         default:
             return {
                 source: newValue.source,
                 type: newValue.type,
                 value: newValue.value,
                 watcher: oldValue.watcher,
+                nullable: newValue.nullable,
             } as BaseConfigValue
     }
 }
@@ -194,6 +230,7 @@ function setBaseConfigValueForKey(
                 return acc
             }, {}),
             watcher: oldValue.watcher,
+            nullable: newValue.nullable,
         }
 
         if (alertWatchers && returnValue.watcher) {
@@ -204,7 +241,6 @@ function setBaseConfigValueForKey(
 
     } else if (tail.length === 0) {
         const returnValue = newConfigValue(oldValue, newValue)
-        returnValue.watcher = returnValue.watcher
 
         if (alertWatchers && returnValue.watcher !== null) {
             returnValue.watcher(readConfigValue(newValue))

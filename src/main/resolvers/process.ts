@@ -10,8 +10,6 @@ import { MissingProcessVariable } from '../errors'
 
 import { ConfigUtils, Utils } from '../utils'
 
-import * as logger from '../logger'
-
 export function processResolver(): IRemoteResolver {
     return {
         type: 'remote',
@@ -32,8 +30,7 @@ export function processResolver(): IRemoteResolver {
                 }
 
             } else {
-                logger.error(`Error retrieving key[${key}] from command line arguments.`)
-                return Promise.reject(new MissingProcessVariable(key))
+                throw new MissingProcessVariable(key)
             }
         },
 

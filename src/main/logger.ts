@@ -1,12 +1,12 @@
-// function isDebug(): boolean {
-//     return (
-//         process.env.CONFIG_DEBUG === 'true' ||
-//         process.env.DEBUG === 'true'
-//     )
-// }
+function isDebug(): boolean {
+    return (
+        process.env.CONFIG_DEBUG === 'true' ||
+        process.env.DEBUG === 'true'
+    )
+}
 
 export const log = (msg: string, data?: any) => {
-    if (data !== undefined) {
+    if (data !== undefined && isDebug()) {
         console.log(`[dynamic-config:info]: ${msg}: `, data)
     } else {
         console.log(`[dynamic-config:info]: ${msg}`)
@@ -14,7 +14,7 @@ export const log = (msg: string, data?: any) => {
 }
 
 export const warn = (msg: string, data?: any) => {
-    if (data !== undefined) {
+    if (data !== undefined && isDebug()) {
         console.warn(`[dynamic-config:warn]: ${msg}: `, data)
     } else {
         console.warn(`[dynamic-config:warn]: ${msg}`)
