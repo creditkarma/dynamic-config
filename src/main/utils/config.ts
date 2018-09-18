@@ -70,7 +70,6 @@ export function makeTranslator(translators: Array<IConfigTranslator>): ITranslat
                 }, val)
 
             } catch (err) {
-                console.log('path: ', path)
                 throw new InvalidConfigValue(path, err.message)
             }
         }, obj)

@@ -151,10 +151,8 @@ export class DynamicConfig implements IDynamicConfig {
      * loaded, so we must return a Promise.
      */
     public async get<T = any>(key?: string): Promise<T> {
-        console.log('errors: ', this.errorMap)
         this.configState = ConfigState.RUNNING
         return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
-            console.log('errors: ', this.errorMap)
             const error = ConfigUtils.getErrorForKey(key, this.errorMap)
 
             if (error) {
