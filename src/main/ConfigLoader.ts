@@ -109,7 +109,7 @@ export class ConfigLoader {
                 config,
             }
         }, (err: any) => {
-            logger.warn(err.message)
+            logger.warn(`Unable to load config for environment[${this.configEnv}]`)
             return {
                 name: this.configEnv,
                 config: {},
