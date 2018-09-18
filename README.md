@@ -34,7 +34,6 @@ When requesting a value from Dynamic Config a Promise of the expected result is 
 - [API Overview](docs/api-overview.md)
 - [Customizing Your Config Instance](docs/config-settings.md)
 - [Config Resolution](docs/config-resolution.md)
-- [Translators](docs/translators.md)
 - [Plugin Support](docs/plugins.md)
 
 ## Contributing

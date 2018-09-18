@@ -1,3 +1,12 @@
+# Config Resolution
+
+Config values fit into two broad buckets:
+
+1. Static config bundles with your application source
+2. Remote config deployed outside of your application
+
+Here we will look at these two broad configuration sources and discuss how the final config object is resolved from these two sources.
+
 ## Local Configuration
 
 Local configuration files are stored localally with your application source, typically at the project root in a directory named `config/`. The config path can be set as an option if you do not wish to use the default resolution.
