@@ -66,8 +66,10 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get().then((actual: any) => {
                     expect(actual).to.equal({
-                        nullable: null,
-                        not_nullable: 'NOT_NULLABLE',
+                        nullable_test: {
+                            nullable: null,
+                            not_nullable: 'NOT_NULLABLE',
+                        },
                         version: '2.0.1',
                         server: {
                             port: 8000,
@@ -106,7 +108,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should return null for a nullable key', async () => {
-                return dynamicConfig.get<null>('nullable').then((actual: null) => {
+                return dynamicConfig.get<null>('nullable_test.nullable').then((actual: null) => {
                     expect(actual).to.equal(null)
                 })
             })
@@ -183,52 +185,6 @@ describe('DynamicConfig', () => {
                     throw new Error('Should reject for missing secret')
                 }, (err: any) => {
                     expect(err.message).to.equal('Unable to find value for key[missing-secret].')
-                })
-            })
-        })
-    })
-
-    describe('Configured with Consul and Vault with missing Environemnt variables', () => {
-        const dynamicConfig: DynamicConfig = new DynamicConfig({
-            configEnv: 'development',
-            configPath: path.resolve(__dirname, './config'),
-            remoteOptions: {
-                consul: {
-                    consulAddress: 'http://localhost:8510',
-                    consulKeys: 'test-config-one,with-vault',
-                    consulDc: 'dc1',
-                },
-            },
-            resolvers: {
-                remote: consulResolver(),
-                secret: vaultResolver(),
-            },
-            loaders: [
-                jsonLoader,
-                ymlLoader,
-                jsLoader,
-                tsLoader,
-            ],
-            translators: [
-                envTranslator,
-                consulTranslator,
-            ],
-        })
-
-        describe('get', () => {
-            it('should reject with empty call to get if any errors exist', async () => {
-                return dynamicConfig.get().then((val: any) => {
-                    throw new Error('Should reject')
-                }, (err: any) => {
-                    expect(err.message).to.equal(`Environment variable 'NOT_NULLABLE' not set.`)
-                })
-            })
-
-            it('should reject for missing non-nullable keys', async () => {
-                return dynamicConfig.get<null>('not_nullable').then((actual: null) => {
-                    throw new Error('Should reject')
-                }, (err: any) => {
-                    expect(err.message).to.equal(`Environment variable 'NOT_NULLABLE' not set.`)
                 })
             })
         })
@@ -338,8 +294,10 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
-                        nullable: null,
-                        not_nullable: 'NOT_NULLABLE',
+                        nullable_test: {
+                            nullable: null,
+                            not_nullable: 'NOT_NULLABLE',
+                        },
                         version: '2.0.1',
                         server: {
                             port: 8000,
@@ -385,8 +343,10 @@ describe('DynamicConfig', () => {
             it('should mutate config after getting new data from Consul', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
-                        nullable: null,
-                        not_nullable: 'NOT_NULLABLE',
+                        nullable_test: {
+                            nullable: null,
+                            not_nullable: 'NOT_NULLABLE',
+                        },
                         version: '2.0.1',
                         server: {
                             port: 8000,
@@ -499,8 +459,10 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
-                        nullable: null,
-                        not_nullable: 'NOT_NULLABLE',
+                        nullable_test: {
+                            nullable: null,
+                            not_nullable: 'NOT_NULLABLE',
+                        },
                         version: '2.0.1',
                         server: {
                             port: 8000,
@@ -727,23 +689,47 @@ describe('DynamicConfig', () => {
         })
 
         describe('get', () => {
+            it('should reject with empty call to get if any errors exist', async () => {
+                return dynamicConfig.get().then((val: any) => {
+                    throw new Error('Should reject')
+                }, (err: any) => {
+                    expect(err.message).to.equal(`Environment variable 'NOT_NULLABLE' not set.`)
+                })
+            })
+
+            it('should reject for missing non-nullable keys', async () => {
+                return dynamicConfig.get<null>('nullable_test.not_nullable').then((actual: null) => {
+                    throw new Error('Should reject')
+                }, (err: any) => {
+                    expect(err.message).to.equal(`Environment variable 'NOT_NULLABLE' not set.`)
+                })
+            })
+
+            it('should resolve to null for nullable key that is not defined', async () => {
+                return dynamicConfig.get<null>('nullable_test.nullable').then((actual: null) => {
+                    expect(actual).to.equal(null)
+                })
+            })
+
+            it('should reject for object containing errors', async () => {
+                return dynamicConfig.get<null>('nullable_test').then((actual: null) => {
+                    throw new Error('Should reject')
+                }, (err: any) => {
+                    expect(err.message).to.equal(`Environment variable 'NOT_NULLABLE' not set.`)
+                })
+            })
+
             it('should reject if unable to resolve environment variable', async () => {
                 return dynamicConfig.get<string>('database.username').then((actual: string) => {
                     throw new Error(`Should  reject`)
                 }, (err: any) => {
-                    expect(err.message).to.equal(
-                        `Unable to resolve config at key[database.username]. Environment variable 'TEST_USERNAME' not set.`,
-                    )
+                    expect(err.message).to.equal(`Environment variable 'TEST_USERNAME' not set.`)
                 })
             })
 
             it('should return the default for value missing in environment', async () => {
                 return dynamicConfig.get<string>('database.password').then((actual: string) => {
-                    throw new Error(`Should  reject`)
-                }, (err: any) => {
-                    expect(err.message).to.equal(
-                        `Unable to resolve config at key[database.username]. Environment variable 'TEST_USERNAME' not set.`,
-                    )
+                    expect(actual).to.equal('monkey')
                 })
             })
         })

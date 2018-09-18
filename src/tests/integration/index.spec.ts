@@ -46,8 +46,10 @@ describe('DynamicConfig Singleton', () => {
                 return config().get()
                     .then((actual: any) => {
                         expect(actual).to.equal({
-                            nullable: null,
-                            not_nullable: 'NOT_NULLABLE',
+                            nullable_test: {
+                                nullable: null,
+                                not_nullable: 'NOT_NULLABLE',
+                            },
                             version: '2.0.1',
                             server: {
                                 port: 8000,
