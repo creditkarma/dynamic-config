@@ -6,13 +6,44 @@ import {
 import {
     BaseConfigValue,
     IConfigProperties,
+    IInvalidConfigValue,
+    INullConfigValue,
+    IResolvedPlaceholder,
     IRootConfigValue,
     ISource,
 } from '../types'
 
 import * as ConfigUtils from './config'
 
-export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue {
+export function invalidValueForPlaceholder(placeholder: IResolvedPlaceholder): IInvalidConfigValue {
+    return {
+        source: {
+            type: placeholder.resolver.type,
+            name: placeholder.resolver.name,
+            key: placeholder.key,
+        },
+        type: 'invalid',
+        value: null,
+        watcher: null,
+        nullable: placeholder.nullable || false,
+    }
+}
+
+export function nullValueForPlaceholder(placeholder: IResolvedPlaceholder): INullConfigValue {
+    return {
+        source: {
+            type: placeholder.resolver.type,
+            name: placeholder.resolver.name,
+            key: placeholder.key,
+        },
+        type: 'null',
+        value: null,
+        watcher: null,
+        nullable: placeholder.nullable || false,
+    }
+}
+
+export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolean = false): BaseConfigValue {
     const objType = typeof obj
 
     if (obj instanceof Promise) {
@@ -21,6 +52,7 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
             type: 'promise',
             value: obj,
             watcher: null,
+            nullable,
         }
 
     } else if (ConfigUtils.isConfigPlaceholder(obj)) {
@@ -29,6 +61,7 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
             type: 'placeholder',
             value: obj,
             watcher: null,
+            nullable,
         }
 
     } else if (Array.isArray(obj)) {
@@ -37,6 +70,7 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
             type: 'array',
             items: obj,
             watcher: null,
+            nullable,
         }
 
     } else if (isObject(obj)) {
@@ -48,6 +82,7 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
                 return acc
             }, {}),
             watcher: null,
+            nullable,
         }
 
     } else if (isPrimitiveType(objType)) {
@@ -56,6 +91,16 @@ export function buildBaseConfigValue(source: ISource, obj: any): BaseConfigValue
             type: objType,
             value: obj,
             watcher: null,
+            nullable,
+        }
+
+    } else if (obj === null || obj === undefined) {
+        return {
+            source,
+            type: 'null',
+            value: null,
+            watcher: null,
+            nullable,
         }
 
     } else {

@@ -46,6 +46,15 @@ describe('ConfigLoader', () => {
             const expected: object = {
                 name: 'default',
                 config: {
+                    nullable: {
+                        _source: 'env',
+                        _key: 'NULLABLE',
+                        _nullable: true,
+                    },
+                    not_nullable: {
+                        _source: 'env',
+                        _key: 'NOT_NULLABLE',
+                    },
                     version: {
                         _source: 'package',
                         _key: 'version',

@@ -12,8 +12,6 @@ import { MissingPackageProperty } from '../errors'
 
 import { ConfigUtils } from '../utils'
 
-import * as logger from '../logger'
-
 export function packageResolver(): IRemoteResolver {
     return {
         type: 'remote',
@@ -32,16 +30,14 @@ export function packageResolver(): IRemoteResolver {
                         return ConfigUtils.readValueForType(value, type)
 
                     } else {
-                        return Promise.resolve(value) as any
+                        return value
                     }
                 } else {
-                    logger.warn(`Unable to retrieve key[${key}] from package.json.`)
-                    return Promise.reject(new MissingPackageProperty(key))
+                    throw new MissingPackageProperty(key)
                 }
 
             } else {
-                logger.warn(`Unable to retrieve key[${key}] from package.json.`)
-                return Promise.reject(new MissingPackageProperty(key))
+                throw new MissingPackageProperty(key)
             }
         },
 

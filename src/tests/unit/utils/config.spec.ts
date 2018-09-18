@@ -47,6 +47,7 @@ describe('ConfigUtils', () => {
                                         type: 'string',
                                         value: '/javascript',
                                         watcher: null,
+                                        nullable: false,
                                     },
                                     response: {
                                         source: {
@@ -56,12 +57,15 @@ describe('ConfigUtils', () => {
                                         type: 'string',
                                         value: 'PASS',
                                         watcher: null,
+                                        nullable: false,
                                     },
                                 },
                                 watcher: null,
+                                nullable: false,
                             },
                         },
                         watcher: null,
+                        nullable: false,
                     },
                     database: {
                         source: {
@@ -78,6 +82,7 @@ describe('ConfigUtils', () => {
                                 type: 'string',
                                 value: 'root',
                                 watcher: null,
+                                nullable: false,
                             },
                             password: {
                                 source: {
@@ -87,16 +92,18 @@ describe('ConfigUtils', () => {
                                 type: 'string',
                                 value: 'root',
                                 watcher: null,
+                                nullable: false,
                             },
                         },
                         watcher: null,
+                        nullable: false,
                     },
                 },
                 watcher: null,
             }
 
             const actual: ConfigValue | null = ConfigUtils.getConfigForKey('project.health', mockConfig)
-            const expected: any = {
+            const expected: ConfigValue = {
                 source: {
                     type: 'local',
                     name: 'development',
@@ -111,6 +118,7 @@ describe('ConfigUtils', () => {
                         type: 'string',
                         value: '/javascript',
                         watcher: null,
+                        nullable: false,
                     },
                     response: {
                         source: {
@@ -120,9 +128,11 @@ describe('ConfigUtils', () => {
                         type: 'string',
                         value: 'PASS',
                         watcher: null,
+                        nullable: false,
                     },
                 },
                 watcher: null,
+                nullable: false,
             }
 
             expect(actual).to.equal(expected)

@@ -40,6 +40,7 @@ describe('ConfigBuilder', () => {
                         type: 'string',
                         value: 'https',
                         watcher: null,
+                        nullable: false,
                     },
                     destination: {
                         source: {
@@ -49,6 +50,7 @@ describe('ConfigBuilder', () => {
                         type: 'string',
                         value: '127.0.0.1:9000',
                         watcher: null,
+                        nullable: false,
                     },
                     hostHeader: {
                         source: {
@@ -58,6 +60,7 @@ describe('ConfigBuilder', () => {
                         type: 'string',
                         value: 'hvault.com',
                         watcher: null,
+                        nullable: false,
                     },
                     sslValidation: {
                         source: {
@@ -67,6 +70,7 @@ describe('ConfigBuilder', () => {
                         type: 'boolean',
                         value: false,
                         watcher: null,
+                        nullable: false,
                     },
                     namespace: {
                         source: {
@@ -76,6 +80,7 @@ describe('ConfigBuilder', () => {
                         type: 'string',
                         value: '/your-group/your-service',
                         watcher: null,
+                        nullable: false,
                     },
                     tokenPath: {
                         source: {
@@ -85,6 +90,7 @@ describe('ConfigBuilder', () => {
                         type: 'string',
                         value: '/tmp/test-token',
                         watcher: null,
+                        nullable: false,
                     },
                 },
                 watcher: null,
@@ -122,6 +128,7 @@ describe('ConfigBuilder', () => {
                                 type: 'string',
                                 value: 'localhost',
                                 watcher: null,
+                                nullable: false,
                             },
                             port: {
                                 source: {
@@ -131,9 +138,11 @@ describe('ConfigBuilder', () => {
                                 type: 'number',
                                 value: 8080,
                                 watcher: null,
+                                nullable: false,
                             },
                         },
                         watcher: null,
+                        nullable: false,
                     },
                 },
                 watcher: null,
@@ -171,6 +180,7 @@ describe('ConfigBuilder', () => {
                                 type: 'promise',
                                 value: Promise.resolve('localhost'),
                                 watcher: null,
+                                nullable: false,
                             },
                             port: {
                                 source: {
@@ -180,9 +190,11 @@ describe('ConfigBuilder', () => {
                                 type: 'promise',
                                 value: Promise.resolve(8080),
                                 watcher: null,
+                                nullable: false,
                             },
                         },
                         watcher: null,
+                        nullable: false,
                     },
                 },
                 watcher: null,
@@ -230,6 +242,7 @@ describe('ConfigBuilder', () => {
                                     _key: 'host-name',
                                 },
                                 watcher: null,
+                                nullable: false,
                             },
                             port: {
                                 source: {
@@ -243,9 +256,11 @@ describe('ConfigBuilder', () => {
                                     _default: 8080,
                                 },
                                 watcher: null,
+                                nullable: false,
                             },
                         },
                         watcher: null,
+                        nullable: false,
                     },
                 },
                 watcher: null,

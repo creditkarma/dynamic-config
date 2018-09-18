@@ -1,4 +1,13 @@
 {
+    "nullable": {
+        "_source": "env",
+        "_key": "NULLABLE",
+        "_nullable": true
+    },
+    "not_nullable": {
+        "_source": "env",
+        "_key": "NOT_NULLABLE"
+    },
     "version": {
         "_source": "package",
         "_key": "version"

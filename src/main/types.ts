@@ -113,13 +113,16 @@ export interface ISource {
 }
 
 export type ConfigType =
-    'root' | ObjectType | DeferredType
+    'root' | ObjectType | DeferredType | InvalidType
 
 export type ObjectType =
-    'object' | 'array' | 'string' | 'number' | 'boolean'
+    'object' | 'array' | 'string' | 'number' | 'boolean' | 'null'
 
 export type DeferredType =
     'promise' | 'placeholder'
+
+export type InvalidType =
+    'invalid'
 
 export type WatchFunction<T = any> =
     (val: T) => void
@@ -129,8 +132,14 @@ export interface IConfigValue {
     watcher: WatchFunction<any> | null
 }
 
+export interface IConfigError {
+    key: string
+    message: string
+}
+
 export interface IBaseConfigValue extends IConfigValue {
     source: ISource
+    nullable: boolean
 }
 
 export type ConfigValue =
@@ -138,7 +147,8 @@ export type ConfigValue =
 
 export type BaseConfigValue =
     IObjectConfigValue | IArrayConfigValue | IPrimitiveConfigValue |
-    IPromisedConfigValue | IPlaceholderConfigValue
+    INullConfigValue | IPromisedConfigValue | IPlaceholderConfigValue |
+    IInvalidConfigValue
 
 export interface IConfigProperties {
     [name: string]: BaseConfigValue
@@ -162,6 +172,16 @@ export interface IArrayConfigValue extends IBaseConfigValue {
 export interface IPrimitiveConfigValue extends IBaseConfigValue {
     type: 'string' | 'number' | 'boolean'
     value: string | number | boolean
+}
+
+export interface INullConfigValue extends IBaseConfigValue {
+    type: 'null'
+    value: null
+}
+
+export interface IInvalidConfigValue extends IBaseConfigValue {
+    type: 'invalid'
+    value: null
 }
 
 export interface IPromisedConfigValue extends IBaseConfigValue {
@@ -189,6 +209,7 @@ export interface IConfigPlaceholder {
     _key: string
     _type?: ObjectType
     _default?: any
+    _nullable?: boolean
 }
 
 /**
@@ -200,9 +221,11 @@ export interface IConfigPlaceholder {
  * default - default value if fetching fails
  */
 export interface IResolvedPlaceholder {
+    path: string
     resolver: IResolver
     key: string
     type: ObjectType
+    nullable: boolean
     default?: any
 }
 
@@ -218,7 +241,7 @@ export type PromisedUpdate =
 
 export type ISchema =
     IArraySchema | IObjectSchema | IStringSchema | INumberSchema |
-    IBooleanSchema | IAnySchema | IUndefinedSchema
+    IBooleanSchema | IAnySchema | INullSchema | IInvalidSchema
 
 export interface IArraySchema {
     type: 'array'
@@ -245,6 +268,10 @@ export interface IBooleanSchema {
 
 export interface IAnySchema {}
 
-export interface IUndefinedSchema {
-    type: 'undefined'
+export interface INullSchema {
+    type: 'null'
+}
+
+export interface IInvalidSchema {
+    type: 'invalid'
 }
