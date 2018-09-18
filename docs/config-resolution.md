@@ -107,9 +107,7 @@ You can override the values from the default config in a variety of ways, but th
 
 ### Config Path
 
-To override the path to your local config files check out [Customizing Your Config Instance](#customizing-your-config-instance).
-
-[back to top](#table-of-contents)
+To override the path to your local config files check out [Customizing Your Config Instance](config-settings.md).
 
 ## Remote Configuration
 
@@ -119,7 +117,7 @@ Remote configuration allows you to deploy configuration independently of your ap
 
 In this section we are going to look at the resolvers that ship with `DefaultConfig`. These are: env, process, consul and vault.
 
-*Note: If you are interested in adding your own plugin checkout the [Plugins](#plugins) section.*
+*Note: If you are interested in adding your own plugin checkout the [Plugins](plugins.md) section.*
 
 There are two things a remote resolver can do:
 

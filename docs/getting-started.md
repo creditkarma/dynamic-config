@@ -85,7 +85,7 @@ A default config file is required. If you're doing something simple this may be 
 }
 ```
 
-[More Information](#local-configuration)
+[More Information](configuration-resolution.md)
 
 ## Create an Express Server
 

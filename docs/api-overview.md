@@ -1,6 +1,6 @@
 ## API Overview
 
-As we saw in [Getting Started](#getting-started) our `DynamicConfig` object is accessed through a function called `config`. This function is used to lazily create a singleton instance of the underlying `DynamicConfig` class. Subsequent calls to this function return the same instance.
+As we saw in [Getting Started](getting-started.md) our `DynamicConfig` object is accessed through a function called `config`. This function is used to lazily create a singleton instance of the underlying `DynamicConfig` class. Subsequent calls to this function return the same instance.
 
 ```typescript
 import { config } from '@creditkarma/dynamic-config'
