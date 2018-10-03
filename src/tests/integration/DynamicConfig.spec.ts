@@ -103,7 +103,46 @@ describe('DynamicConfig', () => {
                         'test-service': {
                             destination: '127.0.0.1:3000',
                         },
+                        'shard-info': {
+                            'shard-count': 4,
+                            'shard-map': [
+                                {
+                                    destination: '127.0.0.1:3000',
+                                    'virtual-end': 3,
+                                    'virtual-start': 0,
+                                },
+                            ],
+                        },
                     })
+                })
+            })
+
+            it('should recursively resolve consul values', async () => {
+                return dynamicConfig.get('shard-info').then((actual: any) => {
+                    const expected = {
+                        'shard-count': 4,
+                        'shard-map': [
+                            {
+                                destination: '127.0.0.1:3000',
+                                'virtual-end': 3,
+                                'virtual-start': 0,
+                            },
+                        ],
+                    }
+
+                    expect(actual).to.equal(expected)
+                })
+            })
+
+            it('should get value at array index', async () => {
+                return dynamicConfig.get('shard-info.shard-map[0]').then((actual: any) => {
+                    const expected = {
+                        destination: '127.0.0.1:3000',
+                        'virtual-end': 3,
+                        'virtual-start': 0,
+                    }
+
+                    expect(actual).to.equal(expected)
                 })
             })
 
@@ -288,6 +327,44 @@ describe('DynamicConfig', () => {
                     }
                 })
             })
+
+            it('should correctly watch a value in an array', (done) => {
+                const address = dynamicConfig.watch('shard-info.shard-map[0].destination')
+                let count: number = 0
+                address.onValue((next: string) => {
+                    if (count === 0) {
+                        expect(next).to.equal('127.0.0.1:3000')
+                        count += 1
+                        catalog.registerEntity({
+                            Node: 'bango',
+                            Address: '192.168.4.19',
+                            Service: {
+                                Service: 'shard-map-host',
+                                Address: '195.145.2.15',
+                                Port: 3000,
+                            },
+                        })
+
+                    } else if (count === 1) {
+                        expect(next).to.equal('195.145.2.15:3000')
+                        count += 1
+                        catalog.registerEntity({
+                            Node: 'bango',
+                            Address: '192.168.4.19',
+                            Service: {
+                                Service: 'shard-map-host',
+                                Address: '127.0.0.1',
+                                Port: 3000,
+                            },
+                        })
+
+                    } else if (count === 2) {
+                        expect(next).to.equal('127.0.0.1:3000')
+                        count += 1
+                        done()
+                    }
+                })
+            })
         })
 
         describe('get', () => {
@@ -323,6 +400,16 @@ describe('DynamicConfig', () => {
                         },
                         'test-service': {
                             destination: '127.0.0.1:3000',
+                        },
+                        'shard-info': {
+                            'shard-count': 4,
+                            'shard-map': [
+                                {
+                                    destination: '127.0.0.1:3000',
+                                    'virtual-end': 3,
+                                    'virtual-start': 0,
+                                },
+                            ],
                         },
                     })
                 })
@@ -372,6 +459,16 @@ describe('DynamicConfig', () => {
                         },
                         'test-service': {
                             destination: '127.0.0.1:3000',
+                        },
+                        'shard-info': {
+                            'shard-count': 4,
+                            'shard-map': [
+                                {
+                                    destination: '127.0.0.1:3000',
+                                    'virtual-end': 3,
+                                    'virtual-start': 0,
+                                },
+                            ],
                         },
                     })
                 })
@@ -488,6 +585,16 @@ describe('DynamicConfig', () => {
                         },
                         'test-service': {
                             destination: '127.0.0.1:3000',
+                        },
+                        'shard-info': {
+                            'shard-count': 4,
+                            'shard-map': [
+                                {
+                                    destination: '127.0.0.1:3000',
+                                    'virtual-end': 3,
+                                    'virtual-start': 0,
+                                },
+                            ],
                         },
                     })
                 })

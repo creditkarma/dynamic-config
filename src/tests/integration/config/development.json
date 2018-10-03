@@ -7,5 +7,9 @@
     },
     "test-service": {
         "destination": "consul!/test-service?dc=dc1"
+    },
+    "shard-info": {
+        "_source": "consul",
+        "_key": "shard-map-4"
     }
 }

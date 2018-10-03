@@ -68,7 +68,10 @@ export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolea
         return {
             source,
             type: 'array',
-            items: obj,
+            items: obj.reduce((acc: Array<BaseConfigValue>, next: any) => {
+                acc.push(buildBaseConfigValue(source, next))
+                return acc
+            }, []),
             watcher: null,
             nullable,
         }

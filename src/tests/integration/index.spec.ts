@@ -83,6 +83,16 @@ describe('DynamicConfig Singleton', () => {
                             'test-service': {
                                 destination: 'http://localhost:8080',
                             },
+                            'shard-info': {
+                                'shard-count': 4,
+                                'shard-map': [
+                                    {
+                                        destination: 'localhost:4141',
+                                        'virtual-end': 3,
+                                        'virtual-start': 0,
+                                    },
+                                ],
+                            },
                         })
                     })
             })
@@ -159,17 +169,17 @@ describe('DynamicConfig Singleton', () => {
 
             const configValue: string = `
             {
-                "configPath": "./config",
-                "configEnv": "development",
-                "remoteOptions": {},
-                "resolvers": [
-                    "env", "process", "consul", "vault"
+                'configPath': './config',
+                'configEnv': 'development',
+                'remoteOptions': {},
+                'resolvers': [
+                    'env', 'process', 'consul', 'vault'
                 ],
-                "loaders": [
-                    "json", "yml", "js", "ts"
+                'loaders': [
+                    'json', 'yml', 'js', 'ts'
                 ],
-                "translators": [
-                    "env", "consul"
+                'translators': [
+                    'env', 'consul'
                 ]
             }
             `

@@ -1,8 +1,4 @@
-import {
-    isNothing,
-    isPrimitive,
-    splitKey,
-} from './basic'
+import * as Utils from './basic'
 
 import {
     deepMap,
@@ -14,7 +10,9 @@ import {
 
 import {
     BaseConfigValue,
+    ConfigItems,
     ConfigValue,
+    IArrayConfigValue,
     IConfigPlaceholder,
     IConfigProperties,
     IConfigTranslator,
@@ -106,7 +104,7 @@ export async function readValueForType(raw: string, type: ObjectType): Promise<a
 }
 
 export function normalizeConfigPlaceholder(
-    path: Array<string>,
+    path: Array<string | number>,
     placeholder: IConfigPlaceholder,
     resolvers: INamedResolvers,
 ): IResolvedPlaceholder {
@@ -197,7 +195,7 @@ function setBaseConfigValueForKey(
     oldValue: BaseConfigValue,
     alertWatchers: boolean = false,
 ): BaseConfigValue {
-    const [ head, ...tail ] = splitKey(key)
+    const [ head, ...tail ] = Utils.splitKey(key)
 
     if (oldValue.type === 'object') {
         const returnValue: IObjectConfigValue = {
@@ -239,6 +237,47 @@ function setBaseConfigValueForKey(
 
         return returnValue
 
+    } else if (oldValue.type === 'array') {
+        const headIndex = parseInt(head, 10)
+        const returnValue: IArrayConfigValue = {
+            source: oldValue.source,
+            type: oldValue.type,
+            items: oldValue.items.reduce((acc: ConfigItems, nextValue: BaseConfigValue, index: number): ConfigItems => {
+                if (index === headIndex) {
+                    if (tail.length > 0) {
+                        acc.push(setBaseConfigValueForKey(
+                            tail.join('.'),
+                            newValue,
+                            nextValue,
+                            alertWatchers,
+                        ))
+
+                    } else {
+                        const tempValue = newConfigValue(nextValue, newValue)
+                        tempValue.watcher = nextValue.watcher
+                        acc.push(tempValue)
+
+                        if (alertWatchers && nextValue.watcher) {
+                            nextValue.watcher(readConfigValue(newValue))
+                        }
+                    }
+
+                } else {
+                    acc.push(nextValue)
+                }
+
+                return acc
+            }, []),
+            watcher: oldValue.watcher,
+            nullable: newValue.nullable,
+        }
+
+        if (alertWatchers && returnValue.watcher) {
+            returnValue.watcher(readConfigValue(returnValue))
+        }
+
+        return returnValue
+
     } else if (tail.length === 0) {
         const returnValue = newConfigValue(oldValue, newValue)
 
@@ -259,7 +298,7 @@ function setRootConfigValueForKey(
     oldValue: IRootConfigValue,
     alertWatchers: boolean = false,
 ): IRootConfigValue {
-    const [ head, ...tail ] = splitKey(key)
+    const [ head, ...tail ] = Utils.splitKey(key)
 
     const returnValue: IRootConfigValue = {
         type: 'root',
@@ -330,7 +369,10 @@ export function readConfigValue(obj: ConfigValue): any {
             return buildObjectValue(obj)
 
         case 'array':
-            return obj.items
+            return obj.items.reduce((acc: Array<any>, next: BaseConfigValue) => {
+                acc.push(readConfigValue(next))
+                return acc
+            }, [])
 
         case 'string':
         case 'number':
@@ -351,16 +393,19 @@ export function readConfigValue(obj: ConfigValue): any {
 }
 
 function getValueFromConfigValue(key: string, obj: ConfigValue): BaseConfigValue | null {
-    if (isPrimitive(obj) || isNothing(obj)) {
+    if (Utils.isPrimitive(obj) || Utils.isNothing(obj)) {
         return null
 
     } else {
-        const parts: Array<string> = splitKey(key)
+        const parts: Array<string> = Utils.splitKey(key)
 
         if (parts.length > 1) {
             const [ head, ...tail ] = parts
             if (obj.type === 'object') {
                 return getValueFromConfigValue(tail.join('.'), obj.properties[head])
+
+            } else if (obj.type === 'array' && Utils.isNumeric(head)) {
+                return getValueFromConfigValue(tail.join('.'), obj.items[parseInt(head, 10)])
 
             } else {
                 return null
@@ -372,6 +417,18 @@ function getValueFromConfigValue(key: string, obj: ConfigValue): BaseConfigValue
         ) {
             return obj.properties[key]
 
+        } else if (
+            obj.type === 'array' &&
+            Utils.isNumeric(key)
+        ) {
+            const headIndex = parseInt(key, 10)
+            if (obj.items[headIndex] !== undefined) {
+                return obj.items[headIndex]
+
+            } else {
+                return null
+            }
+
         } else {
             return null
         }
@@ -379,11 +436,11 @@ function getValueFromConfigValue(key: string, obj: ConfigValue): BaseConfigValue
 }
 
 export function getConfigForKey(key: string, obj: IRootConfigValue): BaseConfigValue | null {
-    if (isPrimitive(obj) || isNothing(obj)) {
+    if (Utils.isPrimitive(obj) || Utils.isNothing(obj)) {
         return null
 
     } else {
-        const parts: Array<string> = splitKey(key)
+        const parts: Array<string> = Utils.splitKey(key)
 
         if (parts.length > 1) {
             const [ head, ...tail ] = parts

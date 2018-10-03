@@ -99,6 +99,82 @@ describe('ConfigBuilder', () => {
             expect(actual).to.equal(expected)
         })
 
+        it('should build config for an array', async () => {
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
+                type: 'local',
+                name: 'test',
+            }, {
+                'shard-map': [
+                    {
+                        'virtual-start': 0,
+                        'virtual-end': 3,
+                        destination: 'localhost:4141',
+                    },
+                ],
+            })
+
+            const expected: IRootConfigValue = {
+                type: 'root',
+                properties: {
+                    'shard-map': {
+                        source: {
+                            type: 'local',
+                            name: 'test',
+                        },
+                        type: 'array',
+                        items: [
+                            {
+                                source: {
+                                    type: 'local',
+                                    name: 'test',
+                                },
+                                type: 'object',
+                                properties: {
+                                    'virtual-start': {
+                                        source: {
+                                            type: 'local',
+                                            name: 'test',
+                                        },
+                                        type: 'number',
+                                        value: 0,
+                                        watcher: null,
+                                        nullable: false,
+                                    },
+                                    'virtual-end': {
+                                        source: {
+                                            type: 'local',
+                                            name: 'test',
+                                        },
+                                        type: 'number',
+                                        value: 3,
+                                        watcher: null,
+                                        nullable: false,
+                                    },
+                                    destination: {
+                                        source: {
+                                            type: 'local',
+                                            name: 'test',
+                                        },
+                                        type: 'string',
+                                        value: 'localhost:4141',
+                                        watcher: null,
+                                        nullable: false,
+                                    },
+                                },
+                                watcher: null,
+                                nullable: false,
+                            },
+                        ],
+                        watcher: null,
+                        nullable: false,
+                    },
+                },
+                watcher: null,
+            }
+
+            expect(actual).to.equal(expected)
+        })
+
         it('should build config with nested keys', async () => {
             const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
                 type: 'local',
