@@ -22,6 +22,7 @@ import {
     IResolvedPlaceholder,
     IRootConfigValue,
     ITranslator,
+    KeyPath,
     ObjectType,
 } from '../types'
 
@@ -104,7 +105,7 @@ export async function readValueForType(raw: string, type: ObjectType): Promise<a
 }
 
 export function normalizeConfigPlaceholder(
-    path: Array<string | number>,
+    path: KeyPath,
     placeholder: IConfigPlaceholder,
     resolvers: INamedResolvers,
 ): IResolvedPlaceholder {
