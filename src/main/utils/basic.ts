@@ -91,6 +91,20 @@ export function isNumeric(val: string): boolean {
     )
 }
 
+/**
+ * This will handle reading a key that contains an array index.
+ *
+ * Example:
+ *
+ * 'databases[2]' -> { key: 'databases', index: 2 }
+ *
+ * TODO:
+ * This will not handle multi-dimensional arrays
+ *
+ * Example:
+ *
+ * databases[1][4] -> { key: 'databases[1]', index: 4 }
+ */
 export function parseArrayKey(rawKey: string): IArrayKey | null {
     const len: number = rawKey.length
     let cursor: number = len - 1
