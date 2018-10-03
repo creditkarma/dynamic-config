@@ -113,6 +113,9 @@ describe('DynamicConfig', () => {
                                 },
                             ],
                         },
+                        'not-in-consul': {
+                            value: 'I am a default',
+                        },
                     })
                 })
             })
@@ -411,6 +414,9 @@ describe('DynamicConfig', () => {
                                 },
                             ],
                         },
+                        'not-in-consul': {
+                            value: 'I am a default',
+                        },
                     })
                 })
             })
@@ -469,6 +475,9 @@ describe('DynamicConfig', () => {
                                     'virtual-start': 0,
                                 },
                             ],
+                        },
+                        'not-in-consul': {
+                            value: 'I am a default',
                         },
                     })
                 })
@@ -595,6 +604,9 @@ describe('DynamicConfig', () => {
                                     'virtual-start': 0,
                                 },
                             ],
+                        },
+                        'not-in-consul': {
+                            value: 'I am a default',
                         },
                     })
                 })

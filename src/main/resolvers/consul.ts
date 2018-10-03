@@ -9,7 +9,7 @@ import {
     CONSUL_NAMESPACE,
 } from '../constants'
 
-import { ConsulFailed, ConsulNotConfigured } from '../errors'
+import * as errors from '../errors'
 
 import {
     IConfigStore,
@@ -179,18 +179,16 @@ export function consulResolver(): IRemoteResolver {
                                 return client.catalog.resolveAddress(key).then((address: string) => {
                                     return address
                                 }, (err: Error) => {
-                                    logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
-                                    throw new ConsulFailed(err.message)
+                                    throw new errors.ConsulFailed(key, err.message)
                                 })
                             }
                         }, (err: any) => {
-                            logger.error(`Error retrieving key[${key}] from Consul. ${err.message}`)
-                            throw new ConsulFailed(err.message)
+                            throw new errors.ConsulFailed(key, err.message)
                         })
                 },
                 // Nothing case
                 () => {
-                    throw new ConsulNotConfigured(key)
+                    throw new errors.ConsulNotConfigured(key)
                 },
             )
         },

@@ -150,6 +150,13 @@ describe('ConfigLoader', () => {
                         _source: 'consul',
                         _key: 'shard-map-4',
                     },
+                    'not-in-consul': {
+                        _source: 'consul',
+                        _key: 'not-in-consul',
+                        _default: {
+                            value: 'I am a default',
+                        },
+                    },
                 },
             }
 

@@ -348,6 +348,10 @@ export class DynamicConfig implements IDynamicConfig {
      */
     private buildDefaultForPlaceholder(placeholder: IResolvedPlaceholder, err?: errors.DynamicConfigError): BaseConfigValue {
         if (placeholder.default !== undefined) {
+            if (err !== undefined) {
+                logger.warn(`Unable to read value. Returning default value. ${err.message}`)
+            }
+
             return ConfigBuilder.buildBaseConfigValue({
                 type: placeholder.resolver.type,
                 name: placeholder.resolver.name,
@@ -355,14 +359,21 @@ export class DynamicConfig implements IDynamicConfig {
             }, this.translator(placeholder.default))
 
         } else if (placeholder.nullable) {
+            if (err !== undefined) {
+                logger.warn(`Unable to read value. Returning null value. ${err.message}`)
+            }
+
             return ConfigBuilder.nullValueForPlaceholder(placeholder)
 
         } else if (err !== undefined) {
+            logger.error(err.message)
             this.errorMap = ConfigUtils.setErrorForKey(placeholder.path, err, this.errorMap)
             return ConfigBuilder.invalidValueForPlaceholder(placeholder)
 
         } else {
-            this.errorMap = ConfigUtils.setErrorForKey(placeholder.path, new errors.MissingConfigPlaceholder(placeholder.path), this.errorMap)
+            const missingError = new errors.MissingConfigPlaceholder(placeholder.path)
+            logger.error(missingError.message)
+            this.errorMap = ConfigUtils.setErrorForKey(placeholder.path, missingError, this.errorMap)
             return ConfigBuilder.invalidValueForPlaceholder(placeholder)
         }
     }
