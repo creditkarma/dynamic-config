@@ -69,6 +69,15 @@ setTimeout(() => {
                     Port: 3000,
                 },
             }),
+            catalog.registerEntity({
+                Node: 'bango',
+                Address: '192.168.4.19',
+                Service: {
+                    Service: 'shard-map-host',
+                    Address: '127.0.0.1',
+                    Port: 3000,
+                },
+            }),
             consulClient.set(
                 { path: 'test-config-one' },
                 {
@@ -92,6 +101,22 @@ setTimeout(() => {
                             _default: 'NotSoSecret',
                         },
                     },
+                },
+            ),
+            consulClient.set(
+                { path: 'shard-map-4' },
+                {
+                    'shard-count': 4,
+                    'shard-map': [
+                        {
+                            'virtual-start': 0,
+                            'virtual-end': 3,
+                            'destination': {
+                                '_source': 'consul',
+                                '_key': 'shard-map-host',
+                            },
+                        },
+                    ],
                 },
             ),
             consulClient.set(

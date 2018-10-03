@@ -34,4 +34,57 @@ describe('BasicUtils', () => {
             expect(actual).to.equal(expected)
         })
     })
+
+    describe('parseArrayKey', () => {
+        it('should return an object of string/number if key contains array index', async () => {
+            const testKey: string = 'shards[3]'
+            const expected = {
+                key: 'shards',
+                index: 3,
+            }
+
+            const actual = Utils.parseArrayKey(testKey)
+
+            expect(actual).to.equal(expected)
+        })
+
+        it('should handle multi-digit index numbers', async () => {
+            const testKey: string = 'shards[349]'
+            const expected = {
+                key: 'shards',
+                index: 349,
+            }
+
+            const actual = Utils.parseArrayKey(testKey)
+
+            expect(actual).to.equal(expected)
+        })
+
+        it('should return an null if the key does not contain array index', async () => {
+            const testKey: string = 'name'
+            const expected = null
+
+            const actual = Utils.parseArrayKey(testKey)
+
+            expect(actual).to.equal(expected)
+        })
+
+        it('should return an null if the key only contains a left bracket', async () => {
+            const testKey: string = 'name[0'
+            const expected = null
+
+            const actual = Utils.parseArrayKey(testKey)
+
+            expect(actual).to.equal(expected)
+        })
+
+        it('should return an null if the key only contains a right bracket', async () => {
+            const testKey: string = 'name0]'
+            const expected = null
+
+            const actual = Utils.parseArrayKey(testKey)
+
+            expect(actual).to.equal(expected)
+        })
+    })
 })

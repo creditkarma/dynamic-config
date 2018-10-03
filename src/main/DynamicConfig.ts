@@ -38,6 +38,7 @@ import {
     ISchemaMap,
     ITranslator,
     IVariable,
+    KeyPath,
     PromisedUpdate,
     ResolverType,
 } from './types'
@@ -165,8 +166,9 @@ export class DynamicConfig implements IDynamicConfig {
 
                 // If the key is set we try to find it in the structure
                 } else {
+                    const normalizedKey: string = Utils.normalizePath(key)
                     const value: ConfigValue | null = ConfigUtils.getConfigForKey(
-                        key,
+                        normalizedKey,
                         resolvedConfig,
                     )
 
@@ -196,11 +198,13 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public watch<T>(key: string): IVariable<T> {
+        const normalizedKey: string = Utils.normalizePath(key)
+
         if (this.observerMap.has(key)) {
             return this.observerMap.get(key)!
 
         } else {
-            const value: BaseConfigValue | null = ConfigUtils.getConfigForKey(key, this.resolvedConfig)
+            const value: BaseConfigValue | null = ConfigUtils.getConfigForKey(normalizedKey, this.resolvedConfig)
 
             if (value !== null) {
                 const observer: Observer<T> = new Observer((sink: (val: T) => boolean) => {
@@ -214,7 +218,12 @@ export class DynamicConfig implements IDynamicConfig {
                         resolver.watch(value.source.key, (val: any) => {
                             const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(value.source, val)
                             this.setConfig(
-                                ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
+                                ConfigUtils.setValueForKey(
+                                    normalizedKey,
+                                    baseValue,
+                                    this.resolvedConfig,
+                                    true,
+                                ) as IRootConfigValue,
                             )
                         })
 
@@ -231,7 +240,7 @@ export class DynamicConfig implements IDynamicConfig {
                 const observer = new Observer<T>((sink: ValueSink<T>) => {
                     this.getConfig().then((resolvedConfig: IRootConfigValue) => {
                         const rawValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
-                            key,
+                            normalizedKey,
                             resolvedConfig,
                         )
 
@@ -249,7 +258,12 @@ export class DynamicConfig implements IDynamicConfig {
                                 resolver.watch(rawValue.source.key, (val: any) => {
                                     const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
                                     this.setConfig(
-                                        ConfigUtils.setValueForKey(key, baseValue, this.resolvedConfig, true) as IRootConfigValue,
+                                        ConfigUtils.setValueForKey(
+                                            normalizedKey,
+                                            baseValue,
+                                            this.resolvedConfig,
+                                            true,
+                                        ) as IRootConfigValue,
                                     )
                                 })
 
@@ -282,9 +296,10 @@ export class DynamicConfig implements IDynamicConfig {
             throw error
 
         } else {
+            const normalizedKey = Utils.normalizePath(key)
             return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
                 const value: BaseConfigValue | null = ConfigUtils.getConfigForKey(
-                    key,
+                    normalizedKey,
                     resolvedConfig,
                 )
 
@@ -317,14 +332,7 @@ export class DynamicConfig implements IDynamicConfig {
         key: string,
         defaultVal: T,
     ): Promise<T> {
-        return this.get(key).then(
-            (val: T) => {
-                return Promise.resolve(val)
-            },
-            (err: any) => {
-                return Promise.resolve(defaultVal)
-            },
-        )
+        return this.get(key).catch(() => defaultVal)
     }
 
     public async getRemoteValue<T>(key: string): Promise<T> {
@@ -387,7 +395,7 @@ export class DynamicConfig implements IDynamicConfig {
      */
     private appendUpdatesForObject(
         configValue: ConfigValue,
-        path: Array<string>,
+        path: KeyPath,
         updates: Array<PromisedUpdate>,
         whitelist?: Array<string>,
     ): void {
@@ -403,23 +411,33 @@ export class DynamicConfig implements IDynamicConfig {
 
             updates.push([
                 path,
-                this.getRemotePlaceholder(resolvedPlaceholder),
+                this.getRemotePlaceholder(resolvedPlaceholder).then((val: any) => {
+                    return (this.replaceConfigPlaceholders(val, whitelist) as Promise<BaseConfigValue>)
+                }),
             ])
-        } else if (configValue.type === 'object') {
+        } else if (configValue.type === 'object' || configValue.type === 'array') {
             this.collectConfigPlaceholders(configValue, path, updates, whitelist)
         }
     }
 
     private collectConfigPlaceholders(
         configValue: ConfigValue,
-        path: Array<string>,
+        path: KeyPath,
         updates: Array<PromisedUpdate>,
         whitelist?: Array<string>,
     ): Array<PromisedUpdate> {
-        if (configValue.type === 'object' || configValue.type === 'root') {
+        if (configValue.type === 'array') {
+            configValue.items.forEach((oldValue: BaseConfigValue, index: number) => {
+                const newPath: KeyPath = [ ...path, `${index}` ]
+                this.appendUpdatesForObject(oldValue, newPath, updates, whitelist)
+            })
+
+            return updates
+
+        } else if (configValue.type === 'object' || configValue.type === 'root') {
             for (const key of Object.keys(configValue.properties)) {
                 const objValue: BaseConfigValue = configValue.properties[key]
-                const newPath: Array<string> = [ ...path, key ]
+                const newPath: KeyPath = [ ...path, key ]
                 this.appendUpdatesForObject(objValue, newPath, updates, whitelist)
             }
 
@@ -437,7 +455,7 @@ export class DynamicConfig implements IDynamicConfig {
      * any placeholders that remain in the config
      */
     private async replaceConfigPlaceholders(
-        rootConfig: IRootConfigValue,
+        rootConfig: ConfigValue,
         whitelist?: Array<string>,
     ): Promise<ConfigValue> {
         const unresolved: Array<PromisedUpdate> = this.collectConfigPlaceholders(rootConfig, [], [], whitelist)

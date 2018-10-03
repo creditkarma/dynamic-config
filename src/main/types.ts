@@ -154,6 +154,8 @@ export interface IConfigProperties {
     [name: string]: BaseConfigValue
 }
 
+export type ConfigItems = Array<BaseConfigValue>
+
 export interface IRootConfigValue extends IConfigValue {
     type: 'root'
     properties: IConfigProperties
@@ -166,7 +168,7 @@ export interface IObjectConfigValue extends IBaseConfigValue {
 
 export interface IArrayConfigValue extends IBaseConfigValue {
     type: 'array'
-    items: Array<any>
+    items: ConfigItems
 }
 
 export interface IPrimitiveConfigValue extends IBaseConfigValue {
@@ -231,11 +233,13 @@ export interface IResolvedPlaceholder {
 
 // UTILITY TYPES
 
+export type KeyPath = Array<string>
+
 export type ObjectUpdate =
-    [ Array<string>, Promise<any> ]
+    [ KeyPath, Promise<any> ]
 
 export type PromisedUpdate =
-    [ Array<string>, Promise<BaseConfigValue> ]
+    [ KeyPath, Promise<BaseConfigValue> ]
 
 // SCHEMA TYPES
 

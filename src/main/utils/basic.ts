@@ -79,9 +79,77 @@ export function isObject(obj: any): boolean {
     )
 }
 
+export interface IArrayKey {
+    key: string
+    index: number
+}
+
+export function isNumeric(val: string): boolean {
+    return (
+        val >= '0' &&
+        val <= '9'
+    )
+}
+
+export function parseArrayKey(rawKey: string): IArrayKey | null {
+    const len: number = rawKey.length
+    let cursor: number = len - 1
+
+    // bail early if we know the last char isn't a right bracket
+    if (rawKey.charAt(cursor) === ']') {
+        const stack: Array<string> = []
+        let index: string = ''
+
+        while (cursor >= 0) {
+            const next: string = rawKey.charAt(cursor)
+
+            // Bust out when we get to our right bracket
+            if (next === '[') {
+                if (stack.length === 1 && index !== '') {
+                    return {
+                        key: rawKey.substring(0, cursor),
+                        index: parseInt(index, 10),
+                    }
+                } else {
+                    return null
+                }
+
+            } else if (next === ']') {
+                stack.push(next)
+
+            } else if (stack.length === 1 && isNumeric(next)) {
+                index = next + index
+
+            }
+
+            cursor -= 1
+        }
+
+    }
+
+    return null
+}
+
+export function normalizePath(key: string): string {
+    const parts = splitKey(key).reduce((acc: Array<string | number>, next: string) => {
+        const arrayKey = parseArrayKey(next)
+        if (arrayKey !== null) {
+            acc.push(arrayKey.key)
+            acc.push(arrayKey.index)
+        } else {
+            acc.push(next)
+        }
+        return acc
+    }, [])
+
+    return parts.join('.')
+}
+
 export function splitKey(key: string): Array<string> {
-    return (key || '').split('.').filter((val) => {
-        return val.trim() !== ''
+    return (key || '').split('.').map((val: string) => {
+        return val.trim()
+    }).filter((val) => {
+        return val !== ''
     })
 }
 
