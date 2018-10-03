@@ -108,8 +108,8 @@ export class ConsulNotConfigured extends Error {
 
 export class ConsulFailed extends Error {
     public readonly type = DynamicConfigErrorType.ConsulFailed
-    constructor(message?: string) {
-        super(`Consul failed with error: ${message}.`)
+    constructor(key: string, message?: string) {
+        super(`Unable to retrieve key[${key}] from Consul. Consul failed with error: ${message}.`)
     }
 }
 

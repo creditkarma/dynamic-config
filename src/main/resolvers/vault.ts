@@ -4,7 +4,7 @@ import { HVAULT_CONFIG_KEY } from '../constants'
 
 import { Just, Maybe, Nothing } from '../Maybe'
 
-import { HVFailed, HVNotConfigured } from '../errors'
+import * as errors from '../errors'
 
 import {
     IConfigStore,
@@ -55,12 +55,12 @@ export function vaultResolver(): IRemoteResolver {
                                 return Promise.resolve(value)
                             },
                             (err: any) => {
-                                throw new HVFailed(err.message)
+                                throw new errors.HVFailed(err.message)
                             },
                         )
                     },
                     () => {
-                        throw new HVNotConfigured(key)
+                        throw new errors.HVNotConfigured(key)
                     },
                 )
             })
