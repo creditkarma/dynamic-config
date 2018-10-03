@@ -95,7 +95,7 @@ export async function readValueForType(raw: string, type: ObjectType): Promise<a
                     return Promise.resolve(raw)
             }
         } catch (err) {
-            logger.error(`Unable to parse value as type[${type}]`)
+            logger.error(`Unable to parse value[${raw}] as type[${type}]`)
             throw new DynamicConfigInvalidType(type)
         }
     } else {
