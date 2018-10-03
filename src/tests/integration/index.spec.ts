@@ -169,17 +169,17 @@ describe('DynamicConfig Singleton', () => {
 
             const configValue: string = `
             {
-                'configPath': './config',
-                'configEnv': 'development',
-                'remoteOptions': {},
-                'resolvers': [
-                    'env', 'process', 'consul', 'vault'
+                "configPath": "./config",
+                "configEnv": "development",
+                "remoteOptions": {},
+                "resolvers": [
+                    "env", "process", "consul", "vault"
                 ],
-                'loaders': [
-                    'json', 'yml', 'js', 'ts'
+                "loaders": [
+                    "json", "yml", "js", "ts"
                 ],
-                'translators': [
-                    'env', 'consul'
+                "translators": [
+                    "env", "consul"
                 ]
             }
             `
