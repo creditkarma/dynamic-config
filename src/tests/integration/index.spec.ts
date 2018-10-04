@@ -58,6 +58,16 @@ describe('DynamicConfig Singleton', () => {
                             database: {
                                 username: 'testUser',
                                 password: 'K1ndaS3cr3t',
+                                'shard-info': {
+                                    'shard-count': 4,
+                                    'shard-map': [
+                                        {
+                                            destination: '127.0.0.1:3000',
+                                            'virtual-end': 3,
+                                            'virtual-start': 0,
+                                        },
+                                    ],
+                                },
                             },
                             project: {
                                 id: {
@@ -82,16 +92,6 @@ describe('DynamicConfig Singleton', () => {
                             },
                             'test-service': {
                                 destination: 'http://localhost:8080',
-                            },
-                            'shard-info': {
-                                'shard-count': 4,
-                                'shard-map': [
-                                    {
-                                        destination: 'localhost:4141',
-                                        'virtual-end': 3,
-                                        'virtual-start': 0,
-                                    },
-                                ],
                             },
                         })
                     })

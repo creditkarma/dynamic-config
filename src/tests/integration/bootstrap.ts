@@ -87,6 +87,10 @@ setTimeout(() => {
                             _source: 'consul',
                             _key: 'password',
                         },
+                        'shard-info': {
+                            _source: 'consul',
+                            _key: 'shard-map-4',
+                        },
                     },
                 },
             ),
@@ -111,10 +115,7 @@ setTimeout(() => {
                         {
                             'virtual-start': 0,
                             'virtual-end': 3,
-                            'destination': {
-                                '_source': 'consul',
-                                '_key': 'shard-map-host',
-                            },
+                            'destination': 'consul!/shard-map-host?dc=dc1',
                         },
                     ],
                 },

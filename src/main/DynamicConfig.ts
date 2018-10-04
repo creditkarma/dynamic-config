@@ -426,6 +426,7 @@ export class DynamicConfig implements IDynamicConfig {
                     return (this.replaceConfigPlaceholders(val, whitelist) as Promise<BaseConfigValue>)
                 }),
             ])
+
         } else if (configValue.type === 'object' || configValue.type === 'array') {
             this.collectConfigPlaceholders(configValue, path, updates, whitelist)
         }
