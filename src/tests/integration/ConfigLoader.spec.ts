@@ -82,6 +82,16 @@ describe('ConfigLoader', () => {
                     database: {
                         username: 'root',
                         password: 'root',
+                        'shard-info': {
+                            'shard-count': 4,
+                            'shard-map': [
+                                {
+                                    'virtual-start': 0,
+                                    'virtual-end': 3,
+                                    destination: 'localhost:4141',
+                                },
+                            ],
+                        },
                     },
                     names: {
                         first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
@@ -89,16 +99,6 @@ describe('ConfigLoader', () => {
                     },
                     'test-service': {
                         destination: 'http://${HOST_NAME||localhost}:8080',
-                    },
-                    'shard-info': {
-                        'shard-count': 4,
-                        'shard-map': [
-                            {
-                                'virtual-start': 0,
-                                'virtual-end': 3,
-                                destination: 'localhost:4141',
-                            },
-                        ],
                     },
                 },
             }
@@ -145,10 +145,6 @@ describe('ConfigLoader', () => {
                     },
                     'test-service': {
                         destination: 'consul!/test-service?dc=dc1',
-                    },
-                    'shard-info': {
-                        _source: 'consul',
-                        _key: 'shard-map-4',
                     },
                     'not-in-consul': {
                         _source: 'consul',

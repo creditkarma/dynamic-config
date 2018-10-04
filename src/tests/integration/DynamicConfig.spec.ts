@@ -78,6 +78,16 @@ describe('DynamicConfig', () => {
                         database: {
                             username: 'testUser',
                             password: 'K1ndaS3cr3t',
+                            'shard-info': {
+                                'shard-count': 4,
+                                'shard-map': [
+                                    {
+                                        destination: '127.0.0.1:3000',
+                                        'virtual-end': 3,
+                                        'virtual-start': 0,
+                                    },
+                                ],
+                            },
                         },
                         project: {
                             id: {
@@ -103,16 +113,6 @@ describe('DynamicConfig', () => {
                         'test-service': {
                             destination: '127.0.0.1:3000',
                         },
-                        'shard-info': {
-                            'shard-count': 4,
-                            'shard-map': [
-                                {
-                                    destination: '127.0.0.1:3000',
-                                    'virtual-end': 3,
-                                    'virtual-start': 0,
-                                },
-                            ],
-                        },
                         'not-in-consul': {
                             value: 'I am a default',
                         },
@@ -121,7 +121,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should recursively resolve consul values', async () => {
-                return dynamicConfig.get('shard-info').then((actual: any) => {
+                return dynamicConfig.get('database.shard-info').then((actual: any) => {
                     const expected = {
                         'shard-count': 4,
                         'shard-map': [
@@ -138,7 +138,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should get value at array index', async () => {
-                return dynamicConfig.get('shard-info.shard-map[0]').then((actual: any) => {
+                return dynamicConfig.get('database.shard-info.shard-map[0]').then((actual: any) => {
                     const expected = {
                         destination: '127.0.0.1:3000',
                         'virtual-end': 3,
@@ -227,6 +227,54 @@ describe('DynamicConfig', () => {
                     throw new Error('Should reject for missing secret')
                 }, (err: any) => {
                     expect(err.message).to.equal('Unable to find value for key[missing-secret].')
+                })
+            })
+        })
+    })
+
+    describe('With incomplete values', () => {
+        const dynamicConfig: DynamicConfig = new DynamicConfig({
+            configEnv: 'broken',
+            configPath: path.resolve(__dirname, './config'),
+            remoteOptions: {
+                consul: {
+                    consulAddress: 'http://localhost:8510',
+                    consulKeys: 'test-config-one,with-vault',
+                    consulDc: 'dc1',
+                },
+            },
+            resolvers: {
+                remote: consulResolver(),
+                secret: vaultResolver(),
+            },
+            loaders: [
+                jsonLoader,
+                ymlLoader,
+                jsLoader,
+                tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
+        })
+
+        before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.NOT_NULLABLE
+        })
+
+        describe('get', () => {
+            it('should reject when unable to resolve all values', async () => {
+                return dynamicConfig.get().then((actual: any) => {
+                    throw new Error('Should reject')
+                }, (err: any) => {
+                    expect(err.message).to.equal(
+                        'Unable to retrieve key[not-in-consul] from Consul. Consul failed with error: No service found with name[not-in-consul].',
+                    )
                 })
             })
         })
@@ -332,9 +380,10 @@ describe('DynamicConfig', () => {
             })
 
             it('should correctly watch a value in an array', (done) => {
-                const address = dynamicConfig.watch('shard-info.shard-map[0].destination')
+                const address = dynamicConfig.watch('database.shard-info.shard-map[0].destination')
                 let count: number = 0
                 address.onValue((next: string) => {
+                    console.log('next: ', next)
                     if (count === 0) {
                         expect(next).to.equal('127.0.0.1:3000')
                         count += 1
@@ -386,6 +435,16 @@ describe('DynamicConfig', () => {
                         database: {
                             username: 'testUser',
                             password: 'Sup3rS3cr3t',
+                            'shard-info': {
+                                'shard-count': 4,
+                                'shard-map': [
+                                    {
+                                        destination: '127.0.0.1:3000',
+                                        'virtual-end': 3,
+                                        'virtual-start': 0,
+                                    },
+                                ],
+                            },
                         },
                         project: {
                             id: {
@@ -403,16 +462,6 @@ describe('DynamicConfig', () => {
                         },
                         'test-service': {
                             destination: '127.0.0.1:3000',
-                        },
-                        'shard-info': {
-                            'shard-count': 4,
-                            'shard-map': [
-                                {
-                                    destination: '127.0.0.1:3000',
-                                    'virtual-end': 3,
-                                    'virtual-start': 0,
-                                },
-                            ],
                         },
                         'not-in-consul': {
                             value: 'I am a default',
@@ -448,6 +497,16 @@ describe('DynamicConfig', () => {
                         database: {
                             username: 'testUser',
                             password: 'Sup3rS3cr3t',
+                            'shard-info': {
+                                'shard-count': 4,
+                                'shard-map': [
+                                    {
+                                        destination: '127.0.0.1:3000',
+                                        'virtual-end': 3,
+                                        'virtual-start': 0,
+                                    },
+                                ],
+                            },
                         },
                         project: {
                             id: {
@@ -465,16 +524,6 @@ describe('DynamicConfig', () => {
                         },
                         'test-service': {
                             destination: '127.0.0.1:3000',
-                        },
-                        'shard-info': {
-                            'shard-count': 4,
-                            'shard-map': [
-                                {
-                                    destination: '127.0.0.1:3000',
-                                    'virtual-end': 3,
-                                    'virtual-start': 0,
-                                },
-                            ],
                         },
                         'not-in-consul': {
                             value: 'I am a default',
@@ -577,6 +626,16 @@ describe('DynamicConfig', () => {
                         database: {
                             username: 'fakeUser',
                             password: 'NotSoSecret',
+                            'shard-info': {
+                                'shard-count': 4,
+                                'shard-map': [
+                                    {
+                                        destination: '127.0.0.1:3000',
+                                        'virtual-end': 3,
+                                        'virtual-start': 0,
+                                    },
+                                ],
+                            },
                         },
                         project: {
                             id: {
@@ -594,16 +653,6 @@ describe('DynamicConfig', () => {
                         },
                         'test-service': {
                             destination: '127.0.0.1:3000',
-                        },
-                        'shard-info': {
-                            'shard-count': 4,
-                            'shard-map': [
-                                {
-                                    destination: '127.0.0.1:3000',
-                                    'virtual-end': 3,
-                                    'virtual-start': 0,
-                                },
-                            ],
                         },
                         'not-in-consul': {
                             value: 'I am a default',
