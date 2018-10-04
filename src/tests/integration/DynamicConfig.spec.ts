@@ -383,7 +383,6 @@ describe('DynamicConfig', () => {
                 const address = dynamicConfig.watch('database.shard-info.shard-map[0].destination')
                 let count: number = 0
                 address.onValue((next: string) => {
-                    console.log('next: ', next)
                     if (count === 0) {
                         expect(next).to.equal('127.0.0.1:3000')
                         count += 1
