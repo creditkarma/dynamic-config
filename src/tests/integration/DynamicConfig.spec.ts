@@ -361,101 +361,107 @@ describe('DynamicConfig', () => {
         })
 
         describe('watch', () => {
-            it('should return an observer for requested key', (done) => {
+            it('should return an observer for requested key', async () => {
                 const password = dynamicConfig.watch('persistedQueries.databaseLookup.password')
                 let count: number = 0
-                password.onValue((next: string) => {
-                    if (count === 0) {
-                        expect(next).to.equal('Sup3rS3cr3t')
-                        count += 1
-                        kvStore.set({ path: 'password', dc: 'dc1' }, '123456')
+                return new Promise((resolve, reject) => {
+                    password.onValue((next: string) => {
+                        if (count === 0) {
+                            expect(next).to.equal('Sup3rS3cr3t')
+                            count += 1
+                            kvStore.set({ path: 'password', dc: 'dc1' }, '123456')
 
-                    } else if (count === 1) {
-                        expect(next).to.equal('123456')
-                        count += 1
-                        kvStore.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
+                        } else if (count === 1) {
+                            expect(next).to.equal('123456')
+                            count += 1
+                            kvStore.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
 
-                    } else if (count === 2) {
-                        expect(next).to.equal('Sup3rS3cr3t')
-                        count += 1
-                        done()
-                    }
+                        } else if (count === 2) {
+                            expect(next).to.equal('Sup3rS3cr3t')
+                            count += 1
+                            resolve()
+                        }
+                    })
                 })
             })
 
-            it('should be able to watch for changes to service address', (done) => {
+            it('should be able to watch for changes to service address', async () => {
                 const address = dynamicConfig.watch('test-service.destination')
                 let count: number = 0
-                address.onValue((next: string) => {
-                    if (count === 0) {
-                        expect(next).to.equal('127.0.0.1:3000')
-                        count += 1
-                        catalog.registerEntity({
-                            Node: 'bango',
-                            Address: '192.168.4.19',
-                            Service: {
-                                Service: 'test-service',
-                                Address: '192.145.3.12',
-                                Port: 3000,
-                            },
-                        })
+                return new Promise((resolve, reject) => {
+                    address.onValue((next: string) => {
+                        if (count === 0) {
+                            expect(next).to.equal('127.0.0.1:3000')
+                            count += 1
+                            catalog.registerEntity({
+                                Node: 'bango',
+                                Address: '192.168.4.19',
+                                Service: {
+                                    Service: 'test-service',
+                                    Address: '192.145.3.12',
+                                    Port: 3000,
+                                },
+                            })
 
-                    } else if (count === 1) {
-                        expect(next).to.equal('192.145.3.12:3000')
-                        count += 1
-                        catalog.registerEntity({
-                            Node: 'bango',
-                            Address: '192.168.4.19',
-                            Service: {
-                                Service: 'test-service',
-                                Address: '127.0.0.1',
-                                Port: 3000,
-                            },
-                        })
+                        } else if (count === 1) {
+                            expect(next).to.equal('192.145.3.12:3000')
+                            count += 1
+                            catalog.registerEntity({
+                                Node: 'bango',
+                                Address: '192.168.4.19',
+                                Service: {
+                                    Service: 'test-service',
+                                    Address: '127.0.0.1',
+                                    Port: 3000,
+                                },
+                            })
 
-                    } else if (count === 2) {
-                        expect(next).to.equal('127.0.0.1:3000')
-                        count += 1
-                        done()
-                    }
+                        } else if (count === 2) {
+                            expect(next).to.equal('127.0.0.1:3000')
+                            count += 1
+                            resolve()
+                        }
+                    })
                 })
             })
 
-            it('should correctly watch a value in an array', (done) => {
+            it('should correctly watch a value in an array', async () => {
                 const address = dynamicConfig.watch('persistedQueries.databaseLookup.shardedDBHostsInfo.sharding.client.shard-info.shard-map[1].destination')
                 let count: number = 0
-                address.onValue((next: string) => {
-                    if (count === 0) {
-                        expect(next).to.equal('127.0.0.2:4000')
-                        count += 1
-                        catalog.registerEntity({
-                            Node: 'bango',
-                            Address: '192.168.4.19',
-                            Service: {
-                                Service: 'shard-map-host-2',
-                                Address: '195.145.2.15',
-                                Port: 3000,
-                            },
-                        })
+                return new Promise((resolve, reject) => {
+                    address.onValue((next: string) => {
+                        if (count === 0) {
+                            expect(next).to.equal('127.0.0.2:4000')
+                            count += 1
+                            catalog.registerEntity({
+                                Node: 'bango',
+                                Address: '192.168.4.19',
+                                Service: {
+                                    Service: 'shard-map-host-2',
+                                    Address: '195.145.2.15',
+                                    Port: 3000,
+                                },
+                            })
 
-                    } else if (count === 1) {
-                        expect(next).to.equal('195.145.2.15:3000')
-                        count += 1
-                        catalog.registerEntity({
-                            Node: 'bango',
-                            Address: '192.168.4.19',
-                            Service: {
-                                Service: 'shard-map-host-2',
-                                Address: '127.0.0.2',
-                                Port: 4000,
-                            },
-                        })
+                        } else if (count === 1) {
+                            expect(next).to.equal('195.145.2.15:3000')
+                            count += 1
+                            catalog.registerEntity({
+                                Node: 'bango',
+                                Address: '192.168.4.19',
+                                Service: {
+                                    Service: 'shard-map-host-2',
+                                    Address: '127.0.0.2',
+                                    Port: 4000,
+                                },
+                            })
 
-                    } else if (count === 2) {
-                        expect(next).to.equal('127.0.0.2:4000')
-                        count += 1
-                        done()
-                    }
+                        } else if (count === 2) {
+                            expect(next).to.equal('127.0.0.2:4000')
+                            count += 1
+                            resolve()
+                        }
+                    })
                 })
             })
         })
@@ -628,25 +634,27 @@ describe('DynamicConfig', () => {
         })
 
         describe('watch', () => {
-            it('should return an observer for requested key', (done) => {
+            it('should return an observer for requested key', async () => {
                 const password = dynamicConfig.watch('persistedQueries.databaseLookup.password')
                 let count: number = 0
-                password.onValue((next: string) => {
-                    if (count === 0) {
-                        expect(next).to.equal('Sup3rS3cr3t')
-                        count += 1
-                        kvStore.set({ path: 'password', dc: 'dc1' }, '123456')
+                return new Promise((resolve, reject) => {
+                    password.onValue((next: string) => {
+                        if (count === 0) {
+                            expect(next).to.equal('Sup3rS3cr3t')
+                            count += 1
+                            kvStore.set({ path: 'password', dc: 'dc1' }, '123456')
 
-                    } else if (count === 1) {
-                        expect(next).to.equal('123456')
-                        count += 1
-                        kvStore.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
+                        } else if (count === 1) {
+                            expect(next).to.equal('123456')
+                            count += 1
+                            kvStore.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
 
-                    } else if (count === 2) {
-                        expect(next).to.equal('Sup3rS3cr3t')
-                        count += 1
-                        done()
-                    }
+                        } else if (count === 2) {
+                            expect(next).to.equal('Sup3rS3cr3t')
+                            count += 1
+                            resolve()
+                        }
+                    })
                 })
             })
         })
