@@ -138,27 +138,8 @@ setTimeout(() => {
             consulClient.set(
                 { path: 'test-config-three' },
                 {
-                    persistedQueries: {
-                        databaseLookup: {
-                            username: 'testUser',
-                            password: 'testPassword',
-                            shardedDBHostsInfo: {
-                                sharding: {
-                                    client: {
-                                        'shard-info': {
-                                            'shard-count': 4,
-                                            'shard-map': [
-                                                {
-                                                    'virtual-start': 0,
-                                                    'virtual-end': 3,
-                                                    'destination': '127.0.0.1:5000',
-                                                },
-                                            ],
-                                        },
-                                    },
-                                },
-                            },
-                        },
+                    server: {
+                        port: 8080,
                     },
                 },
             ),
@@ -183,14 +164,6 @@ setTimeout(() => {
                             'destination': 'consul!/shard-map-host-3?dc=dc1',
                         },
                     ],
-                },
-            ),
-            consulClient.set(
-                { path: 'test-config-three' },
-                {
-                    server: {
-                        port: 8080,
-                    },
                 },
             ),
             consulClient.set({ path: 'password' }, 'Sup3rS3cr3t'),

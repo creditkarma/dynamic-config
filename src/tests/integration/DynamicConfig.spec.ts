@@ -690,7 +690,6 @@ describe('DynamicConfig', () => {
         describe('get', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
-                    console.log('actual: ', JSON.stringify(actual, null, 4))
                     expect(actual).to.equal({
                         nullable_test: {
                             nullable: null,

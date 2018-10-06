@@ -176,6 +176,7 @@ describe('DynamicConfig Singleton', () => {
         let server: ChildProcess
 
         before((done) => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
             server = exec('node ./server.js CONSUL_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three')
             server.stdout.on('data', (data) => {
                 console.log('msg: ', data)
