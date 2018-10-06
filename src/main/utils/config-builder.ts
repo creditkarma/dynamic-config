@@ -107,7 +107,7 @@ export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolea
         }
 
     } else {
-        throw new TypeError(`Cannot build config from with object of type[${objType}]`)
+        throw new TypeError(`Cannot build config from object of type[${objType}]`)
     }
 }
 

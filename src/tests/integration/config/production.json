@@ -4,8 +4,10 @@
             "response": "PASS"
         }
     },
-    "database": {
-        "username": "foo",
-        "password": "bar"
+    "persistedQueries": {
+        "databaseLookup": {
+            "username": "foo",
+            "password": "bar"
+        }
     }
 }

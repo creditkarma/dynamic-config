@@ -179,6 +179,7 @@ export class DynamicConfig implements IDynamicConfig {
                             const schema: object | undefined = this.schemas[key]
                             if (schema !== undefined && !JSONUtils.objectMatchesSchema(schema, baseValue)) {
                                 throw new errors.DynamicConfigInvalidObject(key)
+
                             } else {
                                 return Promise.resolve(baseValue)
                             }
@@ -199,92 +200,65 @@ export class DynamicConfig implements IDynamicConfig {
 
     public watch<T>(key: string): IVariable<T> {
         const normalizedKey: string = Utils.normalizePath(key)
+        console.log('normalizedKey: ', normalizedKey)
 
         if (this.observerMap.has(key)) {
             return this.observerMap.get(key)!
 
         } else {
-            const value: BaseConfigValue | null = ConfigUtils.getConfigForKey(normalizedKey, this.resolvedConfig)
+            const observer = new Observer<T>((sink: ValueSink<T>) => {
+                this.getConfig().then((resolvedConfig: IRootConfigValue) => {
+                    const rawValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
+                        normalizedKey,
+                        resolvedConfig,
+                    )
 
-            if (value !== null) {
-                const observer: Observer<T> = new Observer((sink: (val: T) => boolean) => {
-                    value.watcher = (val: T): void => {
-                        sink(val)
-                    }
+                    console.log('value: 2: ', JSON.stringify(rawValue, null, 4))
 
-                    const resolver: IRemoteResolver | undefined = this.getResolverForValue(value)
+                    if (rawValue !== null) {
+                        // Set initial value
+                        sink(ConfigUtils.readConfigValue(rawValue))
 
-                    if (resolver !== undefined && resolver.type === 'remote' && value.source.key !== undefined) {
-                        resolver.watch(value.source.key, (val: any) => {
-                            const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(value.source, val)
-                            this.setConfig(
-                                ConfigUtils.setValueForKey(
-                                    normalizedKey,
-                                    baseValue,
-                                    this.resolvedConfig,
-                                    true,
-                                ) as IRootConfigValue,
-                            )
-                        })
-
-                    } else {
-                        logger.error(`No resolver found for key[${key}]`)
-                    }
-                }, ConfigUtils.readConfigValue(value))
-
-                this.observerMap.set(key, observer)
-
-                return observer
-
-            } else {
-                const observer = new Observer<T>((sink: ValueSink<T>) => {
-                    this.getConfig().then((resolvedConfig: IRootConfigValue) => {
-                        const rawValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
-                            normalizedKey,
-                            resolvedConfig,
-                        )
-
-                        if (rawValue !== null) {
-                            // Set initial value
-                            sink(ConfigUtils.readConfigValue(rawValue))
-
-                            rawValue.watcher = (val: T): void => {
-                                sink(val)
-                            }
-
-                            const resolver: IRemoteResolver | undefined = this.getResolverForValue(rawValue)
-
-                            if (resolver !== undefined && resolver.type === 'remote' && rawValue.source.key !== undefined) {
-                                resolver.watch(rawValue.source.key, (val: any) => {
-                                    const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
-                                    this.setConfig(
-                                        ConfigUtils.setValueForKey(
-                                            normalizedKey,
-                                            baseValue,
-                                            this.resolvedConfig,
-                                            true,
-                                        ) as IRootConfigValue,
-                                    )
-                                })
-
-                            } else {
-                                logger.error(`No resolver found for key[${key}]`)
-                            }
-
-                        } else {
-                            logger.warn(`Value for key[${key}] not found in config`)
-                            throw new errors.DynamicConfigMissingKey(key)
+                        rawValue.watcher = (val: T): void => {
+                            sink(val)
                         }
 
-                    }, (err: errors.DynamicConfigError) => {
-                        logger.error(`Unable to load config. ${err.message}`)
-                    })
+                        const resolver: IRemoteResolver | undefined = this.getResolverForValue(rawValue)
+
+                        if (
+                            resolver !== undefined &&
+                            resolver.type === 'remote' &&
+                            rawValue.source.key !== undefined
+                        ) {
+                            resolver.watch(rawValue.source.key, (val: any) => {
+                                const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
+                                this.setConfig(
+                                    ConfigUtils.setValueForKey(
+                                        normalizedKey,
+                                        baseValue,
+                                        this.resolvedConfig,
+                                        true,
+                                    ) as IRootConfigValue,
+                                )
+                            })
+
+                        } else {
+                            logger.error(`No resolver found for key[${key}]`)
+                        }
+
+                    } else {
+                        logger.warn(`Value for key[${key}] not found in config`)
+                        throw new errors.DynamicConfigMissingKey(key)
+                    }
+
+                }, (err: errors.DynamicConfigError) => {
+                    logger.error(`Unable to load config. ${err.message}`)
                 })
+            })
 
-                this.observerMap.set(key, observer)
+            this.observerMap.set(key, observer)
 
-                return observer
-            }
+            return observer
         }
     }
 
@@ -343,9 +317,6 @@ export class DynamicConfig implements IDynamicConfig {
         return this.getValueFromResolver<T>(key, 'secret')
     }
 
-    /**
-     * Given a ConfigPlaceholder attempt to find the value in Consul
-     */
     private buildDefaultForPlaceholder(placeholder: IResolvedPlaceholder, err?: errors.DynamicConfigError): BaseConfigValue {
         if (placeholder.default !== undefined) {
             if (err !== undefined) {
@@ -584,7 +555,7 @@ export class DynamicConfig implements IDynamicConfig {
                 } else {
                     return Promise.reject(new errors.DynamicConfigMissingKey(key))
                 }
-            }, (err: any) => {
+            }, () => {
                 return Promise.reject(new errors.DynamicConfigMissingKey(key))
             })
         } else {
