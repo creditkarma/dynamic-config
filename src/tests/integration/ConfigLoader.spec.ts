@@ -79,18 +79,26 @@ describe('ConfigLoader', () => {
                         port: 8000,
                         host: 'localhost',
                     },
-                    database: {
-                        username: 'root',
-                        password: 'root',
-                        'shard-info': {
-                            'shard-count': 4,
-                            'shard-map': [
-                                {
-                                    'virtual-start': 0,
-                                    'virtual-end': 3,
-                                    destination: 'localhost:4141',
+                    persistedQueries: {
+                        databaseLookup: {
+                            username: 'root',
+                            password: 'root',
+                            shardedDBHostsInfo: {
+                                sharding: {
+                                    client: {
+                                        'shard-info': {
+                                            'shard-count': 4,
+                                            'shard-map': [
+                                                {
+                                                    'virtual-start': 0,
+                                                    'virtual-end': 3,
+                                                    destination: 'localhost:4141',
+                                                },
+                                            ],
+                                        },
+                                    },
                                 },
-                            ],
+                            },
                         },
                     },
                     names: {

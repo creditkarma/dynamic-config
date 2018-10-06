@@ -7,14 +7,16 @@ export const server = {
     host: 'localhost',
 }
 
-export const database = {
-    username: {
-        _source: 'env',
-        _key: 'TEST_USERNAME',
-    },
-    password: {
-        _source: 'env',
-        _key: 'TEST_PASSWORD',
-        _default: 'monkey',
+export const persistedQueries = {
+    databaseLookup: {
+        username: {
+            _source: 'env',
+            _key: 'TEST_USERNAME',
+        },
+        password: {
+            _source: 'env',
+            _key: 'TEST_PASSWORD',
+            _default: 'monkey',
+        },
     },
 }

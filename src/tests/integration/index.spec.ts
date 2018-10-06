@@ -55,18 +55,36 @@ describe('DynamicConfig Singleton', () => {
                                 port: 8000,
                                 host: 'localhost',
                             },
-                            database: {
-                                username: 'testUser',
-                                password: 'K1ndaS3cr3t',
-                                'shard-info': {
-                                    'shard-count': 4,
-                                    'shard-map': [
-                                        {
-                                            destination: '127.0.0.1:3000',
-                                            'virtual-end': 3,
-                                            'virtual-start': 0,
+                            persistedQueries: {
+                                databaseLookup: {
+                                    username: 'testUser',
+                                    password: 'K1ndaS3cr3t',
+                                    shardedDBHostsInfo: {
+                                        sharding: {
+                                            client: {
+                                                'shard-info': {
+                                                    'shard-count': 12,
+                                                    'shard-map': [
+                                                        {
+                                                            'virtual-start': 0,
+                                                            'virtual-end': 3,
+                                                            destination: '127.0.0.1:3000',
+                                                        },
+                                                        {
+                                                            'virtual-start': 4,
+                                                            'virtual-end': 7,
+                                                            destination: '127.0.0.2:4000',
+                                                        },
+                                                        {
+                                                            'virtual-start': 8,
+                                                            'virtual-end': 11,
+                                                            destination: '127.0.0.3:5000',
+                                                        },
+                                                    ],
+                                                },
+                                            },
                                         },
-                                    ],
+                                    },
                                 },
                             },
                             project: {
@@ -99,7 +117,7 @@ describe('DynamicConfig Singleton', () => {
 
             it('should return the value from Consul if available', async () => {
                 return config()
-                    .get<string>('database.username')
+                    .get<string>('persistedQueries.databaseLookup.username')
                     .then((val: string) => {
                         expect(val).to.equal('testUser')
                     })

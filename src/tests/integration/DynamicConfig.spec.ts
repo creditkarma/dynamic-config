@@ -75,18 +75,36 @@ describe('DynamicConfig', () => {
                             port: 8000,
                             host: 'localhost',
                         },
-                        database: {
-                            username: 'testUser',
-                            password: 'K1ndaS3cr3t',
-                            'shard-info': {
-                                'shard-count': 4,
-                                'shard-map': [
-                                    {
-                                        destination: '127.0.0.1:3000',
-                                        'virtual-end': 3,
-                                        'virtual-start': 0,
+                        persistedQueries: {
+                            databaseLookup: {
+                                username: 'testUser',
+                                password: 'K1ndaS3cr3t',
+                                shardedDBHostsInfo: {
+                                    sharding: {
+                                        client: {
+                                            'shard-info': {
+                                                'shard-count': 12,
+                                                'shard-map': [
+                                                    {
+                                                        'virtual-start': 0,
+                                                        'virtual-end': 3,
+                                                        destination: '127.0.0.1:3000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 4,
+                                                        'virtual-end': 7,
+                                                        destination: '127.0.0.2:4000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 8,
+                                                        'virtual-end': 11,
+                                                        destination: '127.0.0.3:5000',
+                                                    },
+                                                ],
+                                            },
+                                        },
                                     },
-                                ],
+                                },
                             },
                         },
                         project: {
@@ -121,14 +139,24 @@ describe('DynamicConfig', () => {
             })
 
             it('should recursively resolve consul values', async () => {
-                return dynamicConfig.get('database.shard-info').then((actual: any) => {
+                return dynamicConfig.get('persistedQueries.databaseLookup.shardedDBHostsInfo.sharding.client.shard-info').then((actual: any) => {
                     const expected = {
-                        'shard-count': 4,
+                        'shard-count': 12,
                         'shard-map': [
                             {
                                 destination: '127.0.0.1:3000',
                                 'virtual-end': 3,
                                 'virtual-start': 0,
+                            },
+                            {
+                                destination: '127.0.0.2:4000',
+                                'virtual-end': 7,
+                                'virtual-start': 4,
+                            },
+                            {
+                                destination: '127.0.0.3:5000',
+                                'virtual-end': 11,
+                                'virtual-start': 8,
                             },
                         ],
                     }
@@ -138,14 +166,28 @@ describe('DynamicConfig', () => {
             })
 
             it('should get value at array index', async () => {
-                return dynamicConfig.get('database.shard-info.shard-map[0]').then((actual: any) => {
-                    const expected = {
+                return dynamicConfig.get('persistedQueries.databaseLookup.shardedDBHostsInfo.sharding.client.shard-info.shard-map[0]').then((actual1: any) => {
+                    expect(actual1).to.equal({
                         destination: '127.0.0.1:3000',
                         'virtual-end': 3,
                         'virtual-start': 0,
-                    }
+                    })
 
-                    expect(actual).to.equal(expected)
+                    return dynamicConfig.get('persistedQueries.databaseLookup.shardedDBHostsInfo.sharding.client.shard-info.shard-map[1]').then((actual2: any) => {
+                        expect(actual2).to.equal({
+                            destination: '127.0.0.2:4000',
+                            'virtual-end': 7,
+                            'virtual-start': 4,
+                        })
+
+                        return dynamicConfig.get('persistedQueries.databaseLookup.shardedDBHostsInfo.sharding.client.shard-info.shard-map[2]').then((actual3: any) => {
+                            expect(actual3).to.equal({
+                                destination: '127.0.0.3:5000',
+                                'virtual-end': 11,
+                                'virtual-start': 8,
+                            })
+                        })
+                    })
                 })
             })
 
@@ -156,13 +198,13 @@ describe('DynamicConfig', () => {
             })
 
             it('should return the value from Consul if available', async () => {
-                return dynamicConfig.get<string>('database.username').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.username').then((actual: string) => {
                     expect(actual).to.equal('testUser')
                 })
             })
 
             it('should fetch value from Vault when value is Vault placeholder', async () => {
-                return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.password').then((actual: string) => {
                     expect(actual).to.equal('K1ndaS3cr3t')
                 })
             })
@@ -187,29 +229,29 @@ describe('DynamicConfig', () => {
 
         describe('getAll', () => {
             it('should resolve with all requested config values', async () => {
-                return dynamicConfig.getAll('database.username', 'database.password').then((actual: any) => {
+                return dynamicConfig.getAll('persistedQueries.databaseLookup.username', 'persistedQueries.databaseLookup.password').then((actual: any) => {
                     expect(actual).to.equal(['testUser', 'K1ndaS3cr3t'])
                 })
             })
 
             it('should reject if one of the values is missing', async () => {
-                return dynamicConfig.getAll('database.username', 'database.fake').then((val: any) => {
+                return dynamicConfig.getAll('persistedQueries.databaseLookup.username', 'persistedQueries.databaseLookup.fake').then((val: any) => {
                     throw new Error('Promise should reject')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to find value for key[database.fake].')
+                    expect(err.message).to.equal('Unable to find value for key[persistedQueries.databaseLookup.fake].')
                 })
             })
         })
 
         describe('getWithDefault', () => {
             it('should resolve with with value if found', async () => {
-                return dynamicConfig.getWithDefault('database.username', 'defaultUser').then((actual: any) => {
+                return dynamicConfig.getWithDefault('persistedQueries.databaseLookup.username', 'defaultUser').then((actual: any) => {
                     expect(actual).to.equal('testUser')
                 })
             })
 
             it('should resolve with with default if value not found', async () => {
-                return dynamicConfig.getWithDefault('database.fake', 'defaultResponse').then((actual: any) => {
+                return dynamicConfig.getWithDefault('persistedQueries.databaseLookup.fake', 'defaultResponse').then((actual: any) => {
                     expect(actual).to.equal('defaultResponse')
                 })
             })
@@ -320,7 +362,7 @@ describe('DynamicConfig', () => {
 
         describe('watch', () => {
             it('should return an observer for requested key', (done) => {
-                const password = dynamicConfig.watch('database.password')
+                const password = dynamicConfig.watch('persistedQueries.databaseLookup.password')
                 let count: number = 0
                 password.onValue((next: string) => {
                     if (count === 0) {
@@ -380,17 +422,17 @@ describe('DynamicConfig', () => {
             })
 
             it('should correctly watch a value in an array', (done) => {
-                const address = dynamicConfig.watch('database.shard-info.shard-map[0].destination')
+                const address = dynamicConfig.watch('persistedQueries.databaseLookup.shardedDBHostsInfo.sharding.client.shard-info.shard-map[1].destination')
                 let count: number = 0
                 address.onValue((next: string) => {
                     if (count === 0) {
-                        expect(next).to.equal('127.0.0.1:3000')
+                        expect(next).to.equal('127.0.0.2:4000')
                         count += 1
                         catalog.registerEntity({
                             Node: 'bango',
                             Address: '192.168.4.19',
                             Service: {
-                                Service: 'shard-map-host',
+                                Service: 'shard-map-host-2',
                                 Address: '195.145.2.15',
                                 Port: 3000,
                             },
@@ -403,14 +445,14 @@ describe('DynamicConfig', () => {
                             Node: 'bango',
                             Address: '192.168.4.19',
                             Service: {
-                                Service: 'shard-map-host',
-                                Address: '127.0.0.1',
-                                Port: 3000,
+                                Service: 'shard-map-host-2',
+                                Address: '127.0.0.2',
+                                Port: 4000,
                             },
                         })
 
                     } else if (count === 2) {
-                        expect(next).to.equal('127.0.0.1:3000')
+                        expect(next).to.equal('127.0.0.2:4000')
                         count += 1
                         done()
                     }
@@ -431,18 +473,36 @@ describe('DynamicConfig', () => {
                             port: 8000,
                             host: 'localhost',
                         },
-                        database: {
-                            username: 'testUser',
-                            password: 'Sup3rS3cr3t',
-                            'shard-info': {
-                                'shard-count': 4,
-                                'shard-map': [
-                                    {
-                                        destination: '127.0.0.1:3000',
-                                        'virtual-end': 3,
-                                        'virtual-start': 0,
+                        persistedQueries: {
+                            databaseLookup: {
+                                username: 'testUser',
+                                password: 'Sup3rS3cr3t',
+                                shardedDBHostsInfo: {
+                                    sharding: {
+                                        client: {
+                                            'shard-info': {
+                                                'shard-count': 12,
+                                                'shard-map': [
+                                                    {
+                                                        'virtual-start': 0,
+                                                        'virtual-end': 3,
+                                                        destination: '127.0.0.1:3000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 4,
+                                                        'virtual-end': 7,
+                                                        destination: '127.0.0.2:4000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 8,
+                                                        'virtual-end': 11,
+                                                        destination: '127.0.0.3:5000',
+                                                    },
+                                                ],
+                                            },
+                                        },
                                     },
-                                ],
+                                },
                             },
                         },
                         project: {
@@ -470,13 +530,13 @@ describe('DynamicConfig', () => {
             })
 
             it('should return the value from Consul if available', async () => {
-                return dynamicConfig.get<string>('database.username').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.username').then((actual: string) => {
                     expect(actual).to.equal('testUser')
                 })
             })
 
             it('should fetch value from Consul when value is Consul placeholder', async () => {
-                return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.password').then((actual: string) => {
                     expect(actual).to.equal('Sup3rS3cr3t')
                 })
             })
@@ -493,18 +553,36 @@ describe('DynamicConfig', () => {
                             port: 8000,
                             host: 'localhost',
                         },
-                        database: {
-                            username: 'testUser',
-                            password: 'Sup3rS3cr3t',
-                            'shard-info': {
-                                'shard-count': 4,
-                                'shard-map': [
-                                    {
-                                        destination: '127.0.0.1:3000',
-                                        'virtual-end': 3,
-                                        'virtual-start': 0,
+                        persistedQueries: {
+                            databaseLookup: {
+                                username: 'testUser',
+                                password: 'Sup3rS3cr3t',
+                                shardedDBHostsInfo: {
+                                    sharding: {
+                                        client: {
+                                            'shard-info': {
+                                                'shard-count': 12,
+                                                'shard-map': [
+                                                    {
+                                                        'virtual-start': 0,
+                                                        'virtual-end': 3,
+                                                        destination: '127.0.0.1:3000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 4,
+                                                        'virtual-end': 7,
+                                                        destination: '127.0.0.2:4000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 8,
+                                                        'virtual-end': 11,
+                                                        destination: '127.0.0.3:5000',
+                                                    },
+                                                ],
+                                            },
+                                        },
                                     },
-                                ],
+                                },
                             },
                         },
                         project: {
@@ -551,7 +629,7 @@ describe('DynamicConfig', () => {
 
         describe('watch', () => {
             it('should return an observer for requested key', (done) => {
-                const password = dynamicConfig.watch('database.password')
+                const password = dynamicConfig.watch('persistedQueries.databaseLookup.password')
                 let count: number = 0
                 password.onValue((next: string) => {
                     if (count === 0) {
@@ -612,6 +690,7 @@ describe('DynamicConfig', () => {
         describe('get', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
+                    console.log('actual: ', JSON.stringify(actual, null, 4))
                     expect(actual).to.equal({
                         nullable_test: {
                             nullable: null,
@@ -622,18 +701,36 @@ describe('DynamicConfig', () => {
                             port: 8000,
                             host: 'localhost',
                         },
-                        database: {
-                            username: 'fakeUser',
-                            password: 'NotSoSecret',
-                            'shard-info': {
-                                'shard-count': 4,
-                                'shard-map': [
-                                    {
-                                        destination: '127.0.0.1:3000',
-                                        'virtual-end': 3,
-                                        'virtual-start': 0,
+                        persistedQueries: {
+                            databaseLookup: {
+                                username: 'fakeUser',
+                                password: 'NotSoSecret',
+                                shardedDBHostsInfo: {
+                                    sharding: {
+                                        client: {
+                                            'shard-info': {
+                                                'shard-count': 12,
+                                                'shard-map': [
+                                                    {
+                                                        'virtual-start': 0,
+                                                        'virtual-end': 3,
+                                                        destination: '127.0.0.1:3000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 4,
+                                                        'virtual-end': 7,
+                                                        destination: '127.0.0.2:4000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 8,
+                                                        'virtual-end': 11,
+                                                        destination: '127.0.0.3:5000',
+                                                    },
+                                                ],
+                                            },
+                                        },
                                     },
-                                ],
+                                },
                             },
                         },
                         project: {
@@ -661,7 +758,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should return default value if unable to get from Consul', async () => {
-                return dynamicConfig.get<string>('database.password').then((actual: any) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.password').then((actual: any) => {
                     expect(actual).to.equal('NotSoSecret')
                 })
             })
@@ -720,7 +817,7 @@ describe('DynamicConfig', () => {
 
         describe('get', () => {
             it('should reject when config uses consul', async () => {
-                return dynamicConfig.get<string>('database.username').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.username').then((actual: string) => {
                     throw new Error('Should reject')
                 }, (err: any) => {
                     expect(err.message).to.equal('Unable to retrieve key[test-service?dc=dc1]. No resolver found.')
@@ -793,7 +890,7 @@ describe('DynamicConfig', () => {
 
         describe('get', () => {
             it('should return value stored in environment variable', async () => {
-                return dynamicConfig.get<string>('database.username').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.username').then((actual: string) => {
                     expect(actual).to.equal('foobarwilly')
                 })
             })
@@ -805,7 +902,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should return the default for value missing in environment', async () => {
-                return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.password').then((actual: string) => {
                     expect(actual).to.equal('monkey')
                 })
             })
@@ -887,7 +984,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should reject if unable to resolve environment variable', async () => {
-                return dynamicConfig.get<string>('database.username').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.username').then((actual: string) => {
                     throw new Error(`Should  reject`)
                 }, (err: any) => {
                     expect(err.message).to.equal(`Environment variable 'TEST_USERNAME' not set.`)
@@ -895,7 +992,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should return the default for value missing in environment', async () => {
-                return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.password').then((actual: string) => {
                     expect(actual).to.equal('monkey')
                 })
             })
@@ -934,7 +1031,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should fetch value from default config', async () => {
-                return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.password').then((actual: string) => {
                     expect(actual).to.equal('root')
                 })
             })
@@ -987,7 +1084,7 @@ describe('DynamicConfig', () => {
             })
 
             it('should fetch value from default config', async () => {
-                return dynamicConfig.get<string>('database.password').then((actual: string) => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.password').then((actual: string) => {
                     expect(actual).to.equal('root')
                 })
             })

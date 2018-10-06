@@ -59,7 +59,7 @@ setTimeout(() => {
     mkdir('./tmp')
 
     fs.writeFile('./tmp/token', token, (err: any) => {
-        Promise.all([
+        Promise.all<void | boolean>([
             catalog.registerEntity({
                 Node: 'bango',
                 Address: '192.168.4.19',
@@ -73,23 +73,49 @@ setTimeout(() => {
                 Node: 'bango',
                 Address: '192.168.4.19',
                 Service: {
-                    Service: 'shard-map-host',
+                    Service: 'shard-map-host-1',
                     Address: '127.0.0.1',
                     Port: 3000,
+                },
+            }),
+            catalog.registerEntity({
+                Node: 'bango',
+                Address: '192.168.4.19',
+                Service: {
+                    Service: 'shard-map-host-2',
+                    Address: '127.0.0.2',
+                    Port: 4000,
+                },
+            }),
+            catalog.registerEntity({
+                Node: 'bango',
+                Address: '192.168.4.19',
+                Service: {
+                    Service: 'shard-map-host-3',
+                    Address: '127.0.0.3',
+                    Port: 5000,
                 },
             }),
             consulClient.set(
                 { path: 'test-config-one' },
                 {
-                    database: {
-                        username: 'testUser',
-                        password: {
-                            _source: 'consul',
-                            _key: 'password',
-                        },
-                        'shard-info': {
-                            _source: 'consul',
-                            _key: 'shard-map-4',
+                    persistedQueries: {
+                        databaseLookup: {
+                            username: 'testUser',
+                            password: {
+                                _source: 'consul',
+                                _key: 'password',
+                            },
+                            shardedDBHostsInfo: {
+                                sharding: {
+                                    client: {
+                                        'shard-info': {
+                                            _source: 'consul',
+                                            _key: 'shard-map-12',
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                 },
@@ -97,25 +123,64 @@ setTimeout(() => {
             consulClient.set(
                 { path: 'test-config-two' },
                 {
-                    database: {
-                        username: 'fakeUser',
-                        password: {
-                            _source: 'consul',
-                            _key: 'missing-password',
-                            _default: 'NotSoSecret',
+                    persistedQueries: {
+                        databaseLookup: {
+                            username: 'fakeUser',
+                            password: {
+                                _source: 'consul',
+                                _key: 'missing-password',
+                                _default: 'NotSoSecret',
+                            },
                         },
                     },
                 },
             ),
             consulClient.set(
-                { path: 'shard-map-4' },
+                { path: 'test-config-three' },
                 {
-                    'shard-count': 4,
+                    persistedQueries: {
+                        databaseLookup: {
+                            username: 'testUser',
+                            password: 'testPassword',
+                            shardedDBHostsInfo: {
+                                sharding: {
+                                    client: {
+                                        'shard-info': {
+                                            'shard-count': 4,
+                                            'shard-map': [
+                                                {
+                                                    'virtual-start': 0,
+                                                    'virtual-end': 3,
+                                                    'destination': '127.0.0.1:5000',
+                                                },
+                                            ],
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            ),
+            consulClient.set(
+                { path: 'shard-map-12' },
+                {
+                    'shard-count': 12,
                     'shard-map': [
                         {
                             'virtual-start': 0,
                             'virtual-end': 3,
-                            'destination': 'consul!/shard-map-host?dc=dc1',
+                            'destination': 'consul!/shard-map-host-1?dc=dc1',
+                        },
+                        {
+                            'virtual-start': 4,
+                            'virtual-end': 7,
+                            'destination': 'consul!/shard-map-host-2?dc=dc1',
+                        },
+                        {
+                            'virtual-start': 8,
+                            'virtual-end': 11,
+                            'destination': 'consul!/shard-map-host-3?dc=dc1',
                         },
                     ],
                 },
@@ -132,10 +197,12 @@ setTimeout(() => {
             consulClient.set(
                 { path: 'with-vault' },
                 {
-                    database: {
-                        password: {
-                            _source: 'vault',
-                            _key: 'password',
+                    persistedQueries: {
+                        databaseLookup: {
+                            password: {
+                                _source: 'vault',
+                                _key: 'password',
+                            },
                         },
                     },
                     'hashicorp-vault': {

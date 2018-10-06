@@ -170,7 +170,7 @@ function newConfigValue(
                 nullable: newValue.nullable,
             }
 
-            case 'object':
+        case 'object':
             return {
                 source: newValue.source,
                 type: newValue.type,
