@@ -200,7 +200,6 @@ export class DynamicConfig implements IDynamicConfig {
 
     public watch<T>(key: string): IVariable<T> {
         const normalizedKey: string = Utils.normalizePath(key)
-        console.log('normalizedKey: ', normalizedKey)
 
         if (this.observerMap.has(key)) {
             return this.observerMap.get(key)!
@@ -212,8 +211,6 @@ export class DynamicConfig implements IDynamicConfig {
                         normalizedKey,
                         resolvedConfig,
                     )
-
-                    console.log('value: 2: ', JSON.stringify(rawValue, null, 4))
 
                     if (rawValue !== null) {
                         // Set initial value
