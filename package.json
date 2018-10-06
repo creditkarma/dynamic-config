@@ -50,20 +50,20 @@
     "@types/lab": "^11.1.0",
     "@types/node": "^8.0.51",
     "@types/request-promise-native": "^1.0.13",
-    "code": "^4.1.0",
+    "code": "^5.2.0",
     "express": "^4.16.2",
-    "lab": "^14.3.1",
+    "lab": "^16.1.0",
     "request-promise-native": "^1.0.5",
     "rimraf": "^2.6.2",
     "tslint": "^5.11.0",
-    "wait-on": "^2.1.0"
+    "wait-on": "^3.1.0"
   },
   "dependencies": {
     "@creditkarma/consul-client": "^0.7.0",
     "@creditkarma/vault-client": "^0.5.10",
     "@types/yamljs": "^0.2.30",
     "ajv": "^6.5.2",
-    "typescript": "2.9.x",
+    "typescript": "3.1.x",
     "yamljs": "^0.3.0"
   }
 }

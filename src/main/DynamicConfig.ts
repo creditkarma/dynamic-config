@@ -36,6 +36,7 @@ import {
     IResolvers,
     IRootConfigValue,
     ISchemaMap,
+    ISource,
     ITranslator,
     IVariable,
     KeyPath,
@@ -48,14 +49,7 @@ import * as logger from './logger'
 import { SyncConfig } from './SyncConfig'
 import { envTranslator } from './translators'
 
-const enum ConfigState {
-    INIT,
-    RUNNING,
-    HAS_ERROR,
-}
-
 export class DynamicConfig implements IDynamicConfig {
-    private configState: ConfigState
     private configLoader: ConfigLoader
     private remoteOptions: IRemoteOptions
 
@@ -84,13 +78,8 @@ export class DynamicConfig implements IDynamicConfig {
         schemas = {},
     }: IConfigOptions = {}) {
         this.errorMap = {}
-        this.configState = ConfigState.INIT
         this.promisedConfig = null
-        this.resolvedConfig = {
-            type: 'root',
-            properties: {},
-            watcher: null,
-        }
+        this.resolvedConfig = ConfigUtils.emptyRootConfig()
         this.schemas = schemas
         this.translator = ConfigUtils.makeTranslator(translators)
         this.configLoader = new ConfigLoader({
@@ -123,36 +112,11 @@ export class DynamicConfig implements IDynamicConfig {
         }
     }
 
-    public register(...resolvers: Array<IRemoteResolver>): void {
-        if (this.configState === ConfigState.INIT) {
-            resolvers.forEach((resolver: IRemoteResolver) => {
-                this.resolversByName[resolver.name] = resolver
-
-                switch (resolver.type) {
-                    case 'remote':
-                        this.resolvers.remote = resolver
-                        break
-
-                    case 'secret':
-                        this.resolvers.secret = resolver
-                        break
-
-                    default:
-                        throw new Error(`Unknown resolver type: ${resolver.type}`)
-                }
-            })
-
-        } else {
-            throw new Error(`Resolvers cannot be registered once requests have been made`)
-        }
-    }
-
     /**
      * Gets a given key from the config. There are not guarantees that the config is already
      * loaded, so we must return a Promise.
      */
     public async get<T = any>(key?: string): Promise<T> {
-        this.configState = ConfigState.RUNNING
         return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
             const error = ConfigUtils.getErrorForKey(key, this.errorMap)
 
@@ -240,11 +204,10 @@ export class DynamicConfig implements IDynamicConfig {
                             })
 
                         } else {
-                            logger.error(`No resolver found for key[${key}]`)
+                            throw new errors.ResolverUnavailable(key)
                         }
 
                     } else {
-                        logger.warn(`Value for key[${key}] not found in config`)
                         throw new errors.DynamicConfigMissingKey(key)
                     }
 
@@ -259,8 +222,7 @@ export class DynamicConfig implements IDynamicConfig {
         }
     }
 
-    public async source(key: string): Promise<string> {
-        this.configState = ConfigState.RUNNING
+    public async source(key: string): Promise<ISource> {
         const error = ConfigUtils.getErrorForKey(key, this.errorMap)
 
         if (error) {
@@ -275,7 +237,7 @@ export class DynamicConfig implements IDynamicConfig {
                 )
 
                 if (value !== null) {
-                    return value.source.name
+                    return value.source
 
                 } else {
                     throw new errors.DynamicConfigMissingKey(key)
@@ -562,5 +524,22 @@ export class DynamicConfig implements IDynamicConfig {
 
     private getResolverForValue(value: BaseConfigValue): IRemoteResolver | undefined {
         return this.resolversByName[value.source.name]
+    }
+
+    private register(resolver: IRemoteResolver): void {
+        this.resolversByName[resolver.name] = resolver
+
+        switch (resolver.type) {
+            case 'remote':
+                this.resolvers.remote = resolver
+                break
+
+            case 'secret':
+                this.resolvers.secret = resolver
+                break
+
+            default:
+                throw new Error(`Unknown resolver type: ${resolver.type}`)
+        }
     }
 }

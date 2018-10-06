@@ -37,6 +37,12 @@ import * as logger from '../logger'
 
 import { InvalidConfigValue } from '../errors'
 
+export const emptyRootConfig = (): IRootConfigValue => ({
+    type: 'root',
+    properties: {},
+    watcher: null,
+})
+
 export function getErrorForKey(key: string | undefined, errorMap: IConfigErrorMap): Error | undefined {
     if (key !== undefined) {
         return errorMap[key]

@@ -39,7 +39,6 @@ export interface IConfigStore {
 }
 
 export interface IDynamicConfig {
-    register(...resolvers: Array<IRemoteResolver>): void
     get<T = any>(key?: string): Promise<T>
     watch<T = any>(key?: string): IVariable<T>
     getAll(...args: Array<string>): Promise<Array<any>>

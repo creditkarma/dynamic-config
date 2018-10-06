@@ -175,48 +175,52 @@ describe('DynamicConfig Singleton', () => {
     describe('Command Line Args', () => {
         let server: ChildProcess
 
-        before((done) => {
-            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
-            server = exec('node ./server.js CONSUL_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three')
-            server.stdout.on('data', (data) => {
-                console.log('msg: ', data)
+        before(async () => {
+            return new Promise((resolve, reject) => {
+                process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+                server = exec('node ./server.js CONSUL_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three')
+                server.stdout.on('data', (data) => {
+                    console.log('msg: ', data)
+                })
+
+                server.stderr.on('data', (data) => {
+                    console.log('err: ', data)
+                })
+
+                const configValue: string = `
+                {
+                    "configPath": "./config",
+                    "configEnv": "development",
+                    "remoteOptions": {},
+                    "resolvers": [
+                        "env", "process", "consul", "vault"
+                    ],
+                    "loaders": [
+                        "json", "yml", "js", "ts"
+                    ],
+                    "translators": [
+                        "env", "consul"
+                    ]
+                }
+                `
+
+                fs.writeFileSync('./config-settings.json', configValue)
+
+                // Let server spin up
+                setTimeout(resolve, 3000)
             })
-
-            server.stderr.on('data', (data) => {
-                console.log('err: ', data)
-            })
-
-            const configValue: string = `
-            {
-                "configPath": "./config",
-                "configEnv": "development",
-                "remoteOptions": {},
-                "resolvers": [
-                    "env", "process", "consul", "vault"
-                ],
-                "loaders": [
-                    "json", "yml", "js", "ts"
-                ],
-                "translators": [
-                    "env", "consul"
-                ]
-            }
-            `
-
-            fs.writeFileSync('./config-settings.json', configValue)
-
-            // Let server spin up
-            setTimeout(done, 3000)
         })
 
-        after((done) => {
-            fs.unlinkSync('./config-settings.json')
+        after(async () => {
+            return new Promise((resolve, reject) => {
+                fs.unlinkSync('./config-settings.json')
 
-            server.on('exit', (data) => {
-                done()
+                server.on('exit', (data) => {
+                    resolve()
+                })
+
+                server.kill()
             })
-
-            server.kill()
         })
 
         it('should correctly run configuration with command line args', async () => {
