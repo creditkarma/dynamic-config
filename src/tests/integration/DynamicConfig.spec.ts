@@ -439,12 +439,12 @@ describe('DynamicConfig', () => {
                                 Service: {
                                     Service: 'shard-map-host-2',
                                     Address: '195.145.2.15',
-                                    Port: 3000,
+                                    Port: 7000,
                                 },
                             })
 
                         } else if (count === 1) {
-                            expect(next).to.equal('195.145.2.15:3000')
+                            expect(next).to.equal('195.145.2.15:7000')
                             count += 1
                             catalog.registerEntity({
                                 Node: 'bango',

@@ -41,7 +41,8 @@
                     "client": {
                         "shard-info": {
                             "shard-count": 4,
-                            "shard-map": [
+                            "shard-map":
+                            [
                                 {
                                     "virtual-start": 0,
                                     "virtual-end": 3,
