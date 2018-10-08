@@ -437,7 +437,7 @@ export class DynamicConfig implements IDynamicConfig {
 
         const localConfig: IRootConfigValue = ObjectUtils.overlayObjects(defaultConfig, envConfig)
 
-        return this.initializeResolvers(localConfig)
+        return await this.initializeResolvers(localConfig)
     }
 
     private setConfig(config: IRootConfigValue): void {

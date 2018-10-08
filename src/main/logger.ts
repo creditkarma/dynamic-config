@@ -14,7 +14,7 @@ export const log = (msg: string, data?: any) => {
 }
 
 export const warn = (msg: string, data?: any) => {
-    if (data !== undefined && isDebug()) {
+    if (data !== undefined) {
         console.warn(`[dynamic-config:warn]: ${msg}: `, data)
     } else {
         console.warn(`[dynamic-config:warn]: ${msg}`)

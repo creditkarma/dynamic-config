@@ -69,7 +69,10 @@ export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolea
             source,
             type: 'array',
             items: obj.reduce((acc: Array<BaseConfigValue>, next: any) => {
-                acc.push(buildBaseConfigValue(source, next))
+                acc.push(buildBaseConfigValue({
+                    type: source.type,
+                    name: source.name,
+                }, next))
                 return acc
             }, []),
             watcher: null,
@@ -81,7 +84,10 @@ export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolea
             source,
             type: 'object',
             properties: Object.keys(obj).reduce((acc: IConfigProperties, next: string) => {
-                acc[next] = buildBaseConfigValue(source, obj[next])
+                acc[next] = buildBaseConfigValue({
+                    type: source.type,
+                    name: source.name,
+                }, obj[next])
                 return acc
             }, {}),
             watcher: null,
