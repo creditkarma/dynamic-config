@@ -33,7 +33,7 @@ import {
     ResolverUnavailable,
 } from '../errors'
 
-import * as logger from '../logger'
+import { defaultLogger as logger } from '../logger'
 
 import { InvalidConfigValue } from '../errors'
 

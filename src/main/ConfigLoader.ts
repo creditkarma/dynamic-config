@@ -24,7 +24,7 @@ import {
     ILoadedFile,
 } from './types'
 
-import * as logger from './logger'
+import { defaultLogger as logger } from './logger'
 
 function getConfigPath(sourceDir: string): string {
     const configPath = FileUtils.findDir(sourceDir, CONFIG_SEARCH_PATHS)

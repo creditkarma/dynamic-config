@@ -13,7 +13,7 @@ import {
     WatchFunction,
 } from '../types'
 
-import * as logger from '../logger'
+import { defaultLogger as logger } from '../logger'
 
 export function vaultResolver(): IRemoteResolver {
     let vaultClient: Maybe<VaultClient> | null = null

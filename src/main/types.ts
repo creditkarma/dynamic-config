@@ -1,3 +1,9 @@
+export interface ILogger {
+    log(msg: string, data?: any): void
+    warn(msg: string, data?: any): void
+    error(msg: string, data?: any): void
+}
+
 export interface IVariable<T> {
     onValue(callback: (val: T) => void): void
 }

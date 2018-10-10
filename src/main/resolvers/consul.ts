@@ -22,7 +22,7 @@ import {
 
 import { ObjectUtils, Utils } from '../utils'
 
-import * as logger from '../logger'
+import { defaultLogger as logger } from '../logger'
 
 export function toRemoteOptionMap(str: string): IRemoteOverrides {
     const [ key, ...tail ] = str.split('?')

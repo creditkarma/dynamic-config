@@ -1,6 +1,6 @@
 import {  } from 'ajv'
 import * as fs from 'fs'
-import * as logger from './logger'
+import { defaultLogger as logger } from './logger'
 
 import {
     IConfigOptions,

@@ -1,4 +1,4 @@
-import * as logger from '../logger'
+import { defaultLogger as logger } from '../logger'
 import { IFileLoader } from '../types'
 
 export const jsLoader: IFileLoader = {

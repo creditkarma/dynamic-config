@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as ts from 'typescript'
 import * as vm from 'vm'
-import * as logger from '../logger'
+import { defaultLogger as logger } from '../logger'
 import { IFileLoader } from '../types'
 
 function locateFile(basePath: string, searchPath: string): string {

@@ -45,7 +45,7 @@ import {
 } from './types'
 
 import { jsonLoader } from './loaders'
-import * as logger from './logger'
+import { defaultLogger as logger } from './logger'
 import { SyncConfig } from './SyncConfig'
 import { envTranslator } from './translators'
 
@@ -171,44 +171,58 @@ export class DynamicConfig implements IDynamicConfig {
         } else {
             const observer = new Observer<T>((sink: ValueSink<T>) => {
                 this.getConfig().then((resolvedConfig: IRootConfigValue) => {
-                    const rawValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
+                    const initialRawValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
                         normalizedKey,
                         resolvedConfig,
                     )
 
-                    if (rawValue !== null) {
-                        // Set initial value
-                        sink(ConfigUtils.readConfigValue(rawValue))
+                    if (initialRawValue !== null) {
+                        // Read initial value
+                        const initialValue = ConfigUtils.readConfigValue(initialRawValue)
 
-                        rawValue.watcher = (val: T): void => {
+                        // Set initial value
+                        sink(initialValue)
+
+                        // Defined watcher for config value
+                        initialRawValue.watcher = (val: T): void => {
                             sink(val)
                         }
 
-                        const resolver: IRemoteResolver | undefined = this.getResolverForValue(rawValue)
+                        const resolver: IRemoteResolver | undefined = this.getResolverForValue(initialRawValue)
 
                         if (
                             resolver !== undefined &&
                             resolver.type === 'remote' &&
-                            rawValue.source.key !== undefined
+                            initialRawValue.source.key !== undefined
                         ) {
-                            resolver.watch(rawValue.source.key, (val: any) => {
-                                const baseValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(rawValue.source, val)
-                                this.setConfig(
-                                    ConfigUtils.setValueForKey(
-                                        normalizedKey,
-                                        baseValue,
-                                        this.resolvedConfig,
-                                        true,
-                                    ) as IRootConfigValue,
-                                )
+                            resolver.watch(initialRawValue.source.key, (val: any) => {
+                                const updatedRawValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(initialRawValue.source, val)
+                                this.replaceConfigPlaceholders(updatedRawValue).then((updatedResolvedValue: BaseConfigValue) => {
+                                    if (initialRawValue.type !== updatedResolvedValue.type) {
+                                        logger.warn(`The watcher for key[${key}] updated with a value of type[${updatedResolvedValue.type}] the initial value was of type[${initialRawValue.type}]`)
+                                    }
+
+                                    this.setConfig(
+                                        ConfigUtils.setValueForKey(
+                                            normalizedKey,
+                                            updatedResolvedValue,
+                                            this.resolvedConfig,
+                                            true,
+                                        ) as IRootConfigValue,
+                                    )
+                                }, (err: any) => {
+                                    logger.error(err.message)
+                                })
                             })
 
                         } else {
-                            throw new errors.ResolverUnavailable(key)
+                            const err = new errors.ResolverUnavailable(key)
+                            logger.error(err.message)
                         }
 
                     } else {
-                        throw new errors.DynamicConfigMissingKey(key)
+                        const err = new errors.DynamicConfigMissingKey(key)
+                        logger.error(err.message)
                     }
 
                 }, (err: errors.DynamicConfigError) => {

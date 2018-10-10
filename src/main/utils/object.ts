@@ -75,7 +75,7 @@ export function getValueForKey<T>(key: string, obj: any): T | null {
         return null
 
     } else {
-        const parts: Array<string | number> = splitKey(key)
+        const parts: Array<string> = splitKey(key)
 
         if (parts.length > 1) {
             const [ head, ...tail ] = parts
