@@ -54,7 +54,6 @@ export class DynamicConfig implements IDynamicConfig {
     private remoteOptions: IRemoteOptions
 
     private promisedConfig: Promise<IRootConfigValue> | null
-    private resolvedConfig: IRootConfigValue
     private initializedResolvers: Array<string>
 
     private resolvers: IResolvers
@@ -79,7 +78,6 @@ export class DynamicConfig implements IDynamicConfig {
     }: IConfigOptions = {}) {
         this.errorMap = {}
         this.promisedConfig = null
-        this.resolvedConfig = ConfigUtils.emptyRootConfig()
         this.schemas = schemas
         this.translator = ConfigUtils.makeTranslator(translators)
         this.configLoader = new ConfigLoader({
@@ -206,7 +204,7 @@ export class DynamicConfig implements IDynamicConfig {
                                         ConfigUtils.setValueForKey(
                                             normalizedKey,
                                             updatedResolvedValue,
-                                            this.resolvedConfig,
+                                            resolvedConfig,
                                             true,
                                         ) as IRootConfigValue,
                                     )
@@ -454,9 +452,8 @@ export class DynamicConfig implements IDynamicConfig {
         return await this.initializeResolvers(localConfig)
     }
 
-    private setConfig(config: IRootConfigValue): void {
-        this.resolvedConfig = config
-        this.promisedConfig = Promise.resolve(this.resolvedConfig)
+    private setConfig(resolvedConfig: IRootConfigValue): void {
+        this.promisedConfig = Promise.resolve(resolvedConfig)
     }
 
     private getConfig(): Promise<IRootConfigValue> {
