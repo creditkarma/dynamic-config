@@ -10,8 +10,8 @@ import * as path from 'path'
 process.chdir(__dirname)
 
 setTimeout(() => {
-    const catalog: Catalog = new Catalog('http://localhost:8510')
-    const consulClient: KvStore = new KvStore('http://localhost:8510')
+    const catalog: Catalog = new Catalog([ 'http://localhost:8510' ])
+    const consulClient: KvStore = new KvStore([ 'http://localhost:8510' ])
     const vaultClient: VaultClient = new VaultClient({
         apiVersion: 'v1',
         protocol: 'http',

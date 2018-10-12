@@ -176,14 +176,14 @@ export class DynamicConfig implements IDynamicConfig {
 
                     if (initialRawValue !== null) {
                         // Read initial value
-                        const initialValue = ConfigUtils.readConfigValue(initialRawValue)
+                        const initialValue: T = ConfigUtils.readConfigValue(initialRawValue)
 
                         // Set initial value
-                        sink(initialValue)
+                        sink(undefined, initialValue)
 
                         // Defined watcher for config value
                         initialRawValue.watcher = (val: T): void => {
-                            sink(val)
+                            sink(undefined, val)
                         }
 
                         const resolver: IRemoteResolver | undefined = this.getResolverForValue(initialRawValue)
@@ -210,21 +210,25 @@ export class DynamicConfig implements IDynamicConfig {
                                     )
                                 }, (err: any) => {
                                     logger.error(err.message)
+                                    sink(new Error(err.message))
                                 })
                             })
 
                         } else {
                             const err = new errors.ResolverUnavailable(key)
                             logger.error(err.message)
+                            sink(new Error(err.message))
                         }
 
                     } else {
                         const err = new errors.DynamicConfigMissingKey(key)
                         logger.error(err.message)
+                        sink(new Error(err.message))
                     }
 
                 }, (err: errors.DynamicConfigError) => {
                     logger.error(`Unable to load config. ${err.message}`)
+                    sink(new Error(`Unable to load config. ${err.message}`))
                 })
             })
 

@@ -80,9 +80,17 @@ export function consulResolver(): IRemoteResolver {
                 consulClient = new Nothing<IConsulClient>()
 
             } else {
+                const addresses: Array<string> = consulAddress.get().split(',').map((next: string) => {
+                    return next.trim()
+                }).filter((next: string) => {
+                    return next !== ''
+                })
+
+                console.log('addresses: ', addresses)
+
                 consulClient = new Just({
-                    kvStore: new KvStore(consulAddress.get()),
-                    catalog: new Catalog(consulAddress.get()),
+                    kvStore: new KvStore(addresses),
+                    catalog: new Catalog(addresses),
                 })
             }
 

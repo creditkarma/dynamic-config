@@ -1,4 +1,7 @@
-import { Catalog, KvStore } from '@creditkarma/consul-client'
+import {
+    Catalog,
+    KvStore,
+} from '@creditkarma/consul-client'
 import { expect } from 'code'
 import * as Lab from 'lab'
 import * as path from 'path'
@@ -322,6 +325,140 @@ describe('DynamicConfig', () => {
         })
     })
 
+    describe('Configured with Consul fail over', () => {
+        const dynamicConfig: DynamicConfig = new DynamicConfig({
+            configEnv: 'development',
+            configPath: path.resolve(__dirname, './config'),
+            resolvers: {
+                remote: consulResolver(),
+                secret: vaultResolver(),
+            },
+            loaders: [
+                jsonLoader,
+                ymlLoader,
+                jsLoader,
+                tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
+        })
+
+        const kvStore = new KvStore([ 'http://localhost:8510' ])
+
+        before(async () => {
+            process.env.CONSUL_ADDRESS = 'localhost:9888,localhost:8510'
+            process.env.CONSUL_KEYS = 'test-config-one'
+            process.env.CONSUL_DC = 'dc1'
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.CONSUL_ADDRESS
+            delete process.env.CONSUL_KEYS
+            delete process.env.CONSUL_DC
+            delete process.env.NOT_NULLABLE
+        })
+
+        describe('get', () => {
+            it('should return full config when making empty call to get', async () => {
+                return dynamicConfig.get<string>().then((actual: any) => {
+                    expect(actual).to.equal({
+                        nullable_test: {
+                            nullable: null,
+                            not_nullable: 'NOT_NULLABLE',
+                        },
+                        version: '2.0.1',
+                        server: {
+                            port: 8000,
+                            host: 'localhost',
+                        },
+                        persistedQueries: {
+                            databaseLookup: {
+                                username: 'testUser',
+                                password: 'Sup3rS3cr3t',
+                                shardedDBHostsInfo: {
+                                    sharding: {
+                                        client: {
+                                            'shard-info': {
+                                                'shard-count': 12,
+                                                'shard-map': [
+                                                    {
+                                                        'virtual-start': 0,
+                                                        'virtual-end': 3,
+                                                        destination: '127.0.0.1:3000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 4,
+                                                        'virtual-end': 7,
+                                                        destination: '127.0.0.2:4000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 8,
+                                                        'virtual-end': 11,
+                                                        destination: '127.0.0.3:5000',
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        project: {
+                            id: {
+                                name: 'yaml-project',
+                                ref: 123456,
+                            },
+                            health: {
+                                control: '/javascript',
+                                response: 'BOOYA',
+                            },
+                        },
+                        names: {
+                            first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
+                            last: [ 'Smith', 'Warren', 'Malick' ],
+                        },
+                        'test-service': {
+                            destination: '127.0.0.1:3000',
+                        },
+                        'not-in-consul': {
+                            value: 'I am a default',
+                        },
+                    })
+                })
+            })
+        })
+
+        describe('watch', () => {
+            it('should return an observer for requested key', async () => {
+                const password = dynamicConfig.watch('persistedQueries.databaseLookup.password')
+                let count: number = 0
+                return new Promise((resolve, reject) => {
+                    password.onValue((next: string) => {
+                        console.log('next: ', next)
+                        if (count === 0) {
+                            expect(next).to.equal('Sup3rS3cr3t')
+                            count += 1
+                            kvStore.set({ path: 'password', dc: 'dc1' }, '123456')
+
+                        } else if (count === 1) {
+                            expect(next).to.equal('123456')
+                            count += 1
+                            kvStore.set({ path: 'password', dc: 'dc1' }, 'Sup3rS3cr3t')
+
+                        } else if (count === 2) {
+                            expect(next).to.equal('Sup3rS3cr3t')
+                            count += 1
+                            resolve()
+                        }
+                    })
+                })
+            })
+        })
+    })
+
     describe('Configured with Consul', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'development',
@@ -349,8 +486,8 @@ describe('DynamicConfig', () => {
             ],
         })
 
-        const kvStore = new KvStore('http://localhost:8510')
-        const catalog = new Catalog('http://localhost:8510')
+        const kvStore = new KvStore([ 'http://localhost:8510' ])
+        const catalog = new Catalog([ 'http://localhost:8510' ])
 
         before(async () => {
             process.env.NOT_NULLABLE = 'NOT_NULLABLE'
