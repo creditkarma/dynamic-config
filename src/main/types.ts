@@ -6,6 +6,9 @@ export interface ILogger {
 
 export interface IVariable<T> {
     onValue(callback: (val: T) => void): void
+    onError(callback: (err: Error) => void): void
+    current(): T | null
+    previous(): T | null
 }
 
 export interface IRemoteOptions {

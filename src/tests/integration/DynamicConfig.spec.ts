@@ -137,6 +137,7 @@ describe('DynamicConfig', () => {
                         'not-in-consul': {
                             value: 'I am a default',
                         },
+                        secret: 'this is a secret',
                     })
                 })
             })
@@ -260,9 +261,17 @@ describe('DynamicConfig', () => {
             })
         })
 
+        describe('getRemoteValue', () => {
+            it('should return value from remote source', async () => {
+                return dynamicConfig.getRemoteValue('test-service.destination').then((actual: string) => {
+                    expect(actual).to.equal('127.0.0.1:3000')
+                })
+            })
+        })
+
         describe('getSecretValue', () => {
             it('should get secret value from Vault', async () => {
-                return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
+                return dynamicConfig.getSecretValue<string>('secret').then((actual: string) => {
                     expect(actual).to.equal('this is a secret')
                 })
             })
@@ -426,6 +435,7 @@ describe('DynamicConfig', () => {
                         'not-in-consul': {
                             value: 'I am a default',
                         },
+                        secret: `I'm not secret`,
                     })
                 })
             })
@@ -437,7 +447,6 @@ describe('DynamicConfig', () => {
                 let count: number = 0
                 return new Promise((resolve, reject) => {
                     password.onValue((next: string) => {
-                        console.log('next: ', next)
                         if (count === 0) {
                             expect(next).to.equal('Sup3rS3cr3t')
                             count += 1
@@ -668,6 +677,7 @@ describe('DynamicConfig', () => {
                         'not-in-consul': {
                             value: 'I am a default',
                         },
+                        secret: `I'm not secret`,
                     })
                 })
             })
@@ -748,6 +758,7 @@ describe('DynamicConfig', () => {
                         'not-in-consul': {
                             value: 'I am a default',
                         },
+                        secret: `I'm not secret`,
                     })
                 })
             })
@@ -897,6 +908,7 @@ describe('DynamicConfig', () => {
                         'not-in-consul': {
                             value: 'I am a default',
                         },
+                        secret: `I'm not secret`,
                     })
                 })
             })
@@ -995,10 +1007,10 @@ describe('DynamicConfig', () => {
 
         describe('getSecretValue', () => {
             it('should reject when Vault not configured', async () => {
-                return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
+                return dynamicConfig.getSecretValue<string>('secret').then((actual: string) => {
                     throw new Error('Should reject')
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to retrieve key[test-secret]. No resolver found.')
+                    expect(err.message).to.equal('Unable to retrieve key[test-service?dc=dc1]. No resolver found.')
                 })
             })
         })
@@ -1071,10 +1083,10 @@ describe('DynamicConfig', () => {
 
         describe('getSecretValue', () => {
             it('should reject when Vault not configured', async () => {
-                return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
-                    throw new Error(`Unable to retrieve key[test-secret]. Should reject when Vault not configured`)
+                return dynamicConfig.getSecretValue<string>('secret').then((actual: string) => {
+                    throw new Error(`Unable to retrieve key[secret]. Should reject when Vault not configured`)
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to retrieve key[test-secret]. No resolver found.')
+                    expect(err.message).to.equal('Unable to retrieve key[secret]. No resolver found.')
                 })
             })
         })
@@ -1183,10 +1195,10 @@ describe('DynamicConfig', () => {
 
         describe('getSecretValue', () => {
             it('should reject when Vault not configured', async () => {
-                return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
-                    throw new Error(`Unable to retrieve key[test-secret]. Should reject when Vault not configured`)
+                return dynamicConfig.getSecretValue<string>('secret').then((actual: string) => {
+                    throw new Error(`Unable to retrieve key[secret]. Should reject when Vault not configured`)
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to retrieve key[test-secret]. No resolver found.')
+                    expect(err.message).to.equal('Unable to retrieve key[secret]. No resolver found.')
                 })
             })
         })
@@ -1236,10 +1248,10 @@ describe('DynamicConfig', () => {
 
         describe('getSecretValue', () => {
             it('should reject when Vault not configured', async () => {
-                return dynamicConfig.getSecretValue<string>('test-secret').then((actual: string) => {
-                    throw new Error(`Unable to retrieve key[test-secret]. Should reject when Vault not configured`)
+                return dynamicConfig.getSecretValue<string>('secret').then((actual: string) => {
+                    throw new Error(`Unable to retrieve key[secret]. Should reject when Vault not configured`)
                 }, (err: any) => {
-                    expect(err.message).to.equal('Unable to retrieve key[test-secret]. No resolver found.')
+                    expect(err.message).to.equal('Unable to retrieve key[secret]. No resolver found.')
                 })
             })
         })

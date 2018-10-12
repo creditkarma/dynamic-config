@@ -185,6 +185,10 @@ setTimeout(() => {
                         mount: 'secret',
                         tokenPath: './tmp/token',
                     },
+                    'secret': {
+                        _source: 'vault',
+                        _key: 'test-secret',
+                    },
                 },
             ),
             vaultClient.set('test-secret', 'this is a secret'),

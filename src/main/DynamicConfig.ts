@@ -238,32 +238,6 @@ export class DynamicConfig implements IDynamicConfig {
         }
     }
 
-    public async source(key: string): Promise<ISource> {
-        const error = ConfigUtils.getErrorForKey(key, this.errorMap)
-
-        if (error) {
-            throw error
-
-        } else {
-            const normalizedKey = Utils.normalizePath(key)
-            return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
-                const value: BaseConfigValue | null = ConfigUtils.getConfigForKey(
-                    normalizedKey,
-                    resolvedConfig,
-                )
-
-                if (value !== null) {
-                    return value.source
-
-                } else {
-                    throw new errors.DynamicConfigMissingKey(key)
-                }
-            }, (err: errors.DynamicConfigError) => {
-                throw err
-            })
-        }
-    }
-
     /**
      * Get n number of keys from the config and return a Promise of an Array of those values.
      */
@@ -285,11 +259,47 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public async getRemoteValue<T>(key: string): Promise<T> {
-        return this.getValueFromResolver<T>(key, 'remote')
+        return this.source(key).then((source: ISource) => {
+            if (source.key !== undefined) {
+                return this.getValueFromResolver<T>(source.key, 'remote')
+            } else {
+                throw new errors.ResolverUnavailable(key)
+            }
+        })
     }
 
     public async getSecretValue<T>(key: string): Promise<T> {
-        return this.getValueFromResolver<T>(key, 'secret')
+        return this.source(key).then((source: ISource) => {
+            if (source.key !== undefined) {
+                return this.getValueFromResolver<T>(source.key, 'secret')
+            } else {
+                throw new errors.ResolverUnavailable(key)
+            }
+        })
+    }
+
+    public async source(key: string): Promise<ISource> {
+        const error = ConfigUtils.getErrorForKey(key, this.errorMap)
+
+        if (error) {
+            throw error
+
+        } else {
+            const normalizedKey = Utils.normalizePath(key)
+            return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
+                const value: BaseConfigValue | null = ConfigUtils.getConfigForKey(
+                    normalizedKey,
+                    resolvedConfig,
+                )
+
+                if (value !== null) {
+                    return value.source
+
+                } else {
+                    throw new errors.DynamicConfigMissingKey(key)
+                }
+            })
+        }
     }
 
     private buildDefaultForPlaceholder(placeholder: IResolvedPlaceholder, err?: errors.DynamicConfigError): BaseConfigValue {

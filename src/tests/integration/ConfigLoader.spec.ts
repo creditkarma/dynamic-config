@@ -108,6 +108,7 @@ describe('ConfigLoader', () => {
                     'test-service': {
                         destination: 'http://${HOST_NAME||localhost}:8080',
                     },
+                    secret: `I'm not secret`,
                 },
             }
 

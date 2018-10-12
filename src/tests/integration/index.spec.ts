@@ -111,6 +111,7 @@ describe('DynamicConfig Singleton', () => {
                             'test-service': {
                                 destination: 'http://localhost:8080',
                             },
+                            secret: 'this is a secret',
                         })
                     })
             })
@@ -151,7 +152,7 @@ describe('DynamicConfig Singleton', () => {
         describe('getSecretValue', () => {
             it('should get secret value from Vault', async () => {
                 return config()
-                    .getSecretValue<string>('test-secret')
+                    .getSecretValue<string>('secret')
                     .then((val: string) => {
                         expect(val).to.equal('this is a secret')
                     })
