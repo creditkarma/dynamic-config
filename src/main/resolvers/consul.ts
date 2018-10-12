@@ -86,8 +86,6 @@ export function consulResolver(): IRemoteResolver {
                     return next !== ''
                 })
 
-                console.log('addresses: ', addresses)
-
                 consulClient = new Just({
                     kvStore: new KvStore(addresses),
                     catalog: new Catalog(addresses),
