@@ -251,7 +251,7 @@ export function consulResolver(): IRemoteResolver {
                     })
                 },
                 () => {
-                    callback(new Error(`Unable to watch changes for key[${key}]. Consul is not configured.`), undefined)
+                    logger.warn(`Unable to watch changes for key[${key}]. Consul is not configured.`)
                 },
             )
         },
