@@ -222,30 +222,36 @@ export function consulResolver(): IRemoteResolver {
                         dc: (remoteOptions.dc || consulDc.getOrElse('')),
                     }).then((_val: any) => {
                         if (_val !== null) {
-                            client.kvStore
+                            const observer = client.kvStore
                                 .watch({
                                     path: pathForKey,
                                     dc: (remoteOptions.dc || consulDc.getOrElse('')),
-                                }).onValue((val: any) => {
-                                    callback(val)
                                 })
+
+                            observer.onValue((val: any) => {
+                                callback(undefined, val)
+                            })
+
+                            observer.onError((err: Error) => {
+                                callback(err, undefined)
+                            })
 
                         } else {
                             client.catalog.resolveAddress(key).then((address: string) => {
                                 client.catalog.watchAddress(key).onValue((val: any) => {
-                                    callback(val)
+                                    callback(undefined, val)
                                 })
 
                             }, (err: any) => {
-                                logger.error(`Unable to watch key[${key}]. Value not found in Consul`)
+                                callback(new Error(`Unable to watch key[${key}]. ${err.message}`), undefined)
                             })
                         }
                     }, (err: any) => {
-                        logger.error(`Unable to watch key[${key}]. Value not found in Consul`)
+                        callback(new Error(`Unable to watch key[${key}]. ${err.message}`), undefined)
                     })
                 },
                 () => {
-                    logger.warn(`Unable to watch changes for key[${key}]. Consul is not configured.`)
+                    callback(new Error(`Unable to watch changes for key[${key}]. Consul is not configured.`), undefined)
                 },
             )
         },

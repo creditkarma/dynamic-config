@@ -169,54 +169,66 @@ export class DynamicConfig implements IDynamicConfig {
         } else {
             const observer = new Observer<T>((sink: ValueSink<T>) => {
                 this.getConfig().then((resolvedConfig: IRootConfigValue) => {
-                    const initialRawValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
-                        normalizedKey,
-                        resolvedConfig,
-                    )
+                    try {
+                        const initialRawValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
+                            normalizedKey,
+                            resolvedConfig,
+                        )
 
-                    if (initialRawValue !== null) {
-                        // Read initial value
-                        const initialValue: T = ConfigUtils.readConfigValue(initialRawValue)
+                        if (initialRawValue !== null) {
+                            // Read initial value
+                            const initialValue: T = ConfigUtils.readConfigValue(initialRawValue)
 
-                        // Set initial value
-                        sink(undefined, initialValue)
+                            // Set initial value
+                            sink(undefined, initialValue)
 
-                        // Defined watcher for config value
-                        initialRawValue.watcher = (val: T): void => {
-                            sink(undefined, val)
-                        }
+                            // Defined watcher for config value
+                            initialRawValue.watcher = (err: Error | undefined, val: T | undefined): void => {
+                                sink(err, val)
+                            }
 
-                        const resolver: IRemoteResolver | undefined = this.getResolverForValue(initialRawValue)
+                            const resolver: IRemoteResolver | undefined = this.getResolverForValue(initialRawValue)
 
-                        if (
-                            resolver !== undefined &&
-                            resolver.type === 'remote' &&
-                            initialRawValue.source.key !== undefined
-                        ) {
-                            resolver.watch(initialRawValue.source.key, (val: any) => {
-                                const updatedRawValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(initialRawValue.source, val)
-                                this.replaceConfigPlaceholders(updatedRawValue).then((updatedResolvedValue: BaseConfigValue) => {
-                                    if (initialRawValue.type !== updatedResolvedValue.type) {
-                                        logger.warn(`The watcher for key[${key}] updated with a value of type[${updatedResolvedValue.type}] the initial value was of type[${initialRawValue.type}]`)
+                            if (
+                                resolver !== undefined &&
+                                resolver.type === 'remote' &&
+                                initialRawValue.source.key !== undefined
+                            ) {
+                                resolver.watch<T>(initialRawValue.source.key, (err: Error | undefined, val: T | undefined) => {
+                                    if (err !== undefined) {
+                                        sink(err)
+
+                                    } else {
+                                        const updatedRawValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(initialRawValue.source, val)
+                                        this.replaceConfigPlaceholders(updatedRawValue).then((updatedResolvedValue: BaseConfigValue) => {
+                                            if (initialRawValue.type !== updatedResolvedValue.type) {
+                                                logger.warn(`The watcher for key[${key}] updated with a value of type[${updatedResolvedValue.type}] the initial value was of type[${initialRawValue.type}]`)
+                                            }
+
+                                            this.setConfig(
+                                                ConfigUtils.setValueForKey(
+                                                    normalizedKey,
+                                                    updatedResolvedValue,
+                                                    resolvedConfig,
+                                                    true,
+                                                ) as IRootConfigValue,
+                                            )
+                                        }, (placeholderError: Error) => {
+                                            sink(placeholderError)
+                                        })
                                     }
-
-                                    this.setConfig(
-                                        ConfigUtils.setValueForKey(
-                                            normalizedKey,
-                                            updatedResolvedValue,
-                                            resolvedConfig,
-                                            true,
-                                        ) as IRootConfigValue,
-                                    )
-                                }, (err: Error) => {
-                                    logger.error(err.message)
-                                    sink(err)
                                 })
-                            })
+
+                            } else {
+                                logger.log(`DynamicConfig.watch called on key[${key}] whose value is static.`)
+                            }
+
+                        } else {
+                            sink(new errors.DynamicConfigMissingKey(key))
                         }
 
-                    } else {
-                        sink(new errors.DynamicConfigMissingKey(key))
+                    } catch (err) {
+                        sink(err)
                     }
 
                 }, (err: errors.DynamicConfigError) => {

@@ -133,7 +133,7 @@ export type InvalidType =
     'invalid'
 
 export type WatchFunction<T = any> =
-    (val: T) => void
+    (err: Error | undefined, val: T | undefined) => void
 
 export interface IConfigValue {
     type: ConfigType

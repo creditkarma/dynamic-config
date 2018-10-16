@@ -224,7 +224,7 @@ function setBaseConfigValueForKey(
                         acc[next].watcher = oldValueAtKey.watcher
 
                         if (alertWatchers && oldValueAtKey.watcher) {
-                            oldValueAtKey.watcher(readConfigValue(newValue))
+                            oldValueAtKey.watcher(undefined, readConfigValue(newValue))
                         }
                     }
 
@@ -239,7 +239,7 @@ function setBaseConfigValueForKey(
         }
 
         if (alertWatchers && returnValue.watcher) {
-            returnValue.watcher(readConfigValue(returnValue))
+            returnValue.watcher(undefined, readConfigValue(returnValue))
         }
 
         return returnValue
@@ -265,7 +265,7 @@ function setBaseConfigValueForKey(
                         acc.push(tempValue)
 
                         if (alertWatchers && nextValue.watcher) {
-                            nextValue.watcher(readConfigValue(newValue))
+                            nextValue.watcher(undefined, readConfigValue(newValue))
                         }
                     }
 
@@ -280,7 +280,7 @@ function setBaseConfigValueForKey(
         }
 
         if (alertWatchers && returnValue.watcher) {
-            returnValue.watcher(readConfigValue(returnValue))
+            returnValue.watcher(undefined, readConfigValue(returnValue))
         }
 
         return returnValue
@@ -289,7 +289,7 @@ function setBaseConfigValueForKey(
         const returnValue = newConfigValue(oldValue, newValue)
 
         if (alertWatchers && returnValue.watcher !== null) {
-            returnValue.watcher(readConfigValue(newValue))
+            returnValue.watcher(undefined, readConfigValue(newValue))
         }
 
         return returnValue
@@ -325,7 +325,7 @@ function setRootConfigValueForKey(
                     acc[next].watcher = oldValueAtKey.watcher
 
                     if (alertWatchers && oldValueAtKey.watcher) {
-                        oldValueAtKey.watcher(readConfigValue(newValue))
+                        oldValueAtKey.watcher(undefined, readConfigValue(newValue))
                     }
                 }
 
@@ -339,7 +339,7 @@ function setRootConfigValueForKey(
     }
 
     if (alertWatchers && returnValue.watcher) {
-        returnValue.watcher(readConfigValue(returnValue))
+        returnValue.watcher(undefined, readConfigValue(returnValue))
     }
 
     return returnValue
