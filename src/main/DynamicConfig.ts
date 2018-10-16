@@ -208,26 +208,18 @@ export class DynamicConfig implements IDynamicConfig {
                                             true,
                                         ) as IRootConfigValue,
                                     )
-                                }, (err: any) => {
+                                }, (err: Error) => {
                                     logger.error(err.message)
-                                    sink(new Error(err.message))
+                                    sink(err)
                                 })
                             })
-
-                        } else {
-                            const err = new errors.ResolverUnavailable(key)
-                            logger.error(err.message)
-                            sink(new Error(err.message))
                         }
 
                     } else {
-                        const err = new errors.DynamicConfigMissingKey(key)
-                        logger.error(err.message)
-                        sink(new Error(err.message))
+                        sink(new errors.DynamicConfigMissingKey(key))
                     }
 
                 }, (err: errors.DynamicConfigError) => {
-                    logger.error(`Unable to load config. ${err.message}`)
                     sink(new Error(`Unable to load config. ${err.message}`))
                 })
             })

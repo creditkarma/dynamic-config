@@ -369,33 +369,38 @@ function buildObjectValue(obj: IObjectConfigValue | IRootConfigValue): any {
     return objectValue
 }
 
-export function readConfigValue(obj: ConfigValue): any {
-    switch (obj.type) {
-        case 'root':
-        case 'object':
-            return buildObjectValue(obj)
+export function readConfigValue(obj: ConfigValue | null): any {
+    if (obj === null) {
+        return null
 
-        case 'array':
-            return obj.items.reduce((acc: Array<any>, next: BaseConfigValue) => {
-                acc.push(readConfigValue(next))
-                return acc
-            }, [])
+    } else {
+        switch (obj.type) {
+            case 'root':
+            case 'object':
+                return buildObjectValue(obj)
 
-        case 'string':
-        case 'number':
-        case 'boolean':
-            return obj.value
+            case 'array':
+                return obj.items.reduce((acc: Array<any>, next: BaseConfigValue) => {
+                    acc.push(readConfigValue(next))
+                    return acc
+                }, [])
 
-        case 'placeholder':
-            logger.warn(`Trying to read value of unresolved Placeholder`)
-            return null
+            case 'string':
+            case 'number':
+            case 'boolean':
+                return obj.value
 
-        case 'promise':
-            logger.warn(`Trying to read value of unresolved Promise`)
-            return null
+            case 'placeholder':
+                logger.warn(`Trying to read value of unresolved Placeholder`)
+                return null
 
-        default:
-            return null
+            case 'promise':
+                logger.warn(`Trying to read value of unresolved Promise`)
+                return null
+
+            default:
+                return null
+        }
     }
 }
 
