@@ -1,7 +1,5 @@
 defaults: &defaults
   working_directory: ~/dynamic-config
-  docker:
-    - image: circleci/node:8.9.4
 
 helpers:
   install_node_8: &install_node_8
