@@ -3,6 +3,21 @@ defaults: &defaults
   docker:
     - image: circleci/node:8.9.4
 
+helpers:
+  install_node_8: &install_node_8
+    run:
+      name: Install Node 8
+      command: |
+        set +e
+        curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
+        export NVM_DIR="/opt/circleci/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        nvm install 8
+        nvm alias default 8
+        # Each step uses the same `$BASH_ENV`, so need to modify it
+        echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+        echo "[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"" >> $BASH_ENV
+
 version: 2
 executorType: machine
 jobs:
@@ -10,6 +25,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - *install_node_8
       - run:
           name: Install NPM Dependencies
           command: npm install
@@ -21,6 +37,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - *install_node_8
       - run:
           name: Generate .npmrc File
           command: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
@@ -38,6 +55,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - *install_node_8
       - run:
           name: Generate .npmrc File
           command: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'

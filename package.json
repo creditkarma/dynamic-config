@@ -18,7 +18,7 @@
     "clean-all": "rimraf dist/ node_modules/ package-lock.json",
     "lint": "tslint --fix './src/**/*.ts'",
     "build": "npm run clean && npm run lint && tsc",
-    "docker": "docker-compose up --force-recreate &",
+    "docker": "docker-compose up --force-recreate -d",
     "docker:kill": "docker-compose kill",
     "precopy-test-config": "rimraf dist/tests/integration/config",
     "copy-test-config": "cp -r src/tests/integration/config dist/tests/integration/config && cp -r src/tests/integration/nested dist/tests/integration/nested",
