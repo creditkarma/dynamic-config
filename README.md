@@ -38,8 +38,7 @@ When requesting a value from Dynamic Config a Promise of the expected result is 
 
 ## Contributing
 
-For more information about contributing new features and bug fixes, see our [Contribution Guidelines](https://github.com/creditkarma/CONTRIBUTING.md).
-External contributors must sign Contributor License Agreement (CLA)
+For more information about contributing new features and bug fixes, see our [Contribution Guidelines](./CONTRIBUTING.md).
 
 ## License
 
