@@ -23,7 +23,7 @@ export function envResolver(): IRemoteResolver {
             const value: string | undefined = process.env[key]
             if (value !== undefined) {
                 if (type !== undefined) {
-                    return ConfigUtils.readValueForType(value, type)
+                    return ConfigUtils.readValueForType(key, value, type)
 
                 } else {
                     return Promise.resolve(value) as any

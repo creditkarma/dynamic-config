@@ -81,7 +81,7 @@ export function makeTranslator(translators: Array<IConfigTranslator>): ITranslat
     }
 }
 
-export async function readValueForType(raw: string, type: ObjectType): Promise<any> {
+export async function readValueForType(key: string, raw: string, type: ObjectType): Promise<any> {
     const rawType: string = typeof raw
 
     if (rawType === 'string') {
@@ -95,14 +95,20 @@ export async function readValueForType(raw: string, type: ObjectType): Promise<a
                     return Promise.resolve(parseFloat(raw))
 
                 case 'boolean':
-                    return Promise.resolve(raw === 'true')
+                    if (raw === 'true') {
+                        return Promise.resolve(true)
+                    } else if (raw === 'false') {
+                        return Promise.resolve(false)
+                    } else {
+                        throw new DynamicConfigInvalidType(key, type)
+                    }
 
                 default:
                     return Promise.resolve(raw)
             }
         } catch (err) {
             logger.error(`Unable to parse value[${raw}] as type[${type}]`)
-            throw new DynamicConfigInvalidType(type)
+            throw new DynamicConfigInvalidType(key, type)
         }
     } else {
         logger.log(`Raw value of type[${rawType}] being returned as is`)

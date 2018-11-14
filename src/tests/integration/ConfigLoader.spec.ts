@@ -46,6 +46,7 @@ describe('ConfigLoader', () => {
             const expected: object = {
                 name: 'default',
                 config: {
+                    type_test: true,
                     nullable_test: {
                         nullable: {
                             _source: 'env',

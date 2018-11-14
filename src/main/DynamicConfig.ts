@@ -345,7 +345,7 @@ export class DynamicConfig implements IDynamicConfig {
             return this.buildDefaultForPlaceholder(placeholder)
 
         } else {
-            return resolver.get(placeholder.key).then(
+            return resolver.get(placeholder.key, placeholder.type).then(
                 (remoteValue: any) => {
                     return ConfigBuilder.buildBaseConfigValue({
                         type: placeholder.resolver.type,

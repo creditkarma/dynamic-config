@@ -1,0 +1,7 @@
+{
+    "type_test": {
+        "_source": "env",
+        "_type": "boolean",
+        "_key": "TYPE_TEST"
+    }
+}

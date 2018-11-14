@@ -69,6 +69,7 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get().then((actual: any) => {
                     expect(actual).to.equal({
+                        type_test: true,
                         nullable_test: {
                             nullable: null,
                             not_nullable: 'NOT_NULLABLE',
@@ -374,6 +375,7 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        type_test: true,
                         nullable_test: {
                             nullable: null,
                             not_nullable: 'NOT_NULLABLE',
@@ -616,6 +618,7 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        type_test: true,
                         nullable_test: {
                             nullable: null,
                             not_nullable: 'NOT_NULLABLE',
@@ -697,6 +700,7 @@ describe('DynamicConfig', () => {
             it('should mutate config after getting new data from Consul', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        type_test: true,
                         nullable_test: {
                             nullable: null,
                             not_nullable: 'NOT_NULLABLE',
@@ -808,7 +812,7 @@ describe('DynamicConfig', () => {
         })
     })
 
-    describe('Configured with Overlayed Consul Configs', () => {
+    describe('Configured with overlayed Consul configs', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'development',
             configPath: path.resolve(__dirname, './config'),
@@ -847,6 +851,7 @@ describe('DynamicConfig', () => {
             it('should return full config when making empty call to get', async () => {
                 return dynamicConfig.get<string>().then((actual: any) => {
                     expect(actual).to.equal({
+                        type_test: true,
                         nullable_test: {
                             nullable: null,
                             not_nullable: 'NOT_NULLABLE',
@@ -921,7 +926,7 @@ describe('DynamicConfig', () => {
         })
     })
 
-    describe('Without Consul or Vault Configured', () => {
+    describe('Without Consul or Vault configured', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'development',
             configPath: path.resolve(__dirname, './config'),
@@ -1016,7 +1021,7 @@ describe('DynamicConfig', () => {
         })
     })
 
-    describe('When Using Environment Variables', () => {
+    describe('When using environment variables', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'production',
             configPath: path.resolve(__dirname, './config'),
@@ -1092,7 +1097,7 @@ describe('DynamicConfig', () => {
         })
     })
 
-    describe('When Using Missing Environment Variables', () => {
+    describe('When using missing environment variables', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'production',
             configPath: path.resolve(__dirname, './config'),
@@ -1155,7 +1160,7 @@ describe('DynamicConfig', () => {
         })
     })
 
-    describe('When Using only default config', () => {
+    describe('When using only default config', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'default',
             configPath: path.resolve(__dirname, './config'),
@@ -1204,7 +1209,7 @@ describe('DynamicConfig', () => {
         })
     })
 
-    describe('When Using Environment Variables with default config', () => {
+    describe('When using environment variables with default config', () => {
         const dynamicConfig: DynamicConfig = new DynamicConfig({
             configEnv: 'default',
             configPath: path.resolve(__dirname, './config'),
@@ -1252,6 +1257,93 @@ describe('DynamicConfig', () => {
                     throw new Error(`Unable to retrieve key[secret]. Should reject when Vault not configured`)
                 }, (err: any) => {
                     expect(err.message).to.equal('Unable to retrieve key[secret]. No resolver found.')
+                })
+            })
+        })
+    })
+
+    describe('When using placeholders when using types', () => {
+        const dynamicConfig: DynamicConfig = new DynamicConfig({
+            configEnv: 'types',
+            configPath: path.resolve(__dirname, './config'),
+            loaders: [
+                jsonLoader,
+                ymlLoader,
+                jsLoader,
+                tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
+        })
+
+        before(async () => {
+            process.env.TYPE_TEST = 'false'
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+            process.env.HEALTH_RESPONSE = 'WHAM BAM!'
+            process.env.TEST_USERNAME = 'foobarwilly'
+        })
+
+        after(async () => {
+            delete process.env.TYPE_TEST
+            delete process.env.NOT_NULLABLE
+            delete process.env.HEALTH_RESPONSE
+            delete process.env.TEST_USERNAME
+        })
+
+        describe('get', () => {
+            it('should return value stored in environment variable', async () => {
+                return dynamicConfig.get<boolean>('type_test').then((actual: boolean) => {
+                    expect(actual).to.equal(false)
+                })
+            })
+
+            it('should fetch value from default config', async () => {
+                return dynamicConfig.get<string>('persistedQueries.databaseLookup.password').then((actual: string) => {
+                    expect(actual).to.equal('root')
+                })
+            })
+        })
+    })
+
+    describe('When using placeholders when using invalid types', () => {
+        const dynamicConfig: DynamicConfig = new DynamicConfig({
+            configEnv: 'types',
+            configPath: path.resolve(__dirname, './config'),
+            loaders: [
+                jsonLoader,
+                ymlLoader,
+                jsLoader,
+                tsLoader,
+            ],
+            translators: [
+                envTranslator,
+                consulTranslator,
+            ],
+        })
+
+        before(async () => {
+            process.env.TYPE_TEST = 'not a boolean'
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+            process.env.HEALTH_RESPONSE = 'WHAM BAM!'
+            process.env.TEST_USERNAME = 'foobarwilly'
+        })
+
+        after(async () => {
+            delete process.env.TYPE_TEST
+            delete process.env.NOT_NULLABLE
+            delete process.env.HEALTH_RESPONSE
+            delete process.env.TEST_USERNAME
+        })
+
+        describe('get', () => {
+            it('should reject when placeholder is of unexpected type', async () => {
+                return dynamicConfig.get<boolean>('type_test').then((actual: boolean) => {
+                    throw new Error('should reject')
+                }, (err: any) => {
+                    console.log('err: ', err.message)
+                    expect(err.message).to.equal('Value for key[TYPE_TEST] cannot parse as expected type[boolean]')
                 })
             })
         })
