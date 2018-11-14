@@ -27,7 +27,7 @@ export function packageResolver(): IRemoteResolver {
                 const value: any = pkg[key]
                 if (value !== undefined) {
                     if (type !== undefined) {
-                        return ConfigUtils.readValueForType(value, type)
+                        return ConfigUtils.readValueForType(key, value, type)
 
                     } else {
                         return value

@@ -66,8 +66,8 @@ export class DynamicConfigInvalidObject extends Error {
 
 export class DynamicConfigInvalidType extends Error {
     public readonly type = DynamicConfigErrorType.DynamicConfigInvalidType
-    constructor(type: string) {
-        super(`Value cannot parse as expected type[${type}]`)
+    constructor(key: string, type: string) {
+        super(`Value for key[${key}] cannot parse as expected type[${type}]`)
     }
 }
 

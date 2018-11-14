@@ -46,6 +46,7 @@ describe('DynamicConfig Singleton', () => {
                 return config().get()
                     .then((actual: any) => {
                         expect(actual).to.equal({
+                            type_test: true,
                             nullable_test: {
                                 nullable: null,
                                 not_nullable: 'NOT_NULLABLE',

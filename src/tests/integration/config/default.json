@@ -1,4 +1,5 @@
 {
+    "type_test": true,
     "nullable_test": {
         "nullable": {
             "_source": "env",
