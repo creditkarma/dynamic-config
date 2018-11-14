@@ -40,6 +40,7 @@ import {
     ITranslator,
     IVariable,
     KeyPath,
+    ObjectType,
     PromisedUpdate,
     ResolverType,
 } from './types'
@@ -262,20 +263,20 @@ export class DynamicConfig implements IDynamicConfig {
         return this.get(key).catch(() => defaultVal)
     }
 
-    public async getRemoteValue<T>(key: string): Promise<T> {
+    public async getRemoteValue<T>(key: string, type?: ObjectType): Promise<T> {
         return this.source(key).then((source: ISource) => {
             if (source.key !== undefined) {
-                return this.getValueFromResolver<T>(source.key, 'remote')
+                return this.getValueFromResolver<T>(source.key, 'remote', type)
             } else {
                 throw new errors.ResolverUnavailable(key)
             }
         })
     }
 
-    public async getSecretValue<T>(key: string): Promise<T> {
+    public async getSecretValue<T>(key: string, type?: ObjectType): Promise<T> {
         return this.source(key).then((source: ISource) => {
             if (source.key !== undefined) {
-                return this.getValueFromResolver<T>(source.key, 'secret')
+                return this.getValueFromResolver<T>(source.key, 'secret', type)
             } else {
                 throw new errors.ResolverUnavailable(key)
             }
@@ -531,12 +532,13 @@ export class DynamicConfig implements IDynamicConfig {
 
     private getValueFromResolver<T>(
         key: string,
-        type: ResolverType,
+        resolverType: ResolverType,
+        valueType?: ObjectType,
     ): Promise<T> {
-        const resolver: IRemoteResolver | undefined = this.resolvers[type]
+        const resolver: IRemoteResolver | undefined = this.resolvers[resolverType]
 
         if (resolver !== undefined) {
-            return resolver.get<T>(key).then((remoteValue: T) => {
+            return resolver.get<T>(key, valueType).then((remoteValue: T) => {
                 if (remoteValue !== null) {
                     return Promise.resolve(remoteValue)
 
