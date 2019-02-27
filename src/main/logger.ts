@@ -11,15 +11,15 @@ export const defaultLogger: ILogger = {
     log(msg: string, data?: any) {
         if (data !== undefined && isDebug()) {
             console.log(`[dynamic-config:info]: ${msg}: `, data)
-        } else {
+        } else if (isDebug()) {
             console.log(`[dynamic-config:info]: ${msg}`)
         }
     },
 
     warn(msg: string, data?: any) {
-        if (data !== undefined) {
+        if (data !== undefined && isDebug()) {
             console.warn(`[dynamic-config:warn]: ${msg}: `, data)
-        } else {
+        } else if (isDebug()) {
             console.warn(`[dynamic-config:warn]: ${msg}`)
         }
     },
