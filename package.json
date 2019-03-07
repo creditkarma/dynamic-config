@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist/",
-    "clean-all": "rimraf dist/ node_modules/ package-lock.json",
+    "clean:all": "rimraf dist/ node_modules/ package-lock.json",
     "lint": "tslint --fix './src/**/*.ts'",
     "build": "npm run clean && npm run lint && tsc",
     "docker": "docker-compose up --force-recreate -d",
@@ -28,15 +28,7 @@
     "test:unit": "lab --timeout 10000 --verbose -l -S -P spec dist/tests/unit",
     "pretest:integration": "npm run docker",
     "test:integration": "wait-on --timeout 20000 http://localhost:8510 http://localhost:8211 && node dist/tests/integration/bootstrap.js && lab --timeout 15000 --verbose -l -S -P spec dist/tests/integration",
-    "posttest:integration": "npm run docker:kill",
-    "release:patch": "npm version patch && npm run release:publish",
-    "release:minor": "npm version minor && npm run release:publish",
-    "release:major": "npm version major && npm run release:publish",
-    "release:prepatch": "npm version prepatch && npm run release:publish",
-    "release:preminor": "npm version preminor && npm run release:publish",
-    "release:premajor": "npm version premajor && npm run release:publish",
-    "release:prerelease": "npm version prerelease && npm run release:publish",
-    "release:publish": "git push --follow-tags"
+    "posttest:integration": "npm run docker:kill"
   },
   "author": "Credit Karma",
   "license": "Apache-2.0",
@@ -59,7 +51,7 @@
   },
   "dependencies": {
     "@creditkarma/consul-client": "^0.8.2",
-    "@creditkarma/vault-client": "^0.5.10",
+    "@creditkarma/vault-client": "^0.5.11",
     "@types/yamljs": "^0.2.30",
     "ajv": "^6.5.2",
     "typescript": "3.1.x",
