@@ -62,6 +62,7 @@ export class DynamicConfig implements IDynamicConfig {
     private translator: ITranslator
     private schemas: ISchemaMap
     private errorMap: errors.IConfigErrorMap
+
     /**
      * The observerMap is a cache of the Observer for a specified key. There is no need to create
      * more than one Observer for a given key.

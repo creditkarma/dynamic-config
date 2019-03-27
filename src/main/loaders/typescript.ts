@@ -61,6 +61,6 @@ function loadTypeScript(filePath: string): any {
 export const tsLoader: IFileLoader = {
     type: 'ts',
     async load(filePath: string): Promise<object> {
-        return Promise.resolve(loadTypeScript(filePath))
+        return loadTypeScript(filePath)
     },
 }
