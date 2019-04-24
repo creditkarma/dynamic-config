@@ -115,6 +115,8 @@ export class DynamicConfig implements IDynamicConfig {
     /**
      * Gets a given key from the config. There are not guarantees that the config is already
      * loaded, so we must return a Promise.
+     *
+     * @param key The key to look up. Dot notation may be used to access nested properties.
      */
     public async get<T = any>(key?: string): Promise<T> {
         return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
@@ -254,8 +256,8 @@ export class DynamicConfig implements IDynamicConfig {
     /**
      * Looks up a key in the config. If the key cannot be found the default is returned.
      *
-     * @param key The key to look up
-     * @param defaultVal The value to return if the get fails
+     * @param key The key to look up. Dot notation may be used to access nested properties.
+     * @param defaultVal The value to return if the get fails.
      */
     public async getWithDefault<T = any>(
         key: string,
