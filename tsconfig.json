@@ -11,8 +11,7 @@
         "strict": true,
         "strictFunctionTypes": false,
         "noUnusedLocals": true,
-        "pretty": true,
-        "removeComments": true
+        "pretty": true
     },
     "exclude": [
         "node_modules",
