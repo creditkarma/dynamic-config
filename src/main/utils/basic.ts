@@ -180,12 +180,9 @@ export function dashToCamel(str: string): string {
     }
 }
 
-export function memoize<A>(fn: () => A): () => A
-export function memoize<A, B>(fn: (a: A) => B): (a: A) => B
-export function memoize<A, B, C>(fn: (a: A, b: B) => C): (a: A, b: B) => C
-export function memoize(fn: (...args: Array<any>) => any): (...args: Array<any>) => any {
+export function memoize<A extends Array<any>, B>(fn: (...args: A) => B): (...args: A) => B {
     let cachedValue: any
-    return (...args: Array<any>) => {
+    return (...args) => {
         if (cachedValue === undefined) {
             cachedValue = fn(...args)
         }
