@@ -28,7 +28,9 @@
     "test:unit": "lab --timeout 10000 --verbose -l -S -P spec dist/tests/unit",
     "pretest:integration": "npm run docker",
     "test:integration": "wait-on --timeout 20000 http://localhost:8510 http://localhost:8211 && node dist/tests/integration/bootstrap.js && lab --timeout 15000 --verbose -l -S -P spec dist/tests/integration",
-    "posttest:integration": "npm run docker:kill"
+    "posttest:integration": "npm run docker:kill",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "author": "Credit Karma",
   "license": "Apache-2.0",
@@ -55,6 +57,8 @@
     "@types/yamljs": "^0.2.30",
     "ajv": "^6.10.0",
     "typescript": "3.3.x",
-    "yamljs": "^0.3.0"
-  }
+    "yamljs": "^0.3.0",
+    "snyk": "^1.189.0"
+  },
+  "snyk": true
 }
