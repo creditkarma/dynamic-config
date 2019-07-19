@@ -22,12 +22,10 @@ export function vaultResolver(): IRemoteResolver {
     async function getVaultClient(): Promise<Maybe<VaultClient>> {
         if (vaultClient !== null) {
             return vaultClient
-
         } else {
             if (vaultConfig !== null) {
                 vaultClient = new Just(new VaultClient(vaultConfig))
                 logger.log(`Vault client initialized for secret config store.`)
-
             } else {
                 logger.warn(`Unable to find valid configuration for Vault.`)
                 vaultClient = new Nothing<VaultClient>()
@@ -41,7 +39,10 @@ export function vaultResolver(): IRemoteResolver {
         type: 'secret',
         name: 'vault',
 
-        init(configInstance: IConfigStore, remoteOptions: any = {}): Promise<any> {
+        init(
+            configInstance: IConfigStore,
+            remoteOptions: any = {},
+        ): Promise<any> {
             vaultConfig = configInstance.get<IHVConfig>(HVAULT_CONFIG_KEY)
             return Promise.resolve({})
         },
@@ -66,7 +67,11 @@ export function vaultResolver(): IRemoteResolver {
             })
         },
 
-        watch<T = any>(key: string, cb: WatchFunction<T>, type?: ObjectType): void {
+        watch<T = any>(
+            key: string,
+            cb: WatchFunction<T>,
+            type?: ObjectType,
+        ): void {
             // Nothing to do. Can't watch environment variables.
         },
     }

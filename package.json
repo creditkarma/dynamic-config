@@ -1,60 +1,66 @@
 {
-  "name": "@creditkarma/dynamic-config",
-  "version": "0.9.7",
-  "description": "Dynamic Config for Node.js backed by Consul and Vault",
-  "main": "dist/main/index.js",
-  "types": "dist/main/index.d.ts",
-  "files": [
-    "dist/main"
-  ],
-  "keywords": [
-    "TypeScript",
-    "Node.js",
-    "Config",
-    "Configuration"
-  ],
-  "scripts": {
-    "clean": "rimraf dist/",
-    "clean:all": "rimraf dist/ node_modules/ package-lock.json",
-    "lint": "tslint --fix './src/**/*.ts'",
-    "build": "npm run clean && npm run lint && tsc",
-    "docker": "docker-compose up --force-recreate -d",
-    "docker:kill": "docker-compose kill",
-    "precopy-test-config": "rimraf dist/tests/integration/config",
-    "copy-test-config": "cp -r src/tests/integration/config dist/tests/integration/config && cp -r src/tests/integration/nested dist/tests/integration/nested",
-    "copy-test-package": "cp src/tests/integration/package.json dist/tests/integration/package.json",
-    "pretest": "npm run docker:kill && npm run build && npm run copy-test-config && npm run copy-test-package",
-    "test": "npm run test:unit && npm run test:integration",
-    "test:unit": "lab --timeout 10000 --verbose -l -S -P spec dist/tests/unit",
-    "pretest:integration": "npm run docker",
-    "test:integration": "wait-on --timeout 20000 http://localhost:8510 http://localhost:8211 && node dist/tests/integration/bootstrap.js && lab --timeout 15000 --verbose -l -S -P spec dist/tests/integration",
-    "posttest:integration": "npm run docker:kill"
-  },
-  "author": "Credit Karma",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/creditkarma/dynamic-config"
-  },
-  "devDependencies": {
-    "@types/code": "^4.0.5",
-    "@types/express": "^4.16.1",
-    "@types/node": "^8.0.51",
-    "@types/request-promise-native": "^1.0.15",
-    "code": "^5.2.4",
-    "express": "^4.16.4",
-    "lab": "^18.0.2",
-    "request-promise-native": "^1.0.7",
-    "rimraf": "^2.6.3",
-    "tslint": "^5.14.0",
-    "wait-on": "^3.2.0"
-  },
-  "dependencies": {
-    "@creditkarma/consul-client": "^0.8.4",
-    "@creditkarma/vault-client": "^0.5.11",
-    "@types/yamljs": "^0.2.30",
-    "ajv": "^6.10.0",
-    "typescript": "3.3.x",
-    "yamljs": "^0.3.0"
-  }
+    "name": "@creditkarma/dynamic-config",
+    "version": "0.9.7",
+    "description": "Dynamic Config for Node.js backed by Consul and Vault",
+    "main": "dist/main/index.js",
+    "types": "dist/main/index.d.ts",
+    "files": [
+        "dist/main"
+    ],
+    "keywords": [
+        "TypeScript",
+        "Node.js",
+        "Config",
+        "Configuration"
+    ],
+    "scripts": {
+        "clean": "rimraf dist/",
+        "clean:all": "rimraf dist/ node_modules/ package-lock.json",
+        "lint": "eslint --fix './src/**/*.ts'",
+        "format": "prettier --write 'src/**/*.ts'",
+        "build": "npm run clean && npm run lint && npm run format && tsc",
+        "docker": "docker-compose up --force-recreate -d",
+        "docker:kill": "docker-compose kill",
+        "precopy-test-config": "rimraf dist/tests/integration/config",
+        "copy-test-config": "cp -r src/tests/integration/config dist/tests/integration/config && cp -r src/tests/integration/nested dist/tests/integration/nested",
+        "copy-test-package": "cp src/tests/integration/package.json dist/tests/integration/package.json",
+        "pretest": "npm run docker:kill && npm run build && npm run copy-test-config && npm run copy-test-package",
+        "test": "npm run test:unit && npm run test:integration",
+        "test:unit": "lab --timeout 10000 --verbose -l -S -P spec dist/tests/unit",
+        "pretest:integration": "npm run docker",
+        "test:integration": "wait-on --timeout 20000 http://localhost:8510 http://localhost:8211 && node dist/tests/integration/bootstrap.js && lab --timeout 15000 --verbose -l -S -P spec dist/tests/integration",
+        "posttest:integration": "npm run docker:kill"
+    },
+    "author": "Credit Karma",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/creditkarma/dynamic-config"
+    },
+    "devDependencies": {
+        "@hapi/code": "^5.3.0",
+        "@hapi/lab": "^19.0.1",
+        "@types/hapi__code": "^5.3.0",
+        "@types/express": "^4.16.1",
+        "@types/node": "^8.0.51",
+        "@types/request-promise-native": "^1.0.15",
+        "@typescript-eslint/eslint-plugin": "^1.12.0",
+        "@typescript-eslint/parser": "^1.12.0",
+        "eslint": "^6.0.1",
+        "eslint-config-prettier": "^6.0.0",
+        "eslint-plugin-prettier": "^3.1.0",
+        "express": "^4.16.4",
+        "prettier": "^1.18.2",
+        "request-promise-native": "^1.0.7",
+        "rimraf": "^2.6.3",
+        "wait-on": "^3.2.0"
+    },
+    "dependencies": {
+        "@creditkarma/consul-client": "^0.8.4",
+        "@creditkarma/vault-client": "^0.5.11",
+        "@types/yamljs": "^0.2.30",
+        "ajv": "^6.10.2",
+        "typescript": "3.5.x",
+        "yamljs": "^0.3.0"
+    }
 }

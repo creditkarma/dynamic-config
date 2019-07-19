@@ -27,9 +27,10 @@ export {
 
 // DEFAULT CONFIG CLIENT
 
-export const config = Utils.memoize((options: IConfigOptions = {}): DynamicConfig => {
-    return new DynamicConfig(ObjectUtils.overlayObjects(
-        SettingsLoader.loadSettings(),
-        options,
-    ))
-})
+export const config = Utils.memoize(
+    (options: IConfigOptions = {}): DynamicConfig => {
+        return new DynamicConfig(
+            ObjectUtils.overlayObjects(SettingsLoader.loadSettings(), options),
+        )
+    },
+)

@@ -1,5 +1,5 @@
-import { expect } from 'code'
-import * as Lab from 'lab'
+import { expect } from '@hapi/code'
+import * as Lab from '@hapi/lab'
 import {
     ConfigLoader,
     jsLoader,
@@ -17,7 +17,6 @@ const beforeEach = lab.beforeEach
 const afterEach = lab.afterEach
 
 describe('ConfigLoader', () => {
-
     before(async () => {
         process.chdir(__dirname)
     })
@@ -36,12 +35,7 @@ describe('ConfigLoader', () => {
         it('should return the correct config for development', async () => {
             process.env.NODE_ENV = 'development'
             const loader: ConfigLoader = new ConfigLoader({
-                loaders: [
-                    jsonLoader,
-                    ymlLoader,
-                    jsLoader,
-                    tsLoader,
-                ],
+                loaders: [jsonLoader, ymlLoader, jsLoader, tsLoader],
             })
             const expected: object = {
                 name: 'default',
@@ -93,7 +87,8 @@ describe('ConfigLoader', () => {
                                                 {
                                                     'virtual-start': 0,
                                                     'virtual-end': 3,
-                                                    destination: 'localhost:4141',
+                                                    destination:
+                                                        'localhost:4141',
                                                 },
                                             ],
                                         },
@@ -103,8 +98,8 @@ describe('ConfigLoader', () => {
                         },
                     },
                     names: {
-                        first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
-                        last: [ 'Smith', 'Warren', 'Malick' ],
+                        first: ['Bob', 'Helen', 'Joe', 'Jane'],
+                        last: ['Smith', 'Warren', 'Malick'],
                     },
                     'test-service': {
                         destination: 'http://${HOST_NAME||localhost}:8080',
@@ -133,12 +128,7 @@ describe('ConfigLoader', () => {
         it('should return the correct config for development', async () => {
             process.env.NODE_ENV = 'development'
             const loader: ConfigLoader = new ConfigLoader({
-                loaders: [
-                    jsonLoader,
-                    ymlLoader,
-                    jsLoader,
-                    tsLoader,
-                ],
+                loaders: [jsonLoader, ymlLoader, jsLoader, tsLoader],
             })
             const expected: object = {
                 name: 'development',
@@ -186,9 +176,7 @@ describe('ConfigLoader', () => {
         it('should return config from the correct directory', async () => {
             process.env.NODE_CONFIG_DIR = 'nested/config'
             const loader: ConfigLoader = new ConfigLoader({
-                loaders: [
-                    jsonLoader,
-                ],
+                loaders: [jsonLoader],
             })
             const expected: object = {
                 name: 'default',
@@ -217,9 +205,7 @@ describe('ConfigLoader', () => {
         it('should return config from the correct directory', async () => {
             process.env.CONFIG_PATH = 'nested/config'
             const loader: ConfigLoader = new ConfigLoader({
-                loaders: [
-                    jsonLoader,
-                ],
+                loaders: [jsonLoader],
             })
             const expected: object = {
                 name: 'default',

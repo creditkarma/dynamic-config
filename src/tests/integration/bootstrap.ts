@@ -10,8 +10,8 @@ import * as path from 'path'
 process.chdir(__dirname)
 
 setTimeout(() => {
-    const catalog: Catalog = new Catalog([ 'http://localhost:8510' ])
-    const consulClient: KvStore = new KvStore([ 'http://localhost:8510' ])
+    const catalog: Catalog = new Catalog(['http://localhost:8510'])
+    const consulClient: KvStore = new KvStore(['http://localhost:8510'])
     const vaultClient: VaultClient = new VaultClient({
         apiVersion: 'v1',
         protocol: 'http',
@@ -151,17 +151,17 @@ setTimeout(() => {
                         {
                             'virtual-start': 0,
                             'virtual-end': 3,
-                            'destination': 'consul!/shard-map-host-1?dc=dc1',
+                            destination: 'consul!/shard-map-host-1?dc=dc1',
                         },
                         {
                             'virtual-start': 4,
                             'virtual-end': 7,
-                            'destination': 'consul!/shard-map-host-2?dc=dc1',
+                            destination: 'consul!/shard-map-host-2?dc=dc1',
                         },
                         {
                             'virtual-start': 8,
                             'virtual-end': 11,
-                            'destination': 'consul!/shard-map-host-3?dc=dc1',
+                            destination: 'consul!/shard-map-host-3?dc=dc1',
                         },
                     ],
                 },
@@ -185,10 +185,25 @@ setTimeout(() => {
                         mount: 'secret',
                         tokenPath: './tmp/token',
                     },
-                    'secret': {
+                    secret: {
                         _source: 'vault',
                         _key: 'test-secret',
                     },
+                },
+            ),
+            consulClient.set(
+                { path: 'service/toggles' },
+                {
+                    toggles: [
+                        {
+                            id: 'com.fake.thing.ramp',
+                            fraction: 0,
+                        },
+                        {
+                            id: 'com.fake.other-thing.ramp',
+                            fraction: 1,
+                        },
+                    ],
                 },
             ),
             vaultClient.set('test-secret', 'this is a secret'),

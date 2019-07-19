@@ -15,7 +15,6 @@ export const jsLoader: IFileLoader = {
         } catch (err) {
             if (err.message !== undefined) {
                 logger.error(err.message)
-
             } else {
                 logger.error(`Error loading file[${filePath}].`)
             }

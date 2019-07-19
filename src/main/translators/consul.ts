@@ -15,7 +15,8 @@ function isPlaceholderKey(key: string): string | undefined {
 }
 
 function isConsulPlaceholder(obj: any): boolean {
-    return JSONUtils.objectMatchesSchema({
+    return JSONUtils.objectMatchesSchema(
+        {
             type: 'object',
             properties: {
                 default: {},
@@ -23,7 +24,7 @@ function isConsulPlaceholder(obj: any): boolean {
                     type: 'string',
                 },
             },
-            required: [ 'key' ],
+            required: ['key'],
         },
         obj,
     )
@@ -39,7 +40,6 @@ export const consulTranslator: IConfigTranslator = {
                     _key: placeholderKey,
                 }
             }
-
         } else if (typeof configValue === 'object') {
             if (
                 isConsulPlaceholder(configValue) &&

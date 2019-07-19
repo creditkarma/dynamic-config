@@ -1,10 +1,7 @@
-import { expect } from 'code'
-import * as Lab from 'lab'
+import { expect } from '@hapi/code'
+import * as Lab from '@hapi/lab'
 
-import {
-    ConfigBuilder,
-    ConfigUtils,
-} from '../../../main/utils'
+import { ConfigBuilder, ConfigUtils } from '../../../main/utils'
 
 import {
     BaseConfigValue,
@@ -102,7 +99,10 @@ describe('ConfigUtils', () => {
                 watcher: null,
             }
 
-            const actual: ConfigValue | null = ConfigUtils.getConfigForKey('project.health', mockConfig)
+            const actual: ConfigValue | null = ConfigUtils.getConfigForKey(
+                'project.health',
+                mockConfig,
+            )
             const expected: ConfigValue = {
                 source: {
                     type: 'local',
@@ -155,50 +155,83 @@ describe('ConfigUtils', () => {
                 },
                 'shard-info': {
                     'shard-count': 4,
-                    'shard-map': [ {
-                        'virtual-start': 0,
-                        'virtual-end': 3,
-                        destination: 'localhost:4141',
-                    }],
+                    'shard-map': [
+                        {
+                            'virtual-start': 0,
+                            'virtual-end': 3,
+                            destination: 'localhost:4141',
+                        },
+                    ],
                 },
             })
         })
 
         it('should correctly set value for object', async () => {
-            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(mockSource, 'fake-service')
-            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey('serviceName', newValue, mockConfg) as IRootConfigValue
-            const baseValue = ConfigUtils.getConfigForKey('serviceName', newConfig)
+            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
+                mockSource,
+                'fake-service',
+            )
+            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
+                'serviceName',
+                newValue,
+                mockConfg,
+            ) as IRootConfigValue
+            const baseValue = ConfigUtils.getConfigForKey(
+                'serviceName',
+                newConfig,
+            )
 
             if (baseValue !== null) {
                 const actual = ConfigUtils.readConfigValue(baseValue)
                 expect(actual).to.equal('fake-service')
-
             } else {
                 throw new Error('Config not found')
             }
         })
 
         it('should correctly set value for object with nested key', async () => {
-            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(mockSource, '123456')
-            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey('database.username', newValue, mockConfg) as IRootConfigValue
-            const baseValue = ConfigUtils.getConfigForKey('database.username', newConfig)
+            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
+                mockSource,
+                '123456',
+            )
+            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
+                'database.username',
+                newValue,
+                mockConfg,
+            ) as IRootConfigValue
+            const baseValue = ConfigUtils.getConfigForKey(
+                'database.username',
+                newConfig,
+            )
 
             if (baseValue !== null) {
-                expect(ConfigUtils.readConfigValue(baseValue)).to.equal('123456')
-
+                expect(ConfigUtils.readConfigValue(baseValue)).to.equal(
+                    '123456',
+                )
             } else {
                 throw new Error('Config not found')
             }
         })
 
         it('should correctly set value for object with nested key', async () => {
-            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(mockSource, '123456')
-            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey('database.username', newValue, mockConfg) as IRootConfigValue
-            const baseValue = ConfigUtils.getConfigForKey('database.username', newConfig)
+            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
+                mockSource,
+                '123456',
+            )
+            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
+                'database.username',
+                newValue,
+                mockConfg,
+            ) as IRootConfigValue
+            const baseValue = ConfigUtils.getConfigForKey(
+                'database.username',
+                newConfig,
+            )
 
             if (baseValue !== null) {
-                expect(ConfigUtils.readConfigValue(baseValue)).to.equal('123456')
-
+                expect(ConfigUtils.readConfigValue(baseValue)).to.equal(
+                    '123456',
+                )
             } else {
                 throw new Error('Config not found')
             }
@@ -265,7 +298,10 @@ describe('ConfigUtils', () => {
             watcher: null,
         }
 
-        const configValue: BaseConfigValue | null = ConfigUtils.getConfigForKey('shard-map', mockConfig)
+        const configValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
+            'shard-map',
+            mockConfig,
+        )
 
         if (configValue !== null) {
             const actual: any = ConfigUtils.readConfigValue(configValue)
@@ -279,7 +315,6 @@ describe('ConfigUtils', () => {
             ]
 
             expect(actual).to.equal(expected)
-
         } else {
             throw new Error('Unable to read config value')
         }

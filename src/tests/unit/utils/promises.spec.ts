@@ -1,9 +1,7 @@
-import { expect } from 'code'
-import * as Lab from 'lab'
+import { expect } from '@hapi/code'
+import * as Lab from '@hapi/lab'
 
-import {
-  PromiseUtils,
-} from '../../../main/utils'
+import { PromiseUtils } from '../../../main/utils'
 
 export const lab = Lab.script()
 
@@ -41,11 +39,16 @@ describe('PromiseUtils', () => {
                 Promise.reject('error 1'),
                 Promise.reject('error 2'),
                 Promise.reject('error 3'),
-            ]).then((actual: any) => {
-                Promise.reject(new Error('Promise should reject'))
-            }, (err: any) => {
-                expect(err.message).to.equal('All Promises rejected without success')
-            })
+            ]).then(
+                (actual: any) => {
+                    Promise.reject(new Error('Promise should reject'))
+                },
+                (err: any) => {
+                    expect(err.message).to.equal(
+                        'All Promises rejected without success',
+                    )
+                },
+            )
         })
     })
 
@@ -106,30 +109,35 @@ describe('PromiseUtils', () => {
                 },
             })
 
-            return objectPromise.then((value: any) => {
-                throw new Error('Promise should fail')
-            }, (err: any) => {
-                expect(err.message).to.equal('Unable to load value')
-            })
+            return objectPromise.then(
+                (value: any) => {
+                    throw new Error('Promise should fail')
+                },
+                (err: any) => {
+                    expect(err.message).to.equal('Unable to load value')
+                },
+            )
         })
 
         it('should resolve nested Promises', async () => {
-            const actual = await PromiseUtils.resolveObjectPromises(Promise.resolve({
-                one: Promise.resolve(5),
-                two: {
-                    three: Promise.resolve(6),
-                    four: 8,
-                    five: {
-                        six: Promise.resolve(9),
+            const actual = await PromiseUtils.resolveObjectPromises(
+                Promise.resolve({
+                    one: Promise.resolve(5),
+                    two: {
+                        three: Promise.resolve(6),
+                        four: 8,
+                        five: {
+                            six: Promise.resolve(9),
+                        },
                     },
-                },
-                seven: Promise.resolve({
-                    eight: 90,
-                    nine: {
-                        ten: Promise.resolve(34),
-                    },
+                    seven: Promise.resolve({
+                        eight: 90,
+                        nine: {
+                            ten: Promise.resolve(34),
+                        },
+                    }),
                 }),
-            }))
+            )
 
             const expected = {
                 one: 5,

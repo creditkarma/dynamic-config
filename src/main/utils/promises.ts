@@ -1,18 +1,19 @@
-import {
-    ObjectUpdate,
-} from '../types'
+import { ObjectUpdate } from '../types'
 
-import {
-    setValueForKey,
-} from './object'
+import { setValueForKey } from './object'
 
-function executePromiseAtIndex(index: number, promise: Promise<any>): Promise<[number, any]> {
-    return promise.then((val: any): [number, any] => {
-        return [ index, val ]
-
-    }, (err: any): [number, null] => {
-        return [ index, null ]
-    })
+function executePromiseAtIndex(
+    index: number,
+    promise: Promise<any>,
+): Promise<[number, any]> {
+    return promise.then(
+        (val: any): [number, any] => {
+            return [index, val]
+        },
+        (err: any): [number, null] => {
+            return [index, null]
+        },
+    )
 }
 
 export function some(promises: Array<Promise<any>>): Promise<Array<any>> {
@@ -20,30 +21,39 @@ export function some(promises: Array<Promise<any>>): Promise<Array<any>> {
         const temp: Array<any> = []
         let count: number = 0
         promises.forEach((next: Promise<any>, index: number) => {
-            executePromiseAtIndex(index, next).then((tuple: [number, any]) => {
-                count++
-                temp[tuple[0]] = tuple[1]
-                if (count === promises.length) {
-                    const result = temp.filter((val: any) => val !== null)
-                    if (result.length > 0) {
-                        resolve(result)
-
-                    } else {
-                        reject(new Error('All promises completed without success'))
+            executePromiseAtIndex(index, next).then(
+                (tuple: [number, any]) => {
+                    count++
+                    temp[tuple[0]] = tuple[1]
+                    if (count === promises.length) {
+                        const result = temp.filter((val: any) => val !== null)
+                        if (result.length > 0) {
+                            resolve(result)
+                        } else {
+                            reject(
+                                new Error(
+                                    'All promises completed without success',
+                                ),
+                            )
+                        }
                     }
-                }
-            }, (err: any) => {
-                count++
-                if (count >= promises.length) {
-                    const result = temp.filter((val: any) => val !== null)
-                    if (result.length > 0) {
-                        resolve(result)
-
-                    } else {
-                        reject(new Error('All promises completed without success'))
+                },
+                (err: any) => {
+                    count++
+                    if (count >= promises.length) {
+                        const result = temp.filter((val: any) => val !== null)
+                        if (result.length > 0) {
+                            resolve(result)
+                        } else {
+                            reject(
+                                new Error(
+                                    'All promises completed without success',
+                                ),
+                            )
+                        }
                     }
-                }
-            })
+                },
+            )
         })
     })
 }
@@ -60,18 +70,22 @@ export function race(promises: Array<Promise<any>>): Promise<any> {
 
     return new Promise((resolve, reject) => {
         promises.forEach((next: Promise<any>) => {
-            next.then((val: any) => {
-                if (!resolved) {
-                    resolved = true
-                    resolve(val)
-                }
-
-            }, (err: any) => {
-                current++
-                if (!resolved && current === count) {
-                    reject(new Error('All Promises rejected without success'))
-                }
-            })
+            next.then(
+                (val: any) => {
+                    if (!resolved) {
+                        resolved = true
+                        resolve(val)
+                    }
+                },
+                (err: any) => {
+                    current++
+                    if (!resolved && current === count) {
+                        reject(
+                            new Error('All Promises rejected without success'),
+                        )
+                    }
+                },
+            )
         })
     })
 }
@@ -87,42 +101,55 @@ type PromiseUpdate = [object, number]
  * Recursively traverses an object, looking for keys with Promised values and returns a Promise of
  * the object with all nested Promises resolved.
  */
-export async function valuesForPromises(promises: Array<Promise<object>>): Promise<Array<object>> {
-    return Promise.all(promises.map((next: Promise<object>, index: number) => {
-        return resolveAtIndex(next, index)
-
-    })).then((values: Array<PromiseUpdate>) => {
+export async function valuesForPromises(
+    promises: Array<Promise<object>>,
+): Promise<Array<object>> {
+    return Promise.all(
+        promises.map((next: Promise<object>, index: number) => {
+            return resolveAtIndex(next, index)
+        }),
+    ).then((values: Array<PromiseUpdate>) => {
         return processValues(values)
     })
 }
 
 function processValues(values: Array<PromiseUpdate>): Array<object> {
-    return values.sort((a: PromiseUpdate, b: PromiseUpdate) => {
-        if (a[1] < b[1]) {
-            return -1
-
-        } else {
-            return 1
-        }
-    }).map((next: PromiseUpdate) => {
-        return next[0]
-    })
-}
-
-function resolveAtIndex(promise: Promise<object>, index: number): Promise<PromiseUpdate> {
-    return new Promise((resolve, reject) => {
-        promise.then((val: object) => {
-            return resolve([val, index])
-        }, (err: any) => {
-            return reject(err)
+    return values
+        .sort((a: PromiseUpdate, b: PromiseUpdate) => {
+            if (a[1] < b[1]) {
+                return -1
+            } else {
+                return 1
+            }
         })
+        .map((next: PromiseUpdate) => {
+            return next[0]
+        })
+}
+
+function resolveAtIndex(
+    promise: Promise<object>,
+    index: number,
+): Promise<PromiseUpdate> {
+    return new Promise((resolve, reject) => {
+        promise.then(
+            (val: object) => {
+                return resolve([val, index])
+            },
+            (err: any) => {
+                return reject(err)
+            },
+        )
     })
 }
 
-function appendUpdateForObject(value: any, path: Array<string>, updates: Array<ObjectUpdate>): void {
+function appendUpdateForObject(
+    value: any,
+    path: Array<string>,
+    updates: Array<ObjectUpdate>,
+): void {
     if (value instanceof Promise) {
-        updates.push([ path, value ])
-
+        updates.push([path, value])
     } else if (typeof value === 'object') {
         collectUnresolvedPromises(value, path, updates)
     }
@@ -136,49 +163,59 @@ function collectUnresolvedPromises(
     if (Array.isArray(obj)) {
         for (let i = 0; i < obj.length; i++) {
             const value = obj[i]
-            const newPath: Array<string> = [ ...path, `${i}` ]
+            const newPath: Array<string> = [...path, `${i}`]
             appendUpdateForObject(value, newPath, updates)
         }
 
         return updates
-
     } else if (obj instanceof Promise) {
-        updates.push([ path, obj ])
+        updates.push([path, obj])
         return updates
-
     } else if (typeof obj === 'object') {
         for (const key of Object.keys(obj)) {
             const value = obj[key]
-            const newPath: Array<string> = [ ...path, key ]
+            const newPath: Array<string> = [...path, key]
             appendUpdateForObject(value, newPath, updates)
         }
 
         return updates
-
     } else {
         return []
     }
 }
 
-async function handleUnresolved(unresolved: Array<ObjectUpdate>, base: object): Promise<object> {
-    const paths: Array<string> = unresolved.map((next: ObjectUpdate) => next[0].join('.'))
-    const promises: Array<Promise<object>> = unresolved.map((next: ObjectUpdate) => next[1])
-    const resolvedPromises: Array<object> = await Promise.all(promises.map((next: Promise<object>) => {
-        return next.then((val: object) => {
-            const nested: Array<ObjectUpdate> = collectUnresolvedPromises(val)
+async function handleUnresolved(
+    unresolved: Array<ObjectUpdate>,
+    base: object,
+): Promise<object> {
+    const paths: Array<string> = unresolved.map((next: ObjectUpdate) =>
+        next[0].join('.'),
+    )
+    const promises: Array<Promise<object>> = unresolved.map(
+        (next: ObjectUpdate) => next[1],
+    )
+    const resolvedPromises: Array<object> = await Promise.all(
+        promises.map((next: Promise<object>) => {
+            return next.then((val: object) => {
+                const nested: Array<ObjectUpdate> = collectUnresolvedPromises(
+                    val,
+                )
 
-            if (nested.length > 0) {
-                return handleUnresolved(nested, val)
+                if (nested.length > 0) {
+                    return handleUnresolved(nested, val)
+                } else {
+                    return Promise.resolve(val)
+                }
+            })
+        }),
+    )
 
-            } else {
-                return Promise.resolve(val)
-            }
-        })
-    }))
-
-    const newObj: object = resolvedPromises.reduce((acc: object, next: any, currentIndex: number) => {
-        return setValueForKey(paths[currentIndex], next, acc)
-    }, base)
+    const newObj: object = resolvedPromises.reduce(
+        (acc: object, next: any, currentIndex: number) => {
+            return setValueForKey(paths[currentIndex], next, acc)
+        },
+        base,
+    )
 
     return newObj
 }

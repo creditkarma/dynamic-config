@@ -56,6 +56,4 @@ export const DEFAULT_ENVIRONMENT: string = 'development'
 /**
  * Other than cwd, what directories to search for configs (relative to cwd)
  */
-export const CONFIG_SEARCH_PATHS = [
-    'src', 'lib', 'main', 'dist', 'app',
-]
+export const CONFIG_SEARCH_PATHS = ['src', 'lib', 'main', 'dist', 'app']

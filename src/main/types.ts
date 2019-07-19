@@ -96,10 +96,12 @@ export interface INamedResolvers {
 
 export type SetFunction<T = any> = (key: string, value: T) => void
 
-export type RemoteInitializer = (config: IConfigStore, remoteOptions?: IRemoteOptions) => Promise<any>
+export type RemoteInitializer = (
+    config: IConfigStore,
+    remoteOptions?: IRemoteOptions,
+) => Promise<any>
 
-export type ResolverType =
-    'remote' | 'secret'
+export type ResolverType = 'remote' | 'secret'
 
 export interface IRemoteResolver {
     type: ResolverType
@@ -111,8 +113,7 @@ export interface IRemoteResolver {
 
 // CONFIG TYPES
 
-export type SourceType =
-    'local' | 'remote' | 'secret' | 'env' | 'process'
+export type SourceType = 'local' | 'remote' | 'secret' | 'env' | 'process'
 
 export interface ISource {
     type: SourceType
@@ -120,20 +121,24 @@ export interface ISource {
     key?: string
 }
 
-export type ConfigType =
-    'root' | ObjectType | DeferredType | InvalidType
+export type ConfigType = 'root' | ObjectType | DeferredType | InvalidType
 
 export type ObjectType =
-    'object' | 'array' | 'string' | 'number' | 'boolean' | 'null'
+    | 'object'
+    | 'array'
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'null'
 
-export type DeferredType =
-    'promise' | 'placeholder'
+export type DeferredType = 'promise' | 'placeholder'
 
-export type InvalidType =
-    'invalid'
+export type InvalidType = 'invalid'
 
-export type WatchFunction<T = any> =
-    (err: Error | undefined, val: T | undefined) => void
+export type WatchFunction<T = any> = (
+    err: Error | undefined,
+    val: T | undefined,
+) => void
 
 export interface IConfigValue {
     type: ConfigType
@@ -150,13 +155,16 @@ export interface IBaseConfigValue extends IConfigValue {
     nullable: boolean
 }
 
-export type ConfigValue =
-    IRootConfigValue | BaseConfigValue
+export type ConfigValue = IRootConfigValue | BaseConfigValue
 
 export type BaseConfigValue =
-    IObjectConfigValue | IArrayConfigValue | IPrimitiveConfigValue |
-    INullConfigValue | IPromisedConfigValue | IPlaceholderConfigValue |
-    IInvalidConfigValue
+    | IObjectConfigValue
+    | IArrayConfigValue
+    | IPrimitiveConfigValue
+    | INullConfigValue
+    | IPromisedConfigValue
+    | IPlaceholderConfigValue
+    | IInvalidConfigValue
 
 export interface IConfigProperties {
     [name: string]: BaseConfigValue
@@ -243,17 +251,22 @@ export interface IResolvedPlaceholder {
 
 export type KeyPath = Array<string>
 
-export type ObjectUpdate =
-    [ KeyPath, Promise<any> ]
+export type ObjectUpdate = [KeyPath, Promise<any>]
 
-export type PromisedUpdate =
-    [ KeyPath, Promise<BaseConfigValue> ]
+export type PromisedUpdate = [KeyPath, Promise<BaseConfigValue>]
 
 // SCHEMA TYPES
 
 export type ISchema =
-    IArraySchema | IObjectSchema | IStringSchema | INumberSchema |
-    IBooleanSchema | IAnySchema | INullSchema | IInvalidSchema
+    | IArraySchema
+    | IObjectSchema
+    | IStringSchema
+    | INumberSchema
+    | IBooleanSchema
+    | IAnySchema
+    | INullSchema
+    | IInvalidSchema
+    | IUndefinedSchema
 
 export interface IArraySchema {
     type: 'array'
@@ -278,10 +291,15 @@ export interface IBooleanSchema {
     type: 'boolean'
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IAnySchema {}
 
 export interface INullSchema {
     type: 'null'
+}
+
+export interface IUndefinedSchema {
+    type: 'undefined'
 }
 
 export interface IInvalidSchema {

@@ -1,12 +1,8 @@
 import * as Utils from './basic'
 
-import {
-    deepMap,
-} from './object'
+import { deepMap } from './object'
 
-import {
-    objectMatchesSchema,
-} from './json'
+import { objectMatchesSchema } from './json'
 
 import {
     BaseConfigValue,
@@ -43,7 +39,10 @@ export const emptyRootConfig = (): IRootConfigValue => ({
     watcher: null,
 })
 
-export function getErrorForKey(key: string | undefined, errorMap: IConfigErrorMap): Error | undefined {
+export function getErrorForKey(
+    key: string | undefined,
+    errorMap: IConfigErrorMap,
+): Error | undefined {
     if (key !== undefined) {
         return errorMap[key]
     } else {
@@ -56,24 +55,35 @@ export function getErrorForKey(key: string | undefined, errorMap: IConfigErrorMa
     }
 }
 
-export function setErrorForKey(key: string, error: DynamicConfigError, errorMap: IConfigErrorMap): IConfigErrorMap {
-    const parts = key.split('.').map((next: string) => next.trim()).filter((next: string) => next !== '')
+export function setErrorForKey(
+    key: string,
+    error: DynamicConfigError,
+    errorMap: IConfigErrorMap,
+): IConfigErrorMap {
+    const parts = key
+        .split('.')
+        .map((next: string) => next.trim())
+        .filter((next: string) => next !== '')
     let soFar: string = ''
     for (const part of parts) {
-        soFar = (soFar !== '') ? `${soFar}.${part}` : part
+        soFar = soFar !== '' ? `${soFar}.${part}` : part
         errorMap[soFar] = error
     }
     return errorMap
 }
 
-export function makeTranslator(translators: Array<IConfigTranslator>): ITranslator {
+export function makeTranslator(
+    translators: Array<IConfigTranslator>,
+): ITranslator {
     return function applyTranslators(obj: any): any {
         return deepMap((val, path) => {
             try {
-                return translators.reduce((acc: any, next: IConfigTranslator) => {
-                    return next.translate(acc)
-                }, val)
-
+                return translators.reduce(
+                    (acc: any, next: IConfigTranslator) => {
+                        return next.translate(acc)
+                    },
+                    val,
+                )
             } catch (err) {
                 throw new InvalidConfigValue(path, err.message)
             }
@@ -81,7 +91,11 @@ export function makeTranslator(translators: Array<IConfigTranslator>): ITranslat
     }
 }
 
-export async function readValueForType(key: string, raw: string, type: ObjectType): Promise<any> {
+export async function readValueForType(
+    key: string,
+    raw: string,
+    type: ObjectType,
+): Promise<any> {
     const rawType: string = typeof raw
 
     if (rawType === 'string') {
@@ -126,7 +140,6 @@ export function normalizeConfigPlaceholder(
 
     if (resolver === undefined) {
         throw new ResolverUnavailable(placeholder._key)
-
     } else {
         return {
             path: path.join('.'),
@@ -135,7 +148,7 @@ export function normalizeConfigPlaceholder(
                 name: source,
                 type: resolver.type,
             },
-            type: (placeholder._type || 'string'),
+            type: placeholder._type || 'string',
             nullable: placeholder._nullable || false,
             default: placeholder._default,
         }
@@ -147,25 +160,28 @@ export function isValidRemote(name: string, resolvers: Set<string>): boolean {
 }
 
 export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
-    return objectMatchesSchema({
-        type: 'object',
-        properties: {
-            '_key': {
-                type: 'string',
+    return objectMatchesSchema(
+        {
+            type: 'object',
+            properties: {
+                _key: {
+                    type: 'string',
+                },
+                _source: {
+                    type: 'string',
+                },
+                _type: {
+                    type: 'string',
+                },
+                _nullable: {
+                    type: 'boolean',
+                },
+                _default: {},
             },
-            '_source': {
-                type: 'string',
-            },
-            '_type': {
-                type: 'string',
-            },
-            '_nullable': {
-                type: 'boolean',
-            },
-            '_default': {},
+            required: ['_key', '_source'],
         },
-        required: [ '_key', '_source' ],
-    }, obj)
+        obj,
+    )
 }
 
 function newConfigValue(
@@ -192,6 +208,7 @@ function newConfigValue(
             }
 
         default:
+            // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
             return {
                 source: newValue.source,
                 type: newValue.type,
@@ -208,38 +225,42 @@ function setBaseConfigValueForKey(
     oldValue: BaseConfigValue,
     alertWatchers: boolean = false,
 ): BaseConfigValue {
-    const [ head, ...tail ] = Utils.splitKey(key)
+    const [head, ...tail] = Utils.splitKey(key)
 
     if (oldValue.type === 'object') {
         const returnValue: IObjectConfigValue = {
             source: oldValue.source,
             type: oldValue.type,
-            properties: Object.keys(oldValue.properties).reduce((acc: IConfigProperties, next: string): IConfigProperties => {
-                const oldValueAtKey = oldValue.properties[next]
-                if (next === head) {
-                    if (tail.length > 0) {
-                        acc[next] = setBaseConfigValueForKey(
-                            tail.join('.'),
-                            newValue,
-                            oldValueAtKey,
-                            alertWatchers,
-                        )
+            properties: Object.keys(oldValue.properties).reduce(
+                (acc: IConfigProperties, next: string): IConfigProperties => {
+                    const oldValueAtKey = oldValue.properties[next]
+                    if (next === head) {
+                        if (tail.length > 0) {
+                            acc[next] = setBaseConfigValueForKey(
+                                tail.join('.'),
+                                newValue,
+                                oldValueAtKey,
+                                alertWatchers,
+                            )
+                        } else {
+                            acc[next] = newConfigValue(oldValueAtKey, newValue)
+                            acc[next].watcher = oldValueAtKey.watcher
 
-                    } else {
-                        acc[next] = newConfigValue(oldValueAtKey, newValue)
-                        acc[next].watcher = oldValueAtKey.watcher
-
-                        if (alertWatchers && oldValueAtKey.watcher) {
-                            oldValueAtKey.watcher(undefined, readConfigValue(newValue))
+                            if (alertWatchers && oldValueAtKey.watcher) {
+                                oldValueAtKey.watcher(
+                                    undefined,
+                                    readConfigValue(newValue),
+                                )
+                            }
                         }
+                    } else {
+                        acc[next] = oldValueAtKey
                     }
 
-                } else {
-                    acc[next] = oldValueAtKey
-                }
-
-                return acc
-            }, {}),
+                    return acc
+                },
+                {},
+            ),
             watcher: oldValue.watcher,
             nullable: newValue.nullable,
         }
@@ -249,38 +270,50 @@ function setBaseConfigValueForKey(
         }
 
         return returnValue
-
     } else if (oldValue.type === 'array') {
         const headIndex = parseInt(head, 10)
         const returnValue: IArrayConfigValue = {
             source: oldValue.source,
             type: oldValue.type,
-            items: oldValue.items.reduce((acc: ConfigItems, nextValue: BaseConfigValue, index: number): ConfigItems => {
-                if (index === headIndex) {
-                    if (tail.length > 0) {
-                        acc.push(setBaseConfigValueForKey(
-                            tail.join('.'),
-                            newValue,
-                            nextValue,
-                            alertWatchers,
-                        ))
+            items: oldValue.items.reduce(
+                (
+                    acc: ConfigItems,
+                    nextValue: BaseConfigValue,
+                    index: number,
+                ): ConfigItems => {
+                    if (index === headIndex) {
+                        if (tail.length > 0) {
+                            acc.push(
+                                setBaseConfigValueForKey(
+                                    tail.join('.'),
+                                    newValue,
+                                    nextValue,
+                                    alertWatchers,
+                                ),
+                            )
+                        } else {
+                            const tempValue = newConfigValue(
+                                nextValue,
+                                newValue,
+                            )
+                            tempValue.watcher = nextValue.watcher
+                            acc.push(tempValue)
 
-                    } else {
-                        const tempValue = newConfigValue(nextValue, newValue)
-                        tempValue.watcher = nextValue.watcher
-                        acc.push(tempValue)
-
-                        if (alertWatchers && nextValue.watcher) {
-                            nextValue.watcher(undefined, readConfigValue(newValue))
+                            if (alertWatchers && nextValue.watcher) {
+                                nextValue.watcher(
+                                    undefined,
+                                    readConfigValue(newValue),
+                                )
+                            }
                         }
+                    } else {
+                        acc.push(nextValue)
                     }
 
-                } else {
-                    acc.push(nextValue)
-                }
-
-                return acc
-            }, []),
+                    return acc
+                },
+                [],
+            ),
             watcher: oldValue.watcher,
             nullable: newValue.nullable,
         }
@@ -290,7 +323,6 @@ function setBaseConfigValueForKey(
         }
 
         return returnValue
-
     } else if (tail.length === 0) {
         const returnValue = newConfigValue(oldValue, newValue)
 
@@ -299,9 +331,10 @@ function setBaseConfigValueForKey(
         }
 
         return returnValue
-
     } else {
-        throw new Error(`Cannot set value at key[${key}] because it is not an object`)
+        throw new Error(
+            `Cannot set value at key[${key}] because it is not an object`,
+        )
     }
 }
 
@@ -311,36 +344,40 @@ function setRootConfigValueForKey(
     oldValue: IRootConfigValue,
     alertWatchers: boolean = false,
 ): IRootConfigValue {
-    const [ head, ...tail ] = Utils.splitKey(key)
+    const [head, ...tail] = Utils.splitKey(key)
 
     const returnValue: IRootConfigValue = {
         type: 'root',
-        properties: Object.keys(oldValue.properties).reduce((acc: IConfigProperties, next: string): IConfigProperties => {
-            const oldValueAtKey = oldValue.properties[next]
-            if (next === head) {
-                if (tail.length > 0) {
-                    acc[next] = setBaseConfigValueForKey(
-                        tail.join('.'),
-                        newValue,
-                        oldValueAtKey,
-                        alertWatchers,
-                    )
+        properties: Object.keys(oldValue.properties).reduce(
+            (acc: IConfigProperties, next: string): IConfigProperties => {
+                const oldValueAtKey = oldValue.properties[next]
+                if (next === head) {
+                    if (tail.length > 0) {
+                        acc[next] = setBaseConfigValueForKey(
+                            tail.join('.'),
+                            newValue,
+                            oldValueAtKey,
+                            alertWatchers,
+                        )
+                    } else {
+                        acc[next] = newConfigValue(oldValueAtKey, newValue)
+                        acc[next].watcher = oldValueAtKey.watcher
 
-                } else {
-                    acc[next] = newConfigValue(oldValueAtKey, newValue)
-                    acc[next].watcher = oldValueAtKey.watcher
-
-                    if (alertWatchers && oldValueAtKey.watcher) {
-                        oldValueAtKey.watcher(undefined, readConfigValue(newValue))
+                        if (alertWatchers && oldValueAtKey.watcher) {
+                            oldValueAtKey.watcher(
+                                undefined,
+                                readConfigValue(newValue),
+                            )
+                        }
                     }
+                } else {
+                    acc[next] = oldValueAtKey
                 }
 
-            } else {
-                acc[next] = oldValueAtKey
-            }
-
-            return acc
-        }, {}),
+                return acc
+            },
+            {},
+        ),
         watcher: oldValue.watcher,
     }
 
@@ -359,7 +396,6 @@ export function setValueForKey(
 ): ConfigValue {
     if (oldConfig.type === 'root') {
         return setRootConfigValueForKey(key, newValue, oldConfig, alertWatchers)
-
     } else {
         return setBaseConfigValueForKey(key, newValue, oldConfig, alertWatchers)
     }
@@ -378,7 +414,6 @@ function buildObjectValue(obj: IObjectConfigValue | IRootConfigValue): any {
 export function readConfigValue(obj: ConfigValue | null): any {
     if (obj === null) {
         return null
-
     } else {
         switch (obj.type) {
             case 'root':
@@ -386,10 +421,13 @@ export function readConfigValue(obj: ConfigValue | null): any {
                 return buildObjectValue(obj)
 
             case 'array':
-                return obj.items.reduce((acc: Array<any>, next: BaseConfigValue) => {
-                    acc.push(readConfigValue(next))
-                    return acc
-                }, [])
+                return obj.items.reduce(
+                    (acc: Array<any>, next: BaseConfigValue) => {
+                        acc.push(readConfigValue(next))
+                        return acc
+                    },
+                    [],
+                )
 
             case 'string':
             case 'number':
@@ -410,63 +448,59 @@ export function readConfigValue(obj: ConfigValue | null): any {
     }
 }
 
-function getValueFromConfigValue(key: string, obj: ConfigValue): BaseConfigValue | null {
+function getValueFromConfigValue(
+    key: string,
+    obj: ConfigValue,
+): BaseConfigValue | null {
     if (Utils.isPrimitive(obj) || Utils.isNothing(obj)) {
         return null
-
     } else {
         const parts: Array<string> = Utils.splitKey(key)
 
         if (parts.length > 1) {
-            const [ head, ...tail ] = parts
+            const [head, ...tail] = parts
             if (obj.type === 'object') {
-                return getValueFromConfigValue(tail.join('.'), obj.properties[head])
-
+                return getValueFromConfigValue(
+                    tail.join('.'),
+                    obj.properties[head],
+                )
             } else if (obj.type === 'array' && Utils.isNumeric(head)) {
-                return getValueFromConfigValue(tail.join('.'), obj.items[parseInt(head, 10)])
-
+                return getValueFromConfigValue(
+                    tail.join('.'),
+                    obj.items[parseInt(head, 10)],
+                )
             } else {
                 return null
             }
-
-        } else if (
-            obj.type === 'object' &&
-            obj.properties[key] !== undefined
-        ) {
+        } else if (obj.type === 'object' && obj.properties[key] !== undefined) {
             return obj.properties[key]
-
-        } else if (
-            obj.type === 'array' &&
-            Utils.isNumeric(key)
-        ) {
+        } else if (obj.type === 'array' && Utils.isNumeric(key)) {
             const headIndex = parseInt(key, 10)
             if (obj.items[headIndex] !== undefined) {
                 return obj.items[headIndex]
-
             } else {
                 return null
             }
-
         } else {
             return null
         }
     }
 }
 
-export function getConfigForKey(key: string, obj: IRootConfigValue): BaseConfigValue | null {
+export function getConfigForKey(
+    key: string,
+    obj: IRootConfigValue,
+): BaseConfigValue | null {
     if (Utils.isPrimitive(obj) || Utils.isNothing(obj)) {
         return null
-
     } else {
         const parts: Array<string> = Utils.splitKey(key)
 
         if (parts.length > 1) {
-            const [ head, ...tail ] = parts
+            const [head, ...tail] = parts
             return getValueFromConfigValue(tail.join('.'), obj.properties[head])
-
         } else if (obj.properties[parts[0]] !== undefined) {
             return obj.properties[parts[0]]
-
         } else {
             return null
         }

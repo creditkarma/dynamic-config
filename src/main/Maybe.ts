@@ -1,8 +1,6 @@
-export type MaybeMapping<A, B> =
-    (val: A) => B
+export type MaybeMapping<A, B> = (val: A) => B
 
-export type MaybePredicate<T> =
-    (val: T) => boolean
+export type MaybePredicate<T> = (val: T) => boolean
 
 export abstract class Maybe<T> {
     public static fromNullable<T>(val: T | undefined | null): Maybe<T> {
@@ -26,8 +24,17 @@ export abstract class Maybe<T> {
      * Maybes is a Nothing a Nothing is returned.
      */
     public static all<A, B>(a: Maybe<A>, b: Maybe<B>): Maybe<[A, B]>
-    public static all<A, B, C>(a: Maybe<A>, b: Maybe<B>, c: Maybe<C>): Maybe<[A, B, C]>
-    public static all<A, B, C, D>(a: Maybe<A>, b: Maybe<B>, c: Maybe<C>, d: Maybe<D>): Maybe<[A, B, C, D]>
+    public static all<A, B, C>(
+        a: Maybe<A>,
+        b: Maybe<B>,
+        c: Maybe<C>,
+    ): Maybe<[A, B, C]>
+    public static all<A, B, C, D>(
+        a: Maybe<A>,
+        b: Maybe<B>,
+        c: Maybe<C>,
+        d: Maybe<D>,
+    ): Maybe<[A, B, C, D]>
     public static all(...args: Array<Maybe<any>>): Maybe<any> {
         const values: Array<any> = []
         for (const item of args) {

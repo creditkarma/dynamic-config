@@ -1,7 +1,4 @@
-import {
-    isObject,
-    isPrimitiveType,
-} from './basic'
+import { isObject, isPrimitiveType } from './basic'
 
 import {
     BaseConfigValue,
@@ -15,7 +12,9 @@ import {
 
 import * as ConfigUtils from './config'
 
-export function invalidValueForPlaceholder(placeholder: IResolvedPlaceholder): IInvalidConfigValue {
+export function invalidValueForPlaceholder(
+    placeholder: IResolvedPlaceholder,
+): IInvalidConfigValue {
     return {
         source: {
             type: placeholder.resolver.type,
@@ -29,7 +28,9 @@ export function invalidValueForPlaceholder(placeholder: IResolvedPlaceholder): I
     }
 }
 
-export function nullValueForPlaceholder(placeholder: IResolvedPlaceholder): INullConfigValue {
+export function nullValueForPlaceholder(
+    placeholder: IResolvedPlaceholder,
+): INullConfigValue {
     return {
         source: {
             type: placeholder.resolver.type,
@@ -43,7 +44,11 @@ export function nullValueForPlaceholder(placeholder: IResolvedPlaceholder): INul
     }
 }
 
-export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolean = false): BaseConfigValue {
+export function buildBaseConfigValue(
+    source: ISource,
+    obj: any,
+    nullable: boolean = false,
+): BaseConfigValue {
     const objType = typeof obj
 
     if (obj instanceof Promise) {
@@ -54,7 +59,6 @@ export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolea
             watcher: null,
             nullable,
         }
-
     } else if (ConfigUtils.isConfigPlaceholder(obj)) {
         return {
             source,
@@ -63,37 +67,45 @@ export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolea
             watcher: null,
             nullable,
         }
-
     } else if (Array.isArray(obj)) {
         return {
             source,
             type: 'array',
             items: obj.reduce((acc: Array<BaseConfigValue>, next: any) => {
-                acc.push(buildBaseConfigValue({
-                    type: source.type,
-                    name: source.name,
-                }, next))
+                acc.push(
+                    buildBaseConfigValue(
+                        {
+                            type: source.type,
+                            name: source.name,
+                        },
+                        next,
+                    ),
+                )
                 return acc
             }, []),
             watcher: null,
             nullable,
         }
-
     } else if (isObject(obj)) {
         return {
             source,
             type: 'object',
-            properties: Object.keys(obj).reduce((acc: IConfigProperties, next: string) => {
-                acc[next] = buildBaseConfigValue({
-                    type: source.type,
-                    name: source.name,
-                }, obj[next])
-                return acc
-            }, {}),
+            properties: Object.keys(obj).reduce(
+                (acc: IConfigProperties, next: string) => {
+                    acc[next] = buildBaseConfigValue(
+                        {
+                            type: source.type,
+                            name: source.name,
+                        },
+                        (obj as any)[next],
+                    )
+                    return acc
+                },
+                {},
+            ),
             watcher: null,
             nullable,
         }
-
     } else if (isPrimitiveType(objType)) {
         return {
             source,
@@ -102,7 +114,6 @@ export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolea
             watcher: null,
             nullable,
         }
-
     } else if (obj === null || obj === undefined) {
         return {
             source,
@@ -111,9 +122,10 @@ export function buildBaseConfigValue(source: ISource, obj: any, nullable: boolea
             watcher: null,
             nullable,
         }
-
     } else {
-        throw new TypeError(`Cannot build config from object of type[${objType}]`)
+        throw new TypeError(
+            `Cannot build config from object of type[${objType}]`,
+        )
     }
 }
 
@@ -129,12 +141,16 @@ export function createConfigObject(
         }
 
         for (const key of Object.keys(obj)) {
-            configObj.properties[key] = buildBaseConfigValue(source, obj[key])
+            configObj.properties[key] = buildBaseConfigValue(
+                source,
+                (obj as any)[key],
+            )
         }
 
         return configObj
-
     } else {
-        throw new TypeError(`Config value must be an object, instead found type[${typeof obj}]`)
+        throw new TypeError(
+            `Config value must be an object, instead found type[${typeof obj}]`,
+        )
     }
 }

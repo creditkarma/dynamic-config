@@ -9,7 +9,10 @@ export class SyncConfig implements IConfigStore {
     }
 
     public get<T = any>(key: string): T | null {
-        const baseValue: ConfigValue | null = ConfigUtils.getConfigForKey(key, this.config)
+        const baseValue: ConfigValue | null = ConfigUtils.getConfigForKey(
+            key,
+            this.config,
+        )
         if (baseValue !== null) {
             return ConfigUtils.readConfigValue(baseValue)
         } else {
@@ -18,15 +21,17 @@ export class SyncConfig implements IConfigStore {
     }
 
     public getAll(...args: Array<string>): Array<any> {
-        return args.map((next: string) => {
-            return this.get(next)
-        }).map((baseValue: ConfigValue | null) => {
-            if (baseValue !== null) {
-                return ConfigUtils.readConfigValue(baseValue)
-            } else {
-                return null
-            }
-        })
+        return args
+            .map((next: string) => {
+                return this.get(next)
+            })
+            .map((baseValue: ConfigValue | null) => {
+                if (baseValue !== null) {
+                    return ConfigUtils.readConfigValue(baseValue)
+                } else {
+                    return null
+                }
+            })
     }
 
     public getWithDefault<T = any>(key: string, defaultVal: T): T {

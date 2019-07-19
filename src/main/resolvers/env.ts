@@ -15,7 +15,10 @@ export function envResolver(): IRemoteResolver {
         type: 'remote',
         name: 'env',
 
-        async init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
+        async init(
+            configInstance: IConfigStore,
+            remoteOptions: IConsulOptions = {},
+        ): Promise<any> {
             return {}
         },
 
@@ -24,17 +27,19 @@ export function envResolver(): IRemoteResolver {
             if (value !== undefined) {
                 if (type !== undefined) {
                     return ConfigUtils.readValueForType(key, value, type)
-
                 } else {
                     return Promise.resolve(value) as any
                 }
-
             } else {
                 throw new MissingEnvironmentVariable(key)
             }
         },
 
-        watch<T = any>(key: string, cb: WatchFunction<T>, type?: ObjectType): void {
+        watch<T = any>(
+            key: string,
+            cb: WatchFunction<T>,
+            type?: ObjectType,
+        ): void {
             // Nothing to do. Can't watch environment variables.
         },
     }

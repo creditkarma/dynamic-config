@@ -15,7 +15,10 @@ export function processResolver(): IRemoteResolver {
         type: 'remote',
         name: 'process',
 
-        async init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
+        async init(
+            configInstance: IConfigStore,
+            remoteOptions: IConsulOptions = {},
+        ): Promise<any> {
             return {}
         },
 
@@ -24,17 +27,19 @@ export function processResolver(): IRemoteResolver {
             if (value !== undefined) {
                 if (type !== undefined) {
                     return ConfigUtils.readValueForType(key, value, type)
-
                 } else {
                     return Promise.resolve(value) as any
                 }
-
             } else {
                 throw new MissingProcessVariable(key)
             }
         },
 
-        watch<T = any>(key: string, cb: WatchFunction<T>, type?: ObjectType): void {
+        watch<T = any>(
+            key: string,
+            cb: WatchFunction<T>,
+            type?: ObjectType,
+        ): void {
             // Can't watch process arguments
         },
     }

@@ -23,11 +23,22 @@ export const enum DynamicConfigErrorType {
 }
 
 export type DynamicConfigError =
-    MissingConfigPlaceholder | DynamicConfigMissingKey | DynamicConfigInvalidObject |
-    DynamicConfigInvalidResolver | HVNotConfigured | HVFailed | ConsulFailed |
-    ResolverUnavailable | InvalidConfigValue | MissingEnvironmentVariable |
-    MissingProcessVariable | UnknownError | DynamicConfigMissingDefault |
-    DynamicConfigInvalidType | InvalidCharacter | MissingPackageProperty
+    | MissingConfigPlaceholder
+    | DynamicConfigMissingKey
+    | DynamicConfigInvalidObject
+    | DynamicConfigInvalidResolver
+    | HVNotConfigured
+    | HVFailed
+    | ConsulFailed
+    | ResolverUnavailable
+    | InvalidConfigValue
+    | MissingEnvironmentVariable
+    | MissingProcessVariable
+    | UnknownError
+    | DynamicConfigMissingDefault
+    | DynamicConfigInvalidType
+    | InvalidCharacter
+    | MissingPackageProperty
 
 export class InvalidConfigValue extends Error {
     public readonly type = DynamicConfigErrorType.InvalidConfigValue
@@ -88,7 +99,9 @@ export class UnknownError extends Error {
 export class HVNotConfigured extends Error {
     public readonly type = DynamicConfigErrorType.HVNotConfigured
     constructor(key: string) {
-        super(`Unable to retrieve key: ${key}. Hashicorp Vault is not configured.`)
+        super(
+            `Unable to retrieve key: ${key}. Hashicorp Vault is not configured.`,
+        )
     }
 }
 
@@ -102,14 +115,18 @@ export class HVFailed extends Error {
 export class ConsulNotConfigured extends Error {
     public readonly type = DynamicConfigErrorType.ConsulNotConfigured
     constructor(key: string) {
-        super(`Unable to retrieve key: ${key}. Hashicorp Consul is not configured.`)
+        super(
+            `Unable to retrieve key: ${key}. Hashicorp Consul is not configured.`,
+        )
     }
 }
 
 export class ConsulFailed extends Error {
     public readonly type = DynamicConfigErrorType.ConsulFailed
     constructor(key: string, message?: string) {
-        super(`Unable to retrieve key[${key}] from Consul. Consul failed with error: ${message}.`)
+        super(
+            `Unable to retrieve key[${key}] from Consul. Consul failed with error: ${message}.`,
+        )
     }
 }
 
@@ -123,7 +140,9 @@ export class ResolverUnavailable extends Error {
 export class InvalidCharacter extends Error {
     public readonly type = DynamicConfigErrorType.InvalidCharacter
     constructor(char: string) {
-        super(`Environment variable must contain only characters A-Z and '_', found '${char}'`)
+        super(
+            `Environment variable must contain only characters A-Z and '_', found '${char}'`,
+        )
     }
 }
 

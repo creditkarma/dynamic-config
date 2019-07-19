@@ -1,33 +1,36 @@
-import { expect } from 'code'
-import * as Lab from 'lab'
+import { expect } from '@hapi/code'
+import * as Lab from '@hapi/lab'
 
-import {
-    IRootConfigValue,
-} from '../../../main/types'
+import { IRootConfigValue } from '../../../main/types'
 
-import {
-    ConfigBuilder,
-} from '../../../main/utils'
+import { ConfigBuilder } from '../../../main/utils'
 
 export const lab = Lab.script()
 
 const describe = lab.describe
 const it = lab.it
 
+function asJSON(obj: any): object {
+    return JSON.parse(JSON.stringify(obj))
+}
+
 describe('ConfigBuilder', () => {
     describe('createConfigObject', () => {
         it('should build config for object', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
-                type: 'local',
-                name: 'test',
-            }, {
-                protocol: 'https',
-                destination: '127.0.0.1:9000',
-                hostHeader: 'hvault.com',
-                sslValidation: false,
-                namespace: '/your-group/your-service',
-                tokenPath: '/tmp/test-token',
-            })
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+                {
+                    type: 'local',
+                    name: 'test',
+                },
+                {
+                    protocol: 'https',
+                    destination: '127.0.0.1:9000',
+                    hostHeader: 'hvault.com',
+                    sslValidation: false,
+                    namespace: '/your-group/your-service',
+                    tokenPath: '/tmp/test-token',
+                },
+            )
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -96,22 +99,25 @@ describe('ConfigBuilder', () => {
                 watcher: null,
             }
 
-            expect(actual).to.equal(expected)
+            expect(asJSON(actual)).to.equal(asJSON(expected))
         })
 
         it('should build config for an array', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
-                type: 'local',
-                name: 'test',
-            }, {
-                'shard-map': [
-                    {
-                        'virtual-start': 0,
-                        'virtual-end': 3,
-                        destination: 'localhost:4141',
-                    },
-                ],
-            })
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+                {
+                    type: 'local',
+                    name: 'test',
+                },
+                {
+                    'shard-map': [
+                        {
+                            'virtual-start': 0,
+                            'virtual-end': 3,
+                            destination: 'localhost:4141',
+                        },
+                    ],
+                },
+            )
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -172,19 +178,22 @@ describe('ConfigBuilder', () => {
                 watcher: null,
             }
 
-            expect(actual).to.equal(expected)
+            expect(asJSON(actual)).to.equal(asJSON(expected))
         })
 
         it('should build config with nested keys', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
-                type: 'local',
-                name: 'test',
-            }, {
-                server: {
-                    host: 'localhost',
-                    port: 8080,
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+                {
+                    type: 'local',
+                    name: 'test',
                 },
-            })
+                {
+                    server: {
+                        host: 'localhost',
+                        port: 8080,
+                    },
+                },
+            )
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -224,19 +233,22 @@ describe('ConfigBuilder', () => {
                 watcher: null,
             }
 
-            expect(actual).to.equal(expected)
+            expect(asJSON(actual)).to.equal(asJSON(expected))
         })
 
         it('should build config with promised values', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
-                type: 'local',
-                name: 'test',
-            }, {
-                server: {
-                    host: Promise.resolve('localhost'),
-                    port: Promise.resolve(8080),
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+                {
+                    type: 'local',
+                    name: 'test',
                 },
-            })
+                {
+                    server: {
+                        host: Promise.resolve('localhost'),
+                        port: Promise.resolve(8080),
+                    },
+                },
+            )
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -276,26 +288,29 @@ describe('ConfigBuilder', () => {
                 watcher: null,
             }
 
-            expect(actual).to.equal(expected)
+            expect(asJSON(actual)).to.equal(asJSON(expected))
         })
 
         it('should build config with placeholder values', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject({
-                type: 'local',
-                name: 'test',
-            }, {
-                server: {
-                    host: {
-                        _source: 'consul',
-                        _key: 'host-name',
-                    },
-                    port: {
-                        _source: 'consul',
-                        _key: 'port-number',
-                        _default: 8080,
+            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+                {
+                    type: 'local',
+                    name: 'test',
+                },
+                {
+                    server: {
+                        host: {
+                            _source: 'consul',
+                            _key: 'host-name',
+                        },
+                        port: {
+                            _source: 'consul',
+                            _key: 'port-number',
+                            _default: 8080,
+                        },
                     },
                 },
-            })
+            )
 
             const expected: IRootConfigValue = {
                 type: 'root',
@@ -342,15 +357,18 @@ describe('ConfigBuilder', () => {
                 watcher: null,
             }
 
-            expect(actual).to.equal(expected)
+            expect(asJSON(actual)).to.equal(asJSON(expected))
         })
 
         it('should throw if config value is not an object', async () => {
             expect(() => {
-                ConfigBuilder.createConfigObject({
-                    type: 'local',
-                    name: 'test',
-                }, 5)
+                ConfigBuilder.createConfigObject(
+                    {
+                        type: 'local',
+                        name: 'test',
+                    },
+                    5,
+                )
             }).to.throw()
         })
     })

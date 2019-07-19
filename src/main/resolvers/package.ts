@@ -17,31 +17,39 @@ export function packageResolver(): IRemoteResolver {
         type: 'remote',
         name: 'package',
 
-        async init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
+        async init(
+            configInstance: IConfigStore,
+            remoteOptions: IConsulOptions = {},
+        ): Promise<any> {
             return {}
         },
 
         async get<T = any>(key: string, type?: ObjectType): Promise<T> {
-            const pkg: any = require(path.resolve(process.cwd(), 'package.json'))
+            const pkg: any = require(path.resolve(
+                process.cwd(),
+                'package.json',
+            ))
             if (pkg !== undefined) {
                 const value: any = pkg[key]
                 if (value !== undefined) {
                     if (type !== undefined) {
                         return ConfigUtils.readValueForType(key, value, type)
-
                     } else {
                         return value
                     }
                 } else {
                     throw new MissingPackageProperty(key)
                 }
-
             } else {
                 throw new MissingPackageProperty(key)
             }
         },
 
-        watch<T = any>(key: string, cb: WatchFunction<T>, type?: ObjectType): void {
+        watch<T = any>(
+            key: string,
+            cb: WatchFunction<T>,
+            type?: ObjectType,
+        ): void {
             // Nothing to do. Can't watch environment variables.
         },
     }

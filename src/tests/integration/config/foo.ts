@@ -1,5 +1,5 @@
 export const project = {
     health: {
-      control: '/typescript',
+        control: '/typescript',
     },
-  }
+}

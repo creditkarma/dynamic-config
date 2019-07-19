@@ -1,6 +1,4 @@
-import {
-    IConfigTranslator,
-} from '../types'
+import { IConfigTranslator } from '../types'
 
 export const debugTranslator: IConfigTranslator = {
     translate(configValue: any): any {

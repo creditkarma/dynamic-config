@@ -1,5 +1,5 @@
-import { expect } from 'code'
-import * as Lab from 'lab'
+import { expect } from '@hapi/code'
+import * as Lab from '@hapi/lab'
 
 import { ISchema } from '../../../main/types'
 
@@ -161,10 +161,7 @@ describe('JSONUtils', () => {
         })
 
         it('should return false if primitive does not match given schema', async () => {
-            const actual: boolean = JSONUtils.objectMatchesSchema(
-                strSchema,
-                5,
-            )
+            const actual: boolean = JSONUtils.objectMatchesSchema(strSchema, 5)
             const expected: boolean = false
 
             expect(actual).to.equal(expected)

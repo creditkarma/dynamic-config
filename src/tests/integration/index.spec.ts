@@ -1,7 +1,7 @@
+import { expect } from '@hapi/code'
+import * as Lab from '@hapi/lab'
 import { ChildProcess, exec } from 'child_process'
-import { expect } from 'code'
 import * as fs from 'fs'
-import * as Lab from 'lab'
 import * as path from 'path'
 import * as rp from 'request-promise-native'
 
@@ -43,7 +43,8 @@ describe('DynamicConfig Singleton', () => {
 
         describe('get', () => {
             it('should return the full config with empty call to get', async () => {
-                return config().get()
+                return config()
+                    .get()
                     .then((actual: any) => {
                         expect(actual).to.equal({
                             type_test: true,
@@ -69,17 +70,20 @@ describe('DynamicConfig Singleton', () => {
                                                         {
                                                             'virtual-start': 0,
                                                             'virtual-end': 3,
-                                                            destination: '127.0.0.1:3000',
+                                                            destination:
+                                                                '127.0.0.1:3000',
                                                         },
                                                         {
                                                             'virtual-start': 4,
                                                             'virtual-end': 7,
-                                                            destination: '127.0.0.2:4000',
+                                                            destination:
+                                                                '127.0.0.2:4000',
                                                         },
                                                         {
                                                             'virtual-start': 8,
                                                             'virtual-end': 11,
-                                                            destination: '127.0.0.3:5000',
+                                                            destination:
+                                                                '127.0.0.3:5000',
                                                         },
                                                     ],
                                                 },
@@ -99,8 +103,8 @@ describe('DynamicConfig Singleton', () => {
                                 },
                             },
                             names: {
-                                first: [ 'Bob', 'Helen', 'Joe', 'Jane' ],
-                                last: [ 'Smith', 'Warren', 'Malick' ],
+                                first: ['Bob', 'Helen', 'Joe', 'Jane'],
+                                last: ['Smith', 'Warren', 'Malick'],
                             },
                             'hashicorp-vault': {
                                 apiVersion: 'v1',
@@ -144,7 +148,9 @@ describe('DynamicConfig Singleton', () => {
                             throw new Error('Should reject for missing key.')
                         },
                         (err: any) => {
-                            expect(err.message).to.equal('Unable to find value for key[fake.path].')
+                            expect(err.message).to.equal(
+                                'Unable to find value for key[fake.path].',
+                            )
                         },
                     )
             })
@@ -167,7 +173,9 @@ describe('DynamicConfig Singleton', () => {
                             throw new Error('Should reject for missing secret.')
                         },
                         (err: any) => {
-                            expect(err.message).to.equal('Unable to find value for key[missing-secret].')
+                            expect(err.message).to.equal(
+                                'Unable to find value for key[missing-secret].',
+                            )
                         },
                     )
             })
@@ -180,7 +188,9 @@ describe('DynamicConfig Singleton', () => {
         before(async () => {
             return new Promise((resolve, reject) => {
                 process.env.NOT_NULLABLE = 'NOT_NULLABLE'
-                server = exec('node ./server.js CONSUL_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three')
+                server = exec(
+                    'node ./server.js CONSUL_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three',
+                )
                 server.stdout.on('data', (data) => {
                     console.log('msg: ', data)
                 })

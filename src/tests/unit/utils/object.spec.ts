@@ -1,5 +1,5 @@
-import { expect } from 'code'
-import * as Lab from 'lab'
+import { expect } from '@hapi/code'
+import * as Lab from '@hapi/lab'
 
 import { ObjectUtils } from '../../../main/utils'
 
@@ -29,13 +29,13 @@ describe('ObjectUtils', () => {
         })
 
         it('should correctly transform values of an array', async () => {
-            const mockObj = [ 1, 5, 8, 23 ]
+            const mockObj = [1, 5, 8, 23]
 
             const actual = ObjectUtils.deepMap((val: any) => {
                 return val + 1
             }, mockObj)
 
-            const expected = [ 2, 6, 9, 24 ]
+            const expected = [2, 6, 9, 24]
 
             expect(actual).to.equal(expected)
         })
@@ -49,24 +49,19 @@ describe('ObjectUtils', () => {
                     },
                 },
             }
-            const actual = ObjectUtils.deepMap(
-                (val: any, key: string) => {
-                    if (
-                        typeof val === 'object' &&
-                        val.three === 5 &&
-                        val.four === 5
-                    ) {
-                        return 'success'
-
-                    } else if (typeof val === 'number') {
-                        return 5
-
-                    } else {
-                        return val
-                    }
-                },
-                mockObj,
-            )
+            const actual = ObjectUtils.deepMap((val: any, key: string) => {
+                if (
+                    typeof val === 'object' &&
+                    val.three === 5 &&
+                    val.four === 5
+                ) {
+                    return 'success'
+                } else if (typeof val === 'number') {
+                    return 5
+                } else {
+                    return val
+                }
+            }, mockObj)
             const expected = {
                 one: {
                     two: 'success',

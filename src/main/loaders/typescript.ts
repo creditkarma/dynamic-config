@@ -6,7 +6,10 @@ import { defaultLogger as logger } from '../logger'
 import { IFileLoader } from '../types'
 
 function locateFile(basePath: string, searchPath: string): string {
-    const resolvedPath: string = path.resolve(path.dirname(basePath), searchPath)
+    const resolvedPath: string = path.resolve(
+        path.dirname(basePath),
+        searchPath,
+    )
     if (fs.existsSync(`${resolvedPath}.ts`)) {
         return `${resolvedPath}.ts`
     } else {
@@ -23,15 +26,21 @@ function loadTypeScript(filePath: string): any {
             exports: {},
             require(pathToRequire: string) {
                 // User files will start with one of these characters
-                if (pathToRequire.startsWith('.') || pathToRequire.startsWith('/')) {
-                    const resolvedFile: string = locateFile(filePath, pathToRequire)
+                if (
+                    pathToRequire.startsWith('.') ||
+                    pathToRequire.startsWith('/')
+                ) {
+                    const resolvedFile: string = locateFile(
+                        filePath,
+                        pathToRequire,
+                    )
 
                     // If the file to include ends in `ts` use our custom machinery to load file
                     if (path.extname(resolvedFile) === '.ts') {
                         return loadTypeScript(resolvedFile)
 
-                    // Else use the default node system, resolving to absolute path to account for our
-                    // shenanigans
+                        // Else use the default node system, resolving to absolute path to account for our
+                        // shenanigans
                     } else {
                         return require(resolvedFile)
                     }
@@ -53,7 +62,9 @@ function loadTypeScript(filePath: string): any {
             return sandbox.exports
         }
     } catch (err) {
-        logger.error(`Error parsing typescript config[${filePath}]: ${err.message}`)
+        logger.error(
+            `Error parsing typescript config[${filePath}]: ${err.message}`,
+        )
         return {}
     }
 }

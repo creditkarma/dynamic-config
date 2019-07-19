@@ -36,11 +36,13 @@ export function parseContent<T>(content: string): Promise<T> {
     })
 }
 
-export function findFile(filePath: string, paths: Array<string>): string | null {
+export function findFile(
+    filePath: string,
+    paths: Array<string>,
+): string | null {
     const firstPath: string = path.resolve(process.cwd(), filePath)
     if (fs.existsSync(firstPath) && fs.statSync(firstPath).isFile) {
         return firstPath
-
     } else {
         for (const next of paths) {
             const nextPath: string = path.resolve(process.cwd(), next, filePath)
@@ -57,7 +59,6 @@ export function findDir(dirName: string, paths: Array<string>): string | null {
     const firstPath: string = path.resolve(process.cwd(), dirName)
     if (fs.existsSync(firstPath) && fs.statSync(firstPath).isDirectory) {
         return firstPath
-
     } else {
         for (const next of paths) {
             const nextPath: string = path.resolve(process.cwd(), next, dirName)

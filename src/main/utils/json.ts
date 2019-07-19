@@ -18,7 +18,6 @@ export function objectAsSimpleSchema(obj: any): ISchema {
             type: 'array',
             items: objectAsSimpleSchema(obj[0]),
         }
-
     } else if (objType === 'object') {
         const schema: IObjectSchema = {
             type: 'object',
@@ -41,13 +40,12 @@ export function objectAsSimpleSchema(obj: any): ISchema {
         }
 
         return schema
-
     } else {
         if (objType !== 'function' && objType !== 'symbol') {
+            // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
             return {
                 type: objType,
             } as ISchema
-
         } else {
             throw new Error(`Type[${objType}] cannot be encoded to JSON`)
         }

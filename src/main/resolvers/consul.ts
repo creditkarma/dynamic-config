@@ -25,7 +25,7 @@ import { ObjectUtils, Utils } from '../utils'
 import { defaultLogger as logger } from '../logger'
 
 export function toRemoteOptionMap(str: string): IRemoteOverrides {
-    const [ key, ...tail ] = str.split('?')
+    const [key, ...tail] = str.split('?')
     const result: IRemoteOverrides = { key }
 
     if (tail.length > 0) {
@@ -65,26 +65,27 @@ export function consulResolver(): IRemoteResolver {
     function getConsulClient(): Maybe<IConsulClient> {
         if (consulClient !== undefined) {
             return consulClient
-
         } else {
             if (consulAddress.isNothing()) {
                 logger.warn(
                     'Could not create a Consul client: Consul Address (CONSUL_ADDRESS) is not defined',
                 )
                 consulClient = new Nothing<IConsulClient>()
-
             } else if (consulDc.isNothing()) {
                 logger.warn(
                     'Could not create a Consul client: Consul Data Center (CONSUL_DC) is not defined',
                 )
                 consulClient = new Nothing<IConsulClient>()
-
             } else {
-                const addresses: Array<string> = consulAddress.get().split(',').map((next: string) => {
-                    return next.trim()
-                }).filter((next: string) => {
-                    return next !== ''
-                })
+                const addresses: Array<string> = consulAddress
+                    .get()
+                    .split(',')
+                    .map((next: string) => {
+                        return next.trim()
+                    })
+                    .filter((next: string) => {
+                        return next !== ''
+                    })
 
                 consulClient = new Just({
                     kvStore: new KvStore(addresses),
@@ -100,18 +101,26 @@ export function consulResolver(): IRemoteResolver {
         type: 'remote',
         name: 'consul',
 
-        async init(configInstance: IConfigStore, remoteOptions: IConsulOptions = {}): Promise<any> {
+        async init(
+            configInstance: IConfigStore,
+            remoteOptions: IConsulOptions = {},
+        ): Promise<any> {
             consulAddress = Maybe.fromNullable(
-                remoteOptions.consulAddress || Utils.readFirstMatch(CONSUL_ADDRESS),
+                remoteOptions.consulAddress ||
+                    Utils.readFirstMatch(CONSUL_ADDRESS),
             )
+
             consulDc = Maybe.fromNullable(
                 remoteOptions.consulDc || Utils.readFirstMatch(CONSUL_DC),
             )
+
             consulKeys = Maybe.fromNullable(
                 remoteOptions.consulKeys || Utils.readFirstMatch(CONSUL_KEYS),
             )
+
             consulNamespace = Maybe.fromNullable(
-                remoteOptions.consulNamespace || Utils.readFirstMatch(CONSUL_NAMESPACE),
+                remoteOptions.consulNamespace ||
+                    Utils.readFirstMatch(CONSUL_NAMESPACE),
             )
 
             return Maybe.all(getConsulClient(), consulDc).fork(
@@ -122,27 +131,34 @@ export function consulResolver(): IRemoteResolver {
                     if (keys !== '') {
                         const rawConfigs: Promise<Array<any>> = Promise.all(
                             keys.split(',').map((key: string) => {
-                                return client.kvStore.get({ path: key, dc }).then((val: any) => {
-                                    if (val === null) {
-                                        throw new Error(`Unable to find key[${key}] in Consul.`)
-                                    } else {
-                                        return val
-                                    }
-                                })
+                                return client.kvStore
+                                    .get({ path: key, dc })
+                                    .then((val: any) => {
+                                        if (val === null) {
+                                            throw new Error(
+                                                `Unable to find key[${key}] in Consul.`,
+                                            )
+                                        } else {
+                                            return val
+                                        }
+                                    })
                             }),
                         ).catch((err: any) => {
-                            logger.error(`Unable to read keys[${keys}] from Consul. ${err.message}`)
+                            logger.error(
+                                `Unable to read keys[${keys}] from Consul. ${err.message}`,
+                            )
                             return []
                         })
 
                         const resolvedConfigs: Promise<any> = rawConfigs.then(
                             (configs: Array<any>): any => {
-                                return ObjectUtils.overlayObjects(...configs) as any
+                                return ObjectUtils.overlayObjects(
+                                    ...configs,
+                                ) as any
                             },
                         )
 
                         return resolvedConfigs
-
                     } else {
                         logger.log('No keys to load from Consul.')
                         return {}
@@ -169,28 +185,41 @@ export function consulResolver(): IRemoteResolver {
                             path: consulNamespace.fork(
                                 // Some case
                                 (val: string) => {
-                                    return `${addTrailingSlash(val)}${remoteOptions.key}`
+                                    return `${addTrailingSlash(val)}${
+                                        remoteOptions.key
+                                    }`
                                 },
                                 // Nothing case
                                 () => {
                                     return `${remoteOptions.key}`
                                 },
                             ),
-                            dc: (remoteOptions.dc || consulDc.getOrElse('')),
-                        }).then((val: any) => {
-                            if (val !== null) {
-                                return val
-
-                            } else {
-                                return client.catalog.resolveAddress(key).then((address: string) => {
-                                    return address
-                                }, (err: Error) => {
-                                    throw new errors.ConsulFailed(key, err.message)
-                                })
-                            }
-                        }, (err: any) => {
-                            throw new errors.ConsulFailed(key, err.message)
+                            dc: remoteOptions.dc || consulDc.getOrElse(''),
                         })
+                        .then(
+                            (val: any) => {
+                                if (val !== null) {
+                                    return val
+                                } else {
+                                    return client.catalog
+                                        .resolveAddress(key)
+                                        .then(
+                                            (address: string) => {
+                                                return address
+                                            },
+                                            (err: Error) => {
+                                                throw new errors.ConsulFailed(
+                                                    key,
+                                                    err.message,
+                                                )
+                                            },
+                                        )
+                                }
+                            },
+                            (err: any) => {
+                                throw new errors.ConsulFailed(key, err.message)
+                            },
+                        )
                 },
                 // Nothing case
                 () => {
@@ -199,7 +228,11 @@ export function consulResolver(): IRemoteResolver {
             )
         },
 
-        watch<T = any>(key: string, callback: WatchFunction<T>, type?: ObjectType): void {
+        watch<T = any>(
+            key: string,
+            callback: WatchFunction<T>,
+            type?: ObjectType,
+        ): void {
             getConsulClient().fork(
                 (client: IConsulClient) => {
                     const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
@@ -209,7 +242,9 @@ export function consulResolver(): IRemoteResolver {
                     const pathForKey = consulNamespace.fork(
                         // Some case
                         (val: string) => {
-                            return `${addTrailingSlash(val)}${remoteOptions.key}`
+                            return `${addTrailingSlash(val)}${
+                                remoteOptions.key
+                            }`
                         },
                         // Nothing case
                         () => {
@@ -217,41 +252,62 @@ export function consulResolver(): IRemoteResolver {
                         },
                     )
 
-                    client.kvStore.get({
-                        path: pathForKey,
-                        dc: (remoteOptions.dc || consulDc.getOrElse('')),
-                    }).then((_val: any) => {
-                        if (_val !== null) {
-                            const observer = client.kvStore
-                                .watch({
-                                    path: pathForKey,
-                                    dc: (remoteOptions.dc || consulDc.getOrElse('')),
-                                })
+                    client.kvStore
+                        .get({
+                            path: pathForKey,
+                            dc: remoteOptions.dc || consulDc.getOrElse(''),
+                        })
+                        .then(
+                            (_val: any) => {
+                                if (_val !== null) {
+                                    const observer = client.kvStore.watch({
+                                        path: pathForKey,
+                                        dc:
+                                            remoteOptions.dc ||
+                                            consulDc.getOrElse(''),
+                                    })
 
-                            observer.onValue((val: any) => {
-                                callback(undefined, val)
-                            })
+                                    observer.onValue((val: any) => {
+                                        callback(undefined, val)
+                                    })
 
-                            observer.onError((err: Error) => {
-                                callback(err, undefined)
-                            })
-
-                        } else {
-                            client.catalog.resolveAddress(key).then((address: string) => {
-                                client.catalog.watchAddress(key).onValue((val: any) => {
-                                    callback(undefined, val)
-                                })
-
-                            }, (err: any) => {
-                                callback(new Error(`Unable to watch key[${key}]. ${err.message}`), undefined)
-                            })
-                        }
-                    }, (err: any) => {
-                        callback(new Error(`Unable to watch key[${key}]. ${err.message}`), undefined)
-                    })
+                                    observer.onError((err: Error) => {
+                                        callback(err, undefined)
+                                    })
+                                } else {
+                                    client.catalog.resolveAddress(key).then(
+                                        (address: string) => {
+                                            client.catalog
+                                                .watchAddress(key)
+                                                .onValue((val: any) => {
+                                                    callback(undefined, val)
+                                                })
+                                        },
+                                        (err: any) => {
+                                            callback(
+                                                new Error(
+                                                    `Unable to watch key[${key}]. ${err.message}`,
+                                                ),
+                                                undefined,
+                                            )
+                                        },
+                                    )
+                                }
+                            },
+                            (err: any) => {
+                                callback(
+                                    new Error(
+                                        `Unable to watch key[${key}]. ${err.message}`,
+                                    ),
+                                    undefined,
+                                )
+                            },
+                        )
                 },
                 () => {
-                    logger.warn(`Unable to watch changes for key[${key}]. Consul is not configured.`)
+                    logger.warn(
+                        `Unable to watch changes for key[${key}]. Consul is not configured.`,
+                    )
                 },
             )
         },

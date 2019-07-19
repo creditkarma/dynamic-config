@@ -1,4 +1,4 @@
-import {  } from 'ajv'
+import {} from 'ajv'
 import * as fs from 'fs'
 import { defaultLogger as logger } from './logger'
 
@@ -12,24 +12,11 @@ import {
 
 import { FileUtils, JSONUtils } from './utils'
 
-import {
-    consulTranslator,
-    debugTranslator,
-    envTranslator,
-} from './translators'
+import { consulTranslator, debugTranslator, envTranslator } from './translators'
 
-import {
-    consulResolver,
-    packageResolver,
-    vaultResolver,
-} from './resolvers'
+import { consulResolver, packageResolver, vaultResolver } from './resolvers'
 
-import {
-    jsLoader,
-    jsonLoader,
-    tsLoader,
-    ymlLoader,
-} from './loaders'
+import { jsLoader, jsonLoader, tsLoader, ymlLoader } from './loaders'
 
 export const SETTINGS_FILE_NAME: string = 'config-settings.json'
 
@@ -135,7 +122,6 @@ function settingsToOptions(settings: IConfigSettings): IConfigOptions {
         if (settings.resolvers.indexOf('vault') > -1) {
             result.resolvers.secret = defaultResolverMap.vault()
         }
-
     } else {
         result.resolvers = {
             remote: consulResolver(),
@@ -144,35 +130,31 @@ function settingsToOptions(settings: IConfigSettings): IConfigOptions {
     }
 
     if (settings.loaders !== undefined) {
-        result.loaders = settings.loaders.reduce((acc: Array<IFileLoader>, next: string) => {
-            if (defaultLoaderMap[next] !== undefined) {
-                acc.push(defaultLoaderMap[next])
-            }
-            return acc
-        }, [])
-
+        result.loaders = settings.loaders.reduce(
+            (acc: Array<IFileLoader>, next: string) => {
+                if (defaultLoaderMap[next] !== undefined) {
+                    acc.push(defaultLoaderMap[next])
+                }
+                return acc
+            },
+            [],
+        )
     } else {
-        result.loaders = [
-            jsonLoader,
-            ymlLoader,
-            jsLoader,
-            tsLoader,
-        ]
+        result.loaders = [jsonLoader, ymlLoader, jsLoader, tsLoader]
     }
 
     if (settings.translators !== undefined) {
-        result.translators = settings.translators.reduce((acc: Array<IConfigTranslator>, next: string) => {
-            if (defaultTranslatorMap[next] !== undefined) {
-                acc.push(defaultTranslatorMap[next])
-            }
-            return acc
-        }, [])
-
+        result.translators = settings.translators.reduce(
+            (acc: Array<IConfigTranslator>, next: string) => {
+                if (defaultTranslatorMap[next] !== undefined) {
+                    acc.push(defaultTranslatorMap[next])
+                }
+                return acc
+            },
+            [],
+        )
     } else {
-        result.translators = [
-            envTranslator,
-            consulTranslator,
-        ]
+        result.translators = [envTranslator, consulTranslator]
     }
 
     return result
@@ -182,21 +164,24 @@ export function loadSettings(): IConfigOptions {
     const settingsPath = FileUtils.findFile(SETTINGS_FILE_NAME, [])
     if (settingsPath !== null) {
         try {
-            const content: string = fs.readFileSync(settingsPath).toString('utf-8')
+            const content: string = fs
+                .readFileSync(settingsPath)
+                .toString('utf-8')
             const settings: IConfigSettings = JSON.parse(content)
             if (JSONUtils.objectMatchesSchema(configSettingsSchema, settings)) {
                 return settingsToOptions(settings)
-
             } else {
-                logger.error(`Config settings does not match the expected schema`)
+                logger.error(
+                    `Config settings does not match the expected schema`,
+                )
                 return settingsToOptions({})
             }
-
         } catch (e) {
-            logger.error(`Failed to load config-settings from file[${settingsPath}]`)
+            logger.error(
+                `Failed to load config-settings from file[${settingsPath}]`,
+            )
             return settingsToOptions({})
         }
-
     } else {
         logger.log(`Unable to find static config-settings`)
         return settingsToOptions({})

@@ -1,10 +1,7 @@
 import { ILogger } from './types'
 
 function isDebug(): boolean {
-    return (
-        process.env.CONFIG_DEBUG === 'true' ||
-        process.env.DEBUG === 'true'
-    )
+    return process.env.CONFIG_DEBUG === 'true' || process.env.DEBUG === 'true'
 }
 
 export const defaultLogger: ILogger = {

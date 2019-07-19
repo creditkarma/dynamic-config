@@ -1,14 +1,6 @@
-import {
-    isNothing,
-    isObject,
-    isPrimitive,
-    splitKey,
-} from './basic'
+import { isNothing, isObject, isPrimitive, splitKey } from './basic'
 
-import {
-    objectAsSimpleSchema,
-    objectMatchesSchema,
-} from './json'
+import { objectAsSimpleSchema, objectMatchesSchema } from './json'
 
 import { ISchema } from '../types'
 
@@ -25,18 +17,16 @@ export function deepMap(
 ): any {
     if (isNothing(obj) || isPrimitive(obj)) {
         return obj
-
     } else if (Array.isArray(obj)) {
         const newObj: Array<any> = []
         for (let i = 0; i < obj.length; i++) {
-            const currentPath: string = (path.length > 0) ? `${path}[${i}]` : `[${i}]`
+            const currentPath: string =
+                path.length > 0 ? `${path}[${i}]` : `[${i}]`
             const value = obj[i]
             if (isNothing(value)) {
                 newObj[i] = value
-
             } else if (isPrimitive(value)) {
                 newObj[i] = mapping(value, currentPath)
-
             } else {
                 newObj[i] = mapping(value, currentPath)
                 newObj[i] = deepMap(mapping, newObj[i], currentPath)
@@ -45,19 +35,17 @@ export function deepMap(
         }
 
         return newObj
-
     } else {
         const newObj: any = {}
         for (const key in obj) {
             if (obj.hasOwnProperty(key)) {
-                const currentPath: string = (path.length > 0) ? `${path}.${key}` : `${key}`
+                const currentPath: string =
+                    path.length > 0 ? `${path}.${key}` : `${key}`
                 const value = (obj as any)[key]
                 if (isNothing(value)) {
                     newObj[key] = value
-
                 } else if (isPrimitive(value)) {
                     newObj[key] = mapping(value, currentPath)
-
                 } else {
                     newObj[key] = mapping(value, currentPath)
                     newObj[key] = deepMap(mapping, newObj[key], currentPath)
@@ -73,24 +61,20 @@ export function deepMap(
 export function getValueForKey<T>(key: string, obj: any): T | null {
     if (isPrimitive(obj) || isNothing(obj)) {
         return null
-
     } else {
         const parts: Array<string> = splitKey(key)
 
         if (parts.length > 1) {
-            const [ head, ...tail ] = parts
+            const [head, ...tail] = parts
             const sub: any = obj[head]
 
             if (!isPrimitive(sub)) {
                 return getValueForKey<T>(tail.join('.'), sub)
-
             } else {
                 return null
             }
-
         } else if (obj[parts[0]] !== undefined) {
             return obj[parts[0]]
-
         } else {
             return null
         }
@@ -100,16 +84,13 @@ export function getValueForKey<T>(key: string, obj: any): T | null {
 export function setValueForKey<T>(key: string, value: any, oldObj: any): T {
     if (typeof key !== 'string') {
         throw new Error('Property to set must be a string')
-
     } else if (oldObj === null) {
         throw new Error(`Cannot set value on null type at key: ${key}`)
-
     } else if (key === '') {
         return value
-
     } else {
-        const newObj: any = (Array.isArray(oldObj)) ? [] : {}
-        const [ head, ...tail ] = splitKey(key)
+        const newObj: any = Array.isArray(oldObj) ? [] : {}
+        const [head, ...tail] = splitKey(key)
 
         const props: Array<string> = Object.keys(oldObj)
 
@@ -117,12 +98,14 @@ export function setValueForKey<T>(key: string, value: any, oldObj: any): T {
             if (prop === head) {
                 if (tail.length > 0) {
                     const nextObj = oldObj[prop] || {}
-                    newObj[prop] = setValueForKey(tail.join('.'), value, nextObj)
-
+                    newObj[prop] = setValueForKey(
+                        tail.join('.'),
+                        value,
+                        nextObj,
+                    )
                 } else {
                     newObj[prop] = value
                 }
-
             } else {
                 newObj[prop] = oldObj[prop]
             }
@@ -136,7 +119,6 @@ function max(...nums: Array<number>): number {
     return nums.reduce((acc: number, next: number): number => {
         if (next > acc) {
             return next
-
         } else {
             return acc
         }
@@ -155,13 +137,10 @@ export function overlayArrays<T>(base: Array<T>, update: Array<T>): Array<T> {
 
         if (Array.isArray(baseValue) && Array.isArray(updateValue)) {
             newArray[i] = overlayArrays(baseValue, updateValue)
-
         } else if (isObject(baseValue) && isObject(updateValue)) {
             newArray[i] = overlay(baseValue, updateValue)
-
         } else if (updateValue !== undefined) {
             newArray[i] = updateValue
-
         } else {
             newArray[i] = baseValue
         }
@@ -170,7 +149,10 @@ export function overlayArrays<T>(base: Array<T>, update: Array<T>): Array<T> {
     return newArray
 }
 
-export function overlay<Base, Update>(base: Base, update: Update): Base & Update {
+export function overlay<Base extends object, Update extends object>(
+    base: Base,
+    update: Update,
+): Base & Update {
     const newObj: any = {}
     const baseKeys: Array<string> = Object.keys(base)
     const updateKeys: Array<string> = Object.keys(update)
@@ -188,13 +170,10 @@ export function overlay<Base, Update>(base: Base, update: Update): Base & Update
 
             if (Array.isArray(baseValue) && Array.isArray(updateValue)) {
                 newObj[key] = overlayArrays(baseValue, updateValue)
-
             } else if (isObject(baseValue) && isObject(updateValue)) {
                 newObj[key] = overlay(baseValue, updateValue)
-
             } else if (updateValue !== undefined) {
                 newObj[key] = updateValue
-
             } else {
                 newObj[key] = baseValue
             }
@@ -213,10 +192,8 @@ export function overlayObjects(...configs: Array<any>): any {
 export function arraysAreEqual(arr1: Array<any>, arr2: Array<any>): boolean {
     if (!Array.isArray(arr1) || !Array.isArray(arr2)) {
         return arr1 === arr2
-
     } else if (arr1.length !== arr2.length) {
         return false
-
     } else {
         for (let i = 0; i < arr1.length; i++) {
             const item1: any = arr1[i]
@@ -226,12 +203,10 @@ export function arraysAreEqual(arr1: Array<any>, arr2: Array<any>): boolean {
                 if (!arraysAreEqual(item1, item2)) {
                     return false
                 }
-
             } else if (isObject(item1) && isObject(item2)) {
                 if (!objectsAreEqual(item1, item2)) {
                     return false
                 }
-
             } else if (item1 !== item2) {
                 return false
             }
@@ -244,29 +219,25 @@ export function arraysAreEqual(arr1: Array<any>, arr2: Array<any>): boolean {
 export function objectsAreEqual(obj1: any, obj2: any): boolean {
     if (!isObject(obj1) || !isObject(obj2)) {
         return obj1 === obj2
-
     } else {
         const keys1 = Object.keys(obj1)
         const keys2 = Object.keys(obj2)
 
         if (!arraysAreEqual(keys1, keys2)) {
             return false
-
         } else {
             for (const key of keys1) {
-                const value1: any = obj1[key]
-                const value2: any = obj2[key]
+                const value1: any = (obj1 as any)[key]
+                const value2: any = (obj2 as any)[key]
 
                 if (isObject(value1) && isObject(value2)) {
                     if (!objectsAreEqual(value1, value2)) {
                         return false
                     }
-
                 } else if (Array.isArray(value1) && Array.isArray(value2)) {
                     if (!arraysAreEqual(value1, value2)) {
                         return false
                     }
-
                 } else if (value1 !== value2) {
                     return false
                 }
@@ -284,7 +255,6 @@ export function objectHasShape(...args: Array<any>): any {
 
     if (args.length === 2) {
         return objectMatchesSchema(targetSchema, args[1])
-
     } else {
         return (obj: object): boolean => {
             return objectMatchesSchema(targetSchema, obj)
