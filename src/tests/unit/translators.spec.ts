@@ -63,5 +63,22 @@ describe('Translators', () => {
             const expected = 'http://test_three:8080'
             expect(actual).to.equal(expected)
         })
+
+        it('should allow numeric values in environment variables', async () => {
+            process.env.TEST_VARIABLE_112_SS = 'some_value'
+            const actual = Translators.envTranslator.translate(
+                '${TEST_VARIABLE_112_SS}',
+            )
+            const expected = 'some_value'
+            expect(actual).to.equal(expected)
+        })
+
+        it('should fallback if environment variables not present', async () => {
+            const actual = Translators.envTranslator.translate(
+                '${TEST_VARIABLE_2||fallback_value}',
+            )
+            const expected = 'fallback_value'
+            expect(actual).to.equal(expected)
+        })
     })
 })
