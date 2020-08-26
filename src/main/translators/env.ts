@@ -8,7 +8,12 @@ import { InvalidCharacter, MissingEnvironmentVariable } from '../errors'
 import { IConfigTranslator } from '../types'
 
 function isValidChar(char: string): boolean {
-    return (char >= 'A' && char <= 'Z') || char === '_' || char === '|'
+    return (
+        (char >= 'A' && char <= 'Z') ||
+        (char >= '0' && char <= '9') ||
+        char === '_' ||
+        char === '|'
+    )
 }
 
 class Interpolater {
