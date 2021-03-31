@@ -53,17 +53,14 @@
         "prettier": "^1.18.2",
         "request-promise-native": "^1.0.7",
         "rimraf": "^2.6.3",
-        "typescript": "3.5.x",
         "wait-on": "^3.2.0"
-    },
-    "peerDependencies": {
-        "typescript": ">=3.5.0"
     },
     "dependencies": {
         "@creditkarma/consul-client": "^0.8.10",
         "@creditkarma/vault-client": "^0.5.11",
         "@types/yamljs": "^0.2.30",
         "ajv": "^6.10.2",
+        "typescript": "3.5.x",
         "yamljs": "^0.3.0"
     }
 }
