@@ -10,6 +10,7 @@ export * from './constants'
 export * from './resolvers'
 export * from './loaders'
 export * from './translators'
+export { loadSettings } from './SettingsLoader'
 
 export {
     IConfigOptions,
