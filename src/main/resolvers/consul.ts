@@ -50,7 +50,7 @@ function addTrailingSlash(str: string): string {
     }
 }
 
-function invokeKeyValueStoreWatchFunction(
+function invokeKeyValueStoreWatchObserver(
     callback: WatchFunction,
     client: IConsulClient,
     pathForKey: string,
@@ -281,7 +281,7 @@ export function consulResolver(): IRemoteResolver {
                         .then(
                             (_val: any) => {
                                 if (_val !== null) {
-                                    invokeKeyValueStoreWatchFunction(
+                                    invokeKeyValueStoreWatchObserver(
                                         callback,
                                         client,
                                         pathForKey,
@@ -302,7 +302,7 @@ export function consulResolver(): IRemoteResolver {
                                                 `Unable to resolve address for key[${key}]: ${err.message}.
                                                 Watching key value store for updates.`,
                                             )
-                                            invokeKeyValueStoreWatchFunction(
+                                            invokeKeyValueStoreWatchObserver(
                                                 callback,
                                                 client,
                                                 pathForKey,
