@@ -298,7 +298,7 @@ export function consulResolver(): IRemoteResolver {
                                                 })
                                         },
                                         (err: any) => {
-                                            console.warn(
+                                            logger.warn(
                                                 `Unable to resolve address for key[${key}]: ${err.message}.
                                                 Watching key value store for updates.`,
                                             )
