@@ -510,12 +510,9 @@ export class DynamicConfig implements IDynamicConfig {
         rootConfig: ConfigValue,
         whitelist?: Array<string>,
     ): Promise<ConfigValue> {
-        const unresolved: Array<PromisedUpdate> = this.collectConfigPlaceholders(
-            rootConfig,
-            [],
-            [],
-            whitelist,
-        )
+        const unresolved: Array<
+            PromisedUpdate
+        > = this.collectConfigPlaceholders(rootConfig, [], [], whitelist)
         const paths: Array<string> = unresolved.map((next: PromisedUpdate) =>
             next[0].join('.'),
         )

@@ -50,27 +50,6 @@ function addTrailingSlash(str: string): string {
     }
 }
 
-function invokeKeyValueStoreWatchObserver(
-    callback: WatchFunction,
-    client: IConsulClient,
-    pathForKey: string,
-    remoteOptions: IRemoteOverrides,
-    consulDc: Maybe<string>,
-) {
-    const observer = client.kvStore.watch({
-        path: pathForKey,
-        dc: remoteOptions.dc || consulDc.getOrElse(''),
-    })
-
-    observer.onValue((val: any) => {
-        callback(undefined, val)
-    })
-
-    observer.onError((err: Error) => {
-        callback(err, undefined)
-    })
-}
-
 interface IConsulClient {
     kvStore: KvStore
     catalog: Catalog
@@ -281,13 +260,20 @@ export function consulResolver(): IRemoteResolver {
                         .then(
                             (_val: any) => {
                                 if (_val !== null) {
-                                    invokeKeyValueStoreWatchObserver(
-                                        callback,
-                                        client,
-                                        pathForKey,
-                                        remoteOptions,
-                                        consulDc,
-                                    )
+                                    const observer = client.kvStore.watch({
+                                        path: pathForKey,
+                                        dc:
+                                            remoteOptions.dc ||
+                                            consulDc.getOrElse(''),
+                                    })
+
+                                    observer.onValue((val: any) => {
+                                        callback(undefined, val)
+                                    })
+
+                                    observer.onError((err: Error) => {
+                                        callback(err, undefined)
+                                    })
                                 } else {
                                     client.catalog.resolveAddress(key).then(
                                         (address: string) => {
@@ -298,16 +284,11 @@ export function consulResolver(): IRemoteResolver {
                                                 })
                                         },
                                         (err: any) => {
-                                            logger.warn(
-                                                `Unable to resolve address for key[${key}]: ${err.message}.
-                                                Watching key value store for updates.`,
-                                            )
-                                            invokeKeyValueStoreWatchObserver(
-                                                callback,
-                                                client,
-                                                pathForKey,
-                                                remoteOptions,
-                                                consulDc,
+                                            callback(
+                                                new Error(
+                                                    `Unable to watch key[${key}]. ${err.message}`,
+                                                ),
+                                                undefined,
                                             )
                                         },
                                     )
