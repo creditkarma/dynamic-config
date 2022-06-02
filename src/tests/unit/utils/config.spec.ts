@@ -167,10 +167,8 @@ describe('ConfigUtils', () => {
         })
 
         it('should correctly set value for object', async () => {
-            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
-                mockSource,
-                'fake-service',
-            )
+            const newValue: BaseConfigValue =
+                ConfigBuilder.buildBaseConfigValue(mockSource, 'fake-service')
             const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
                 'serviceName',
                 newValue,
@@ -190,10 +188,8 @@ describe('ConfigUtils', () => {
         })
 
         it('should correctly set value for object with nested key', async () => {
-            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
-                mockSource,
-                '123456',
-            )
+            const newValue: BaseConfigValue =
+                ConfigBuilder.buildBaseConfigValue(mockSource, '123456')
             const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
                 'database.username',
                 newValue,
@@ -214,10 +210,8 @@ describe('ConfigUtils', () => {
         })
 
         it('should correctly set value for object with nested key', async () => {
-            const newValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
-                mockSource,
-                '123456',
-            )
+            const newValue: BaseConfigValue =
+                ConfigBuilder.buildBaseConfigValue(mockSource, '123456')
             const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
                 'database.username',
                 newValue,

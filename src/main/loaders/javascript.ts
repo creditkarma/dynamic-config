@@ -13,7 +13,7 @@ export const jsLoader: IFileLoader = {
                 return configObj
             }
         } catch (err) {
-            if (err.message !== undefined) {
+            if (err instanceof Error && err.message !== undefined) {
                 logger.error(err.message)
             } else {
                 logger.error(`Error loading file[${filePath}].`)

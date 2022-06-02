@@ -506,7 +506,7 @@ describe('DynamicConfig', () => {
                     'persistedQueries.databaseLookup.password',
                 )
                 let count: number = 0
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     password.onValue((next: string) => {
                         if (count === 0) {
                             expect(next).to.equal('Sup3rS3cr3t')
@@ -569,7 +569,7 @@ describe('DynamicConfig', () => {
                     'persistedQueries.databaseLookup.password',
                 )
                 let count: number = 0
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     password.onValue((next: string) => {
                         if (count === 0) {
                             expect(next).to.equal('Sup3rS3cr3t')
@@ -597,7 +597,7 @@ describe('DynamicConfig', () => {
             it('should be able to watch for changes to service address', async () => {
                 const address = dynamicConfig.watch('test-service.destination')
                 let count: number = 0
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     address.onValue((next: string) => {
                         if (count === 0) {
                             expect(next).to.equal('127.0.0.1:3000')
@@ -637,7 +637,7 @@ describe('DynamicConfig', () => {
                     'persistedQueries.databaseLookup.shardedDBHostsInfo.sharding.client.shard-info.shard-map[1].destination',
                 )
                 let count: number = 0
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     address.onValue((next: string) => {
                         if (count === 0) {
                             expect(next).to.equal('127.0.0.2:4000')
@@ -867,7 +867,7 @@ describe('DynamicConfig', () => {
                     'persistedQueries.databaseLookup.password',
                 )
                 let count: number = 0
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     password.onValue((next: string) => {
                         if (count === 0) {
                             expect(next).to.equal('Sup3rS3cr3t')

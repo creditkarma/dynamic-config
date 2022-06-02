@@ -31,30 +31,28 @@ async function loadFileWithName(
     name: string,
 ): Promise<Array<object>> {
     return PromiseUtils.some(
-        loaders.map(
-            (loader: IFileLoader): Promise<Array<object>> => {
-                const types: Array<string> = Array.isArray(loader.type)
-                    ? loader.type
-                    : [loader.type]
+        loaders.map((loader: IFileLoader): Promise<Array<object>> => {
+            const types: Array<string> = Array.isArray(loader.type)
+                ? loader.type
+                : [loader.type]
 
-                return PromiseUtils.some(
-                    types.map((ext: string) => {
-                        const filePath: string = path.resolve(
-                            configPath,
-                            `${name}.${ext}`,
-                        )
+            return PromiseUtils.some(
+                types.map((ext: string) => {
+                    const filePath: string = path.resolve(
+                        configPath,
+                        `${name}.${ext}`,
+                    )
 
-                        return FileUtils.fileExists(filePath).then(() => {
-                            return loader.load(filePath)
-                        })
-                    }),
-                ).then((val: Array<any>) => {
-                    return val.reduce((acc: any, next: any) => {
-                        return ObjectUtils.overlayObjects(acc, next)
-                    }, {})
-                })
-            },
-        ),
+                    return FileUtils.fileExists(filePath).then(() => {
+                        return loader.load(filePath)
+                    })
+                }),
+            ).then((val: Array<any>) => {
+                return val.reduce((acc: any, next: any) => {
+                    return ObjectUtils.overlayObjects(acc, next)
+                }, {})
+            })
+        }),
     ).then((configs: Array<object>) => {
         return PromiseUtils.resolveObjectPromises(
             ObjectUtils.overlayObjects(...configs),

@@ -63,7 +63,9 @@ function loadTypeScript(filePath: string): any {
         }
     } catch (err) {
         logger.error(
-            `Error parsing typescript config[${filePath}]: ${err.message}`,
+            `Error parsing typescript config[${filePath}]: ${
+                err instanceof Error ? err.message : 'Non Error Thrown'
+            }`,
         )
         return {}
     }

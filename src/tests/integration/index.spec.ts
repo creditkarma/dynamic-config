@@ -191,11 +191,11 @@ describe('DynamicConfig Singleton', () => {
                 server = exec(
                     'node ./server.js CONSUL_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three',
                 )
-                server.stdout.on('data', (data) => {
+                server.stdout?.on('data', (data) => {
                     console.log('msg: ', data)
                 })
 
-                server.stderr.on('data', (data) => {
+                server.stderr?.on('data', (data) => {
                     console.log('err: ', data)
                 })
 
@@ -224,7 +224,7 @@ describe('DynamicConfig Singleton', () => {
         })
 
         after(async () => {
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 fs.unlinkSync('./config-settings.json')
 
                 server.on('exit', (data) => {

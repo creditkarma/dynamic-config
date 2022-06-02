@@ -197,9 +197,8 @@ async function handleUnresolved(
     const resolvedPromises: Array<object> = await Promise.all(
         promises.map((next: Promise<object>) => {
             return next.then((val: object) => {
-                const nested: Array<ObjectUpdate> = collectUnresolvedPromises(
-                    val,
-                )
+                const nested: Array<ObjectUpdate> =
+                    collectUnresolvedPromises(val)
 
                 if (nested.length > 0) {
                     return handleUnresolved(nested, val)
