@@ -50,13 +50,12 @@
         "eslint-plugin-prettier": "^4.0.0",
         "express": "^4.16.4",
         "prettier": "^2.6.0",
-        "request-promise-native": "^1.0.7",
         "rimraf": "^2.6.3",
-        "wait-on": "^3.2.0"
+        "wait-on": "^6.0.1"
     },
     "dependencies": {
-        "@creditkarma/consul-client": "0.8.12-2",
-        "@creditkarma/vault-client": "0.5.14-2",
+        "@creditkarma/consul-client": "0.8.12-3",
+        "@creditkarma/vault-client": "0.5.14-3",
         "@types/yamljs": "^0.2.30",
         "ajv": "^6.10.2",
         "typescript": "4.6.x",
