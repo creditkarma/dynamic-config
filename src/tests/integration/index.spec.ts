@@ -3,7 +3,7 @@ import * as Lab from '@hapi/lab'
 import { ChildProcess, exec } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as rp from 'request-promise-native'
+import got from 'got'
 
 import { config } from '../../main/'
 
@@ -236,8 +236,8 @@ describe('DynamicConfig Singleton', () => {
         })
 
         it('should correctly run configuration with command line args', async () => {
-            return rp.get('http://localhost:8080/control').then((val) => {
-                expect(val).to.equal('success')
+            return got('http://localhost:8080/control').then((val) => {
+                expect(val.body).to.equal('success')
             })
         })
     })
