@@ -54,8 +54,8 @@
         "wait-on": "^6.0.1"
     },
     "dependencies": {
-        "@creditkarma/consul-client": "0.8.12-3",
-        "@creditkarma/vault-client": "0.5.14-3",
+        "@creditkarma/consul-client": "^1.0.0",
+        "@creditkarma/vault-client": "^1.0.0",
         "@types/yamljs": "^0.2.30",
         "ajv": "^6.10.2",
         "typescript": "4.6.x",
