@@ -26,11 +26,9 @@ export async function valuesForPromises(
         promises.map((next: Promise<BaseConfigValue>, index: number) => {
             return resolveAtIndex(next, index)
         }),
-    ).then(
-        (values: Array<PromiseUpdate>): Array<BaseConfigValue> => {
-            return processValues(values)
-        },
-    )
+    ).then((values: Array<PromiseUpdate>): Array<BaseConfigValue> => {
+        return processValues(values)
+    })
 }
 
 function processValues(values: Array<PromiseUpdate>): Array<BaseConfigValue> {
@@ -83,9 +81,8 @@ async function handleUnresolved(
     const resolvedPromises: Array<ConfigValue> = await Promise.all(
         promises.map((next: Promise<BaseConfigValue>) => {
             return next.then((val: BaseConfigValue) => {
-                const nested: Array<PromisedUpdate> = collectUnresolvedPromises(
-                    val,
-                )
+                const nested: Array<PromisedUpdate> =
+                    collectUnresolvedPromises(val)
                 if (nested.length > 0) {
                     return handleUnresolved(nested, val)
                 } else {
@@ -157,9 +154,8 @@ export async function resolveConfigPromises(
             )
         })
     } else if (configValue.type === 'object' || configValue.type === 'root') {
-        const unresolved: Array<ObjectUpdate> = collectUnresolvedPromises(
-            configValue,
-        )
+        const unresolved: Array<ObjectUpdate> =
+            collectUnresolvedPromises(configValue)
         return handleUnresolved(unresolved, configValue)
     } else {
         return configValue

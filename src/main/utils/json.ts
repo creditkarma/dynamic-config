@@ -42,7 +42,6 @@ export function objectAsSimpleSchema(obj: any): ISchema {
         return schema
     } else {
         if (objType !== 'function' && objType !== 'symbol') {
-            // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
             return {
                 type: objType,
             } as ISchema

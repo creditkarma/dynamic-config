@@ -85,7 +85,10 @@ export function makeTranslator(
                     val,
                 )
             } catch (err) {
-                throw new InvalidConfigValue(path, err.message)
+                throw new InvalidConfigValue(
+                    path,
+                    err instanceof Error ? err.message : `Non Error Thrown: ${err}`,
+                )
             }
         }, obj)
     }
@@ -208,7 +211,6 @@ function newConfigValue(
             }
 
         default:
-            // eslint-disable-next-line @typescript-eslint/no-object-literal-type-assertion
             return {
                 source: newValue.source,
                 type: newValue.type,

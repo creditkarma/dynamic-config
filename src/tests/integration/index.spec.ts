@@ -3,7 +3,7 @@ import * as Lab from '@hapi/lab'
 import { ChildProcess, exec } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as rp from 'request-promise-native'
+import got from 'got'
 
 import { config } from '../../main/'
 
@@ -191,11 +191,11 @@ describe('DynamicConfig Singleton', () => {
                 server = exec(
                     'node ./server.js CONSUL_DC=dc1 CONFIG_PATH=./config CONSUL_ADDRESS=http://localhost:8510 CONSUL_KEYS=test-config-three',
                 )
-                server.stdout.on('data', (data) => {
+                server.stdout?.on('data', (data) => {
                     console.log('msg: ', data)
                 })
 
-                server.stderr.on('data', (data) => {
+                server.stderr?.on('data', (data) => {
                     console.log('err: ', data)
                 })
 
@@ -224,7 +224,7 @@ describe('DynamicConfig Singleton', () => {
         })
 
         after(async () => {
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
                 fs.unlinkSync('./config-settings.json')
 
                 server.on('exit', (data) => {
@@ -236,8 +236,8 @@ describe('DynamicConfig Singleton', () => {
         })
 
         it('should correctly run configuration with command line args', async () => {
-            return rp.get('http://localhost:8080/control').then((val) => {
-                expect(val).to.equal('success')
+            return got('http://localhost:8080/control').then((val) => {
+                expect(val.body).to.equal('success')
             })
         })
     })

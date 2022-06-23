@@ -197,9 +197,8 @@ export function consulResolver(): IRemoteResolver {
             return getConsulClient().fork(
                 // Some case
                 (client: IConsulClient) => {
-                    const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
-                        key,
-                    )
+                    const remoteOptions: IRemoteOverrides =
+                        toRemoteOptionMap(key)
 
                     return client.kvStore
                         .get({
@@ -256,9 +255,8 @@ export function consulResolver(): IRemoteResolver {
         ): void {
             getConsulClient().fork(
                 (client: IConsulClient) => {
-                    const remoteOptions: IRemoteOverrides = toRemoteOptionMap(
-                        key,
-                    )
+                    const remoteOptions: IRemoteOverrides =
+                        toRemoteOptionMap(key)
 
                     const pathForKey = consulNamespace.fork(
                         // Some case
