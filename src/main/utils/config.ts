@@ -87,7 +87,9 @@ export function makeTranslator(
             } catch (err) {
                 throw new InvalidConfigValue(
                     path,
-                    err instanceof Error ? err.message : `Non Error Thrown: ${err}`,
+                    err instanceof Error
+                        ? err.message
+                        : `Non Error Thrown: ${err}`,
                 )
             }
         }, obj)
