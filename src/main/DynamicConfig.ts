@@ -299,16 +299,16 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public async getRemoteValue<T>(key: string, type?: ObjectType): Promise<T> {
-        const source = await this.source(key) // get source for key
-        const { key: sourceKey } = source
-        if (!sourceKey) {
+        const source: ISource = await this.source(key) // get source for key
+
+        if (!source.key) {
             throw new errors.ResolverUnavailable(key) // throw if key is undefined
         }
 
-        const resolvedConfig = await this.getConfig() // get the current config (the cached version, that is)
+        const resolvedConfig: IRootConfigValue = await this.getConfig() // get the current config (the cached version, that is)
 
-        const value = await this.getValueFromResolver<T>(
-            sourceKey,
+        const value: T = await this.getValueFromResolver<T>(
+            source.key,
             'remote',
             type,
         ) // get new remote value for key
@@ -323,21 +323,20 @@ export class DynamicConfig implements IDynamicConfig {
          build the normalized key path for the refreshed value to live at.
          *note*: this is **required** to format the new value into a shape consumable by `setConfig()`.
          */
-        const builtValue = ConfigBuilder.buildBaseConfigValue(source, value)
+        const builtValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
+            source,
+            value,
+        )
 
-        await this.setConfig(
-            ConfigUtils.setValueForKey(
-                normalizedKey,
-                builtValue,
-                resolvedConfig,
-                true,
-            ) as IRootConfigValue,
-        ) // ship the formatted value to be set in the config
+        const keyValue = ConfigUtils.setValueForKey(
+            normalizedKey,
+            builtValue,
+            resolvedConfig,
+            true,
+        )
 
-        /*
-        return the value we got from the remote source. We _could_ also do a `get()` against the updated config to be sure the value was updated.
-        I can't be sure how much latency it'd add, but I'm inclined to do it anyways instead of doing an optimistic update.
-        */
+        await this.setConfig(keyValue as IRootConfigValue) // keyValue the formatted value to be set in the config
+
         return value
     }
 

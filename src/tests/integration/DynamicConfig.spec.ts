@@ -316,6 +316,20 @@ describe('DynamicConfig', () => {
                         expect(actual).to.equal('127.0.0.1:3000')
                     })
             })
+            it('should verify that remote value is updated in cached config', async () => {
+                const oldDestination = await dynamicConfig.get(
+                    'test-service.destination',
+                )
+                // make a call to consul to update to a different value
+                // also will need to revert it. so that's annoying
+                await dynamicConfig.getRemoteValue('test-service.destination')
+
+                const updatedConfigVal = await dynamicConfig.get(
+                    'test-service.destination',
+                )
+
+                expect(oldDestination.to.not.equal(updatedConfigVal))
+            })
         })
 
         describe('getSecretValue', () => {
