@@ -17,10 +17,11 @@ helpers:
                 echo "[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"" >> $BASH_ENV
 
 version: 2
-machine: true
-resource_class: large
+
 jobs:
     test:
+        machine: true
+        resource_class: large
         <<: *defaults
         steps:
             - checkout
