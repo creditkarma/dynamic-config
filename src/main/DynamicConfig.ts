@@ -328,14 +328,14 @@ export class DynamicConfig implements IDynamicConfig {
             value,
         )
 
-        const keyValue = ConfigUtils.setValueForKey(
+        const newConfig = ConfigUtils.setValueForKey(
             normalizedKey,
             builtValue,
             resolvedConfig,
             true,
         )
 
-        await this.setConfig(keyValue as IRootConfigValue) // keyValue the formatted value to be set in the config
+        await this.setConfig(newConfig as IRootConfigValue) // keyValue the formatted value to be set in the config
 
         return value
     }
