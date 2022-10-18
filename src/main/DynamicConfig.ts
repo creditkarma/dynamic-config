@@ -313,10 +313,6 @@ export class DynamicConfig implements IDynamicConfig {
             type,
         ) // get new remote value for key
 
-        if (value === null) {
-            throw new errors.ResolverUnavailable(key) // if it doesn't exist, throw
-        }
-
         const normalizedKey: string = Utils.normalizePath(key) // normalize/format key path
 
         /*
@@ -337,7 +333,7 @@ export class DynamicConfig implements IDynamicConfig {
 
         await this.setConfig(newConfig as IRootConfigValue) // keyValue the formatted value to be set in the config
 
-        return value
+        return this.get(key) //re-fetch the value from the updated config to be sure it successfully updated the val.
     }
 
     public async getSecretValue<T>(key: string, type?: ObjectType): Promise<T> {
