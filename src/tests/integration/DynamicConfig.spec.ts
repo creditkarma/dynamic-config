@@ -316,6 +316,28 @@ describe('DynamicConfig', () => {
                         expect(actual).to.equal('127.0.0.1:3000')
                     })
             })
+            it('should verify that remote value is updated in cached config', async () => {
+                // make a call to consul to update to a different value
+                const consulClient: KvStore = new KvStore([
+                    'http://localhost:8510',
+                ])
+
+                await consulClient.set(
+                    { path: 'test-secret', dc: 'dc1' }, // these key paths are weird! lol. Somehow this resolves to 'secret'
+                    'this is a new secret',
+                )
+
+                const newValue = await dynamicConfig.getRemoteValue('secret')
+
+                const updatedConfigVal = await dynamicConfig.get('secret')
+
+                expect(updatedConfigVal).to.equal(newValue)
+
+                await consulClient.set(
+                    { path: 'test-secret', dc: 'dc1' },
+                    'this is a secret',
+                )
+            })
         })
 
         describe('getSecretValue', () => {
