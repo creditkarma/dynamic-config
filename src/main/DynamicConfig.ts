@@ -299,24 +299,29 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public async getRemoteValue<T>(key: string, type?: ObjectType): Promise<T> {
-        const source: ISource = await this.source(key) // get source for key
+        // get source for key
+        const source: ISource = await this.source(key)
 
+        // throw if key is undefined
         if (!source.key) {
-            throw new errors.ResolverUnavailable(key) // throw if key is undefined
+            throw new errors.ResolverUnavailable(key)
         }
 
-        const currentConfig: IRootConfigValue = await this.getConfig() // get the current config (the cached version, that is)
+        // get the current config (the cached version, that is)
+        const currentConfig: IRootConfigValue = await this.getConfig()
 
+        // get new remote value for key
         const remoteValue: T = await this.getValueFromResolver<T>(
             source.key,
             'remote',
             type,
-        ) // get new remote value for key
+        )
 
-        // Find any placeholders in the remote value
+        // Find any placeholders in the remote value. This is important for resolving `consul!` pointers.
         const translatedValue = this.translator(remoteValue)
 
-        const normalizedKey: string = Utils.normalizePath(key) // normalize/format key path
+        // normalize/format key path
+        const normalizedKey: string = Utils.normalizePath(key)
 
         /*
          build the normalized key path for the refreshed value to live at.
@@ -330,6 +335,7 @@ export class DynamicConfig implements IDynamicConfig {
         // Resolve any new placeholders in updated config
         const resolvedValue = await this.replaceConfigPlaceholders(builtValue)
 
+        // create shape of new config
         const newConfig = ConfigUtils.setValueForKey(
             normalizedKey,
             resolvedValue as BaseConfigValue,
