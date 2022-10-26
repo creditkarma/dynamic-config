@@ -351,7 +351,7 @@ describe('DynamicConfig', () => {
                     'test-service.destination',
                 )
 
-                expect(initialConfigValue).to.equal('http://127.0.0.1:3000')
+                expect(initialConfigValue).to.equal('127.0.0.1:3000')
 
                 // update this for fun
                 await catalog.registerEntity({
