@@ -299,13 +299,47 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public async getRemoteValue<T>(key: string, type?: ObjectType): Promise<T> {
-        return this.source(key).then((source: ISource) => {
-            if (source.key !== undefined) {
-                return this.getValueFromResolver<T>(source.key, 'remote', type)
-            } else {
-                throw new errors.ResolverUnavailable(key)
-            }
-        })
+        const source: ISource = await this.source(key) // get source for key
+
+        if (!source.key) {
+            throw new errors.ResolverUnavailable(key) // throw if key is undefined
+        }
+
+        const currentConfig: IRootConfigValue = await this.getConfig() // get the current config (the cached version, that is)
+
+        const remoteValue: T = await this.getValueFromResolver<T>(
+            source.key,
+            'remote',
+            type,
+        ) // get new remote value for key
+
+        // Find any placeholders in the remote value
+        const translatedValue = this.translator(remoteValue)
+
+        const normalizedKey: string = Utils.normalizePath(key) // normalize/format key path
+
+        /*
+         build the normalized key path for the refreshed value to live at.
+         *note*: this is **required** to format the new value into a shape consumable by `setConfig()`.
+         */
+        const builtValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
+            source,
+            translatedValue,
+        )
+
+        // Resolve any new placeholders in updated config
+        const resolvedValue = await this.replaceConfigPlaceholders(builtValue)
+
+        const newConfig = ConfigUtils.setValueForKey(
+            normalizedKey,
+            resolvedValue as BaseConfigValue,
+            currentConfig,
+            true,
+        )
+
+        await this.setConfig(newConfig) // keyValue the formatted value to be set in the config
+
+        return this.get(key) //re-fetch the value from the updated config to be sure it successfully updated the val.
     }
 
     public async getSecretValue<T>(key: string, type?: ObjectType): Promise<T> {
@@ -507,10 +541,10 @@ export class DynamicConfig implements IDynamicConfig {
      * is an object that contains placeholders within nested keys. We need to find and resolve
      * any placeholders that remain in the config
      */
-    private async replaceConfigPlaceholders(
-        rootConfig: ConfigValue,
+    private async replaceConfigPlaceholders<T extends ConfigValue>(
+        rootConfig: T,
         whitelist?: Array<string>,
-    ): Promise<ConfigValue> {
+    ): Promise<T> {
         const unresolved: Array<PromisedUpdate> =
             this.collectConfigPlaceholders(rootConfig, [], [], whitelist)
         const paths: Array<string> = unresolved.map((next: PromisedUpdate) =>
@@ -533,7 +567,7 @@ export class DynamicConfig implements IDynamicConfig {
             rootConfig,
         )
 
-        return ConfigPromises.resolveConfigPromises(newObj)
+        return ConfigPromises.resolveConfigPromises(newObj) as Promise<T>
     }
 
     private async loadConfigs(): Promise<IRootConfigValue> {
