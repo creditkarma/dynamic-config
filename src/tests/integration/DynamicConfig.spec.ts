@@ -315,6 +315,8 @@ describe('DynamicConfig', () => {
                     'http://localhost:8510',
                 ])
 
+                const startingConfigVal = await dynamicConfig.get('secret')
+
                 await consulClient.set(
                     { path: 'test-secret', dc: 'dc1' }, // these key paths are weird! lol. Somehow this resolves to 'secret'
                     'this is a new secret',
@@ -334,6 +336,12 @@ describe('DynamicConfig', () => {
             it('should check the value for a remote source repeatedly and verify the remote value is updated in cached config', async () => {
                 // make a call to consul to update to a different value
                 const catalog = new Catalog(['http://localhost:8510'])
+
+                const initialConfigValue = await dynamicConfig.get(
+                    'test-service.destination',
+                )
+
+                expect(initialConfigValue).to.equal('http://localhost:8080')
 
                 // update this for fun
                 await catalog.registerEntity({
@@ -380,6 +388,8 @@ describe('DynamicConfig', () => {
                         Port: 3000,
                     },
                 })
+
+                expect(updatedTwiceConfigVal).to.equal('127.0.0.1:3000')
             })
             it('should return value from remote source', async () => {
                 return dynamicConfig
