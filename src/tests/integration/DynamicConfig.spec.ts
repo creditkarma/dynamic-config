@@ -315,7 +315,11 @@ describe('DynamicConfig', () => {
                     'http://localhost:8510',
                 ])
 
-                const startingConfigVal = await dynamicConfig.get('secret')
+                const initialConfigValue = await dynamicConfig.get(
+                    'secret',
+                )
+
+                expect(initialConfigValue).to.equal('this is a secret')
 
                 await consulClient.set(
                     { path: 'test-secret', dc: 'dc1' }, // these key paths are weird! lol. Somehow this resolves to 'secret'
@@ -332,6 +336,10 @@ describe('DynamicConfig', () => {
                     { path: 'test-secret', dc: 'dc1' },
                     'this is a secret',
                 )
+
+                const restoredConfigVal = await dynamicConfig.get('secret')
+
+                expect(restoredConfigVal).to.equal('this is a secret')
             })
             it('should check the value for a remote source repeatedly and verify the remote value is updated in cached config', async () => {
                 // make a call to consul to update to a different value
@@ -389,7 +397,11 @@ describe('DynamicConfig', () => {
                     },
                 })
 
-                expect(updatedTwiceConfigVal).to.equal('127.0.0.1:3000')
+                const restoredConfigVal = await dynamicConfig.get(
+                    'test-service.destination',
+                )
+
+                expect(restoredConfigVal).to.equal('127.0.0.1:3000')
             })
             it('should return value from remote source', async () => {
                 return dynamicConfig
