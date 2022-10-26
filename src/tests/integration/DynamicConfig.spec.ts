@@ -337,6 +337,8 @@ describe('DynamicConfig', () => {
                     'this is a secret',
                 )
 
+                await dynamicConfig.getRemoteValue('secret')
+
                 const restoredConfigVal = await dynamicConfig.get('secret')
 
                 expect(restoredConfigVal).to.equal('this is a secret')
@@ -349,7 +351,7 @@ describe('DynamicConfig', () => {
                     'test-service.destination',
                 )
 
-                expect(initialConfigValue).to.equal('http://localhost:3000')
+                expect(initialConfigValue).to.equal('http://127.0.0.1:3000')
 
                 // update this for fun
                 await catalog.registerEntity({
@@ -396,6 +398,8 @@ describe('DynamicConfig', () => {
                         Port: 3000,
                     },
                 })
+
+                await dynamicConfig.getRemoteValue('test-service.destination')
 
                 const restoredConfigVal = await dynamicConfig.get(
                     'test-service.destination',
