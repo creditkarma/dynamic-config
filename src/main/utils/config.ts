@@ -392,16 +392,26 @@ function setRootConfigValueForKey(
     return returnValue
 }
 
-export function setValueForKey(
+export function setValueForKey<T extends ConfigValue>(
     key: string,
     newValue: BaseConfigValue,
-    oldConfig: ConfigValue,
+    oldConfig: T,
     alertWatchers: boolean = false,
-): ConfigValue {
+): T {
     if (oldConfig.type === 'root') {
-        return setRootConfigValueForKey(key, newValue, oldConfig, alertWatchers)
+        return setRootConfigValueForKey(
+            key,
+            newValue,
+            oldConfig,
+            alertWatchers,
+        ) as T
     } else {
-        return setBaseConfigValueForKey(key, newValue, oldConfig, alertWatchers)
+        return setBaseConfigValueForKey(
+            key,
+            newValue,
+            oldConfig,
+            alertWatchers,
+        ) as T
     }
 }
 

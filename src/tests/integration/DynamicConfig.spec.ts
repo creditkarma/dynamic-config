@@ -309,6 +309,104 @@ describe('DynamicConfig', () => {
         })
 
         describe('getRemoteValue', () => {
+            it('should verify that remote value is updated in cached config', async () => {
+                // make a call to consul to update to a different value
+                const consulClient: KvStore = new KvStore([
+                    'http://localhost:8510',
+                ])
+
+                const initialConfigValue = await dynamicConfig.get(
+                    'secret',
+                )
+
+                expect(initialConfigValue).to.equal('this is a secret')
+
+                await consulClient.set(
+                    { path: 'test-secret', dc: 'dc1' }, // these key paths are weird! lol. Somehow this resolves to 'secret'
+                    'this is a new secret',
+                )
+
+                await dynamicConfig.getRemoteValue('secret')
+
+                const updatedConfigVal = await dynamicConfig.get('secret')
+
+                expect(updatedConfigVal).to.equal('this is a new secret')
+
+                await consulClient.set(
+                    { path: 'test-secret', dc: 'dc1' },
+                    'this is a secret',
+                )
+
+                await dynamicConfig.getRemoteValue('secret')
+
+                const restoredConfigVal = await dynamicConfig.get('secret')
+
+                expect(restoredConfigVal).to.equal('this is a secret')
+            })
+            it('should check the value for a remote source repeatedly and verify the remote value is updated in cached config', async () => {
+                // make a call to consul to update to a different value
+                const catalog = new Catalog(['http://localhost:8510'])
+
+                const initialConfigValue = await dynamicConfig.get(
+                    'test-service.destination',
+                )
+
+                expect(initialConfigValue).to.equal('127.0.0.1:3000')
+
+                // update this for fun
+                await catalog.registerEntity({
+                    Node: 'bango',
+                    Address: '192.168.4.19',
+                    Service: {
+                        Service: 'test-service',
+                        Address: '127.0.0.1',
+                        Port: 8888,
+                    },
+                })
+
+                await dynamicConfig.getRemoteValue('test-service.destination')
+                const updatedOnceConfigVal = await dynamicConfig.get(
+                    'test-service.destination',
+                )
+
+                expect(updatedOnceConfigVal).to.equal('127.0.0.1:8888')
+
+                await catalog.registerEntity({
+                    Node: 'bango',
+                    Address: '192.168.4.19',
+                    Service: {
+                        Service: 'test-service',
+                        Address: '127.0.0.1',
+                        Port: 9999,
+                    },
+                })
+
+                await dynamicConfig.getRemoteValue('test-service.destination')
+
+                const updatedTwiceConfigVal = await dynamicConfig.get(
+                    'test-service.destination',
+                )
+
+                expect(updatedTwiceConfigVal).to.equal('127.0.0.1:9999')
+
+                await catalog.registerEntity({
+                    Node: 'bango',
+                    Address: '192.168.4.19',
+                    Service: {
+                        Service: 'test-service',
+                        Address: '127.0.0.1',
+                        Port: 3000,
+                    },
+                })
+
+                await dynamicConfig.getRemoteValue('test-service.destination')
+
+                const restoredConfigVal = await dynamicConfig.get(
+                    'test-service.destination',
+                )
+
+                expect(restoredConfigVal).to.equal('127.0.0.1:3000')
+            })
             it('should return value from remote source', async () => {
                 return dynamicConfig
                     .getRemoteValue('test-service.destination')
