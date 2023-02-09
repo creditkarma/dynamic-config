@@ -149,6 +149,7 @@ export function normalizeConfigPlaceholder(
         return {
             path: path.join('.'),
             key: placeholder._key,
+            altKey: placeholder._altKey,
             resolver: {
                 name: source,
                 type: resolver.type,
@@ -170,6 +171,9 @@ export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
             type: 'object',
             properties: {
                 _key: {
+                    type: 'string',
+                },
+                _altKey: {
                     type: 'string',
                 },
                 _source: {

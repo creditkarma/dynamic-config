@@ -192,6 +192,42 @@ setTimeout(() => {
                 },
             ),
             consulClient.set(
+                { path: 'with-vault-altkey' },
+                {
+                    persistedQueries: {
+                        databaseLookup: {
+                            password: {
+                                _source: 'vault',
+                                _key: 'password',
+                            },
+                        },
+                        databaseWithAlternativeKeyLookup: {
+                            password: {
+                                _source: 'vault',
+                                _key: 'nonexistingkey',
+                                _altKey: 'password',
+                            },
+                        },
+                    },
+                    'hashicorp-vault': {
+                        apiVersion: 'v1',
+                        protocol: 'http',
+                        destination: 'localhost:8210',
+                        mount: 'secret',
+                        tokenPath: './tmp/token',
+                    },
+                    secret: {
+                        _source: 'vault',
+                        _key: 'test-secret',
+                    },
+                    secretWithAlternativeKeyLookup: {
+                        _source: 'vault',
+                        _key: 'nonexistingsecretkey',
+                        _altKey: 'test-secret',
+                    },
+                },
+            ),
+            consulClient.set(
                 { path: 'service/toggles' },
                 {
                     toggles: [

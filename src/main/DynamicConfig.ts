@@ -249,6 +249,8 @@ export class DynamicConfig implements IDynamicConfig {
                                                 )
                                             }
                                         },
+                                        undefined,
+                                        initialRawValue.source.altKey,
                                     )
                                 } else {
                                     logger.log(
@@ -315,6 +317,7 @@ export class DynamicConfig implements IDynamicConfig {
             source.key,
             'remote',
             type,
+            source.altKey,
         )
 
         // Find any placeholders in the remote value. This is important for resolving `consul!` pointers.
@@ -351,7 +354,12 @@ export class DynamicConfig implements IDynamicConfig {
     public async getSecretValue<T>(key: string, type?: ObjectType): Promise<T> {
         return this.source(key).then((source: ISource) => {
             if (source.key !== undefined) {
-                return this.getValueFromResolver<T>(source.key, 'secret', type)
+                return this.getValueFromResolver<T>(
+                    source.key,
+                    'secret',
+                    type,
+                    source.altKey,
+                )
             } else {
                 throw new errors.ResolverUnavailable(key)
             }
@@ -394,6 +402,7 @@ export class DynamicConfig implements IDynamicConfig {
                     type: placeholder.resolver.type,
                     name: placeholder.resolver.name,
                     key: placeholder.key,
+                    altKey: placeholder.altKey,
                 },
                 this.translator(placeholder.default),
             )
@@ -436,21 +445,24 @@ export class DynamicConfig implements IDynamicConfig {
         if (resolver === undefined) {
             return this.buildDefaultForPlaceholder(placeholder)
         } else {
-            return resolver.get(placeholder.key, placeholder.type).then(
-                (remoteValue: any) => {
-                    return ConfigBuilder.buildBaseConfigValue(
-                        {
-                            type: placeholder.resolver.type,
-                            name: placeholder.resolver.name,
-                            key: placeholder.key,
-                        },
-                        this.translator(remoteValue),
-                    )
-                },
-                (err: any) => {
-                    return this.buildDefaultForPlaceholder(placeholder, err)
-                },
-            )
+            return resolver
+                .get(placeholder.key, placeholder.type, placeholder.altKey)
+                .then(
+                    (remoteValue: any) => {
+                        return ConfigBuilder.buildBaseConfigValue(
+                            {
+                                type: placeholder.resolver.type,
+                                name: placeholder.resolver.name,
+                                key: placeholder.key,
+                                altKey: placeholder.altKey,
+                            },
+                            this.translator(remoteValue),
+                        )
+                    },
+                    (err: any) => {
+                        return this.buildDefaultForPlaceholder(placeholder, err)
+                    },
+                )
         }
     }
 
@@ -687,12 +699,13 @@ export class DynamicConfig implements IDynamicConfig {
         key: string,
         resolverType: ResolverType,
         valueType?: ObjectType,
+        altKey?: string,
     ): Promise<T> {
         const resolver: IRemoteResolver | undefined =
             this.resolvers[resolverType]
 
         if (resolver !== undefined) {
-            return resolver.get<T>(key, valueType).then(
+            return resolver.get<T>(key, valueType, altKey).then(
                 (remoteValue: T) => {
                     if (remoteValue !== null) {
                         return Promise.resolve(remoteValue)

@@ -80,9 +80,8 @@ export function race(promises: Array<Promise<any>>): Promise<any> {
                 (err: any) => {
                     current++
                     if (!resolved && current === count) {
-                        reject(
-                            new Error('All Promises rejected without success'),
-                        )
+                        // Propagate the last promise error back to caller
+                        reject(err)
                     }
                 },
             )
