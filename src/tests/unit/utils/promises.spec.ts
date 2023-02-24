@@ -44,9 +44,7 @@ describe('PromiseUtils', () => {
                     Promise.reject(new Error('Promise should reject'))
                 },
                 (err: any) => {
-                    expect(err.message).to.equal(
-                        'All Promises rejected without success',
-                    )
+                    expect(err).to.equal('error 3')
                 },
             )
         })

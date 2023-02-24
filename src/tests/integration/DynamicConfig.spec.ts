@@ -14,6 +14,7 @@ import {
     vaultResolver,
     ymlLoader,
 } from '../../main/'
+import { customConsulResolver, customVaultResolver } from './resolvers'
 
 export const lab = Lab.script()
 
@@ -438,6 +439,219 @@ describe('DynamicConfig', () => {
                             )
                         },
                     )
+            })
+        })
+    })
+
+    describe('Configured with Custom Vault and Consul - altKey uscases', () => {
+        const dynamicConfig: DynamicConfig = new DynamicConfig({
+            configEnv: 'development',
+            configPath: path.resolve(__dirname, './config'),
+            remoteOptions: {
+                consul: {
+                    consulAddress: 'http://localhost:8510',
+                    consulKeys: 'test-config-one,with-vault-altkey',
+                    consulDc: 'dc1',
+                },
+            },
+            resolvers: {
+                remote: customConsulResolver(),
+                secret: customVaultResolver(),
+            },
+            loaders: [jsonLoader, ymlLoader, jsLoader, tsLoader],
+            translators: [envTranslator, consulTranslator],
+        })
+
+        before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.NOT_NULLABLE
+        })
+
+        describe('get', () => {
+            it('should return full config when making empty call to get', async () => {
+                return dynamicConfig.get().then((actual: any) => {
+                    expect(actual).to.equal({
+                        type_test: true,
+                        nullable_test: {
+                            nullable: null,
+                            not_nullable: 'NOT_NULLABLE',
+                        },
+                        version: '2.0.1',
+                        server: {
+                            port: 8000,
+                            host: 'localhost',
+                        },
+                        persistedQueries: {
+                            databaseLookup: {
+                                username: 'testUser',
+                                password: 'K1ndaS3cr3t',
+                                shardedDBHostsInfo: {
+                                    sharding: {
+                                        client: {
+                                            'shard-info': {
+                                                'shard-count': 12,
+                                                'shard-map': [
+                                                    {
+                                                        'virtual-start': 0,
+                                                        'virtual-end': 3,
+                                                        destination:
+                                                            '127.0.0.1:3000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 4,
+                                                        'virtual-end': 7,
+                                                        destination:
+                                                            '127.0.0.2:4000',
+                                                    },
+                                                    {
+                                                        'virtual-start': 8,
+                                                        'virtual-end': 11,
+                                                        destination:
+                                                            '127.0.0.3:5000',
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            databaseWithAlternativeKeyLookup: {
+                                password: 'K1ndaS3cr3t',
+                            },
+                        },
+                        project: {
+                            id: {
+                                name: 'yaml-project',
+                                ref: 123456,
+                            },
+                            health: {
+                                control: '/javascript',
+                                response: 'BOOYA',
+                            },
+                        },
+                        names: {
+                            first: ['Bob', 'Helen', 'Joe', 'Jane'],
+                            last: ['Smith', 'Warren', 'Malick'],
+                        },
+                        'hashicorp-vault': {
+                            apiVersion: 'v1',
+                            protocol: 'http',
+                            destination: 'localhost:8210',
+                            mount: 'secret',
+                            tokenPath: './tmp/token',
+                        },
+                        'test-service': {
+                            destination: '127.0.0.1:3000',
+                        },
+                        'not-in-consul': {
+                            value: 'I am a default',
+                        },
+                        secret: 'this is a secret',
+                        secretWithAlternativeKeyLookup: 'this is a secret',
+                    })
+                })
+            })
+        })
+
+        describe('getAll', () => {
+            it('should resolve with all requested config values', async () => {
+                return dynamicConfig
+                    .getAll(
+                        'persistedQueries.databaseLookup.username',
+                        'persistedQueries.databaseLookup.password',
+                    )
+                    .then((actual: any) => {
+                        expect(actual).to.equal(['testUser', 'K1ndaS3cr3t'])
+                    })
+            })
+
+            it('should resolve with all requested config values', async () => {
+                return dynamicConfig
+                    .getAll(
+                        'persistedQueries.databaseLookup.username',
+                        'persistedQueries.databaseWithAlternativeKeyLookup.password',
+                    )
+                    .then((actual: any) => {
+                        expect(actual).to.equal(['testUser', 'K1ndaS3cr3t'])
+                    })
+            })
+        })
+
+        describe('getRemoteValue', () => {
+            it('should verify that remote value is updated in cached config', async () => {
+                // make a call to consul to update to a different value
+                const consulClient: KvStore = new KvStore([
+                    'http://localhost:8510',
+                ])
+
+                const initialConfigValue = await dynamicConfig.get('secret')
+
+                expect(initialConfigValue).to.equal('this is a secret')
+
+                await consulClient.set(
+                    { path: 'test-secret', dc: 'dc1' }, // these key paths are weird! lol. Somehow this resolves to 'secret'
+                    'this is a new secret',
+                )
+
+                await dynamicConfig.getRemoteValue('secret')
+
+                const updatedConfigVal = await dynamicConfig.get('secret')
+
+                expect(updatedConfigVal).to.equal('this is a new secret')
+
+                await dynamicConfig.getRemoteValue(
+                    'secretWithAlternativeKeyLookup',
+                )
+
+                const updatedConfigValWithAlternativeKey =
+                    await dynamicConfig.get('secretWithAlternativeKeyLookup')
+
+                expect(updatedConfigValWithAlternativeKey).to.equal(
+                    updatedConfigVal,
+                )
+
+                await consulClient.set(
+                    { path: 'test-secret', dc: 'dc1' },
+                    'this is a secret',
+                )
+
+                await dynamicConfig.getRemoteValue('secret')
+
+                const restoredConfigVal = await dynamicConfig.get('secret')
+
+                expect(restoredConfigVal).to.equal('this is a secret')
+
+                await dynamicConfig.getRemoteValue(
+                    'secretWithAlternativeKeyLookup',
+                )
+
+                const restoredConfigValWithAlternativeKey =
+                    await dynamicConfig.get('secretWithAlternativeKeyLookup')
+
+                expect(restoredConfigValWithAlternativeKey).to.equal(
+                    restoredConfigVal,
+                )
+            })
+        })
+
+        describe('getSecretValue', () => {
+            it('should get secret value from Vault', async () => {
+                return dynamicConfig
+                    .getSecretValue<string>('secret')
+                    .then((actual: string) => {
+                        expect(actual).to.equal('this is a secret')
+                    })
+            })
+
+            it('should get secret value from Vault using alternative key', async () => {
+                return dynamicConfig
+                    .getSecretValue<string>('secretWithAlternativeKeyLookup')
+                    .then((actual: string) => {
+                        expect(actual).to.equal('this is a secret')
+                    })
             })
         })
     })

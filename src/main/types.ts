@@ -107,8 +107,13 @@ export interface IRemoteResolver {
     type: ResolverType
     name: string
     init: RemoteInitializer
-    get<T>(key: string, type?: ObjectType): Promise<T>
-    watch<T>(key: string, cb: WatchFunction<T>, type?: ObjectType): void
+    get<T>(key: string, type?: ObjectType, altKey?: string): Promise<T>
+    watch<T>(
+        key: string,
+        cb: WatchFunction<T>,
+        type?: ObjectType,
+        altKey?: string,
+    ): void
 }
 
 // CONFIG TYPES
@@ -119,6 +124,7 @@ export interface ISource {
     type: SourceType
     name: string
     key?: string
+    altKey?: string
 }
 
 export type ConfigType = 'root' | ObjectType | DeferredType | InvalidType
@@ -228,6 +234,7 @@ export interface IConfigPlaceholder {
     _type?: ObjectType
     _default?: any
     _nullable?: boolean
+    _altKey?: string
 }
 
 /**
@@ -245,6 +252,7 @@ export interface IResolvedPlaceholder {
     type: ObjectType
     nullable: boolean
     default?: any
+    altKey?: string
 }
 
 // UTILITY TYPES

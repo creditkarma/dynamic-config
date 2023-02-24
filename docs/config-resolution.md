@@ -157,6 +157,7 @@ The interface:
 interface IConfigPlaceholder {
     _source: string
     _key: string
+    _altKey?: string
     _default?: any
     _type?: 'string' | 'number' | 'object' | 'array' | 'boolean'
     _nullable?: boolean
@@ -165,6 +166,7 @@ interface IConfigPlaceholder {
 
 * `_source` - The name of the resolver to process the key.
 * `_key` - A string to ask the resolver for.
+* `_altKey` - A string incase of the original _key is not resolved/configured in the source
 * `_default` - A default value for the case that placeholder resolution fails. Default values are ignored for resolvers that are registered as 'secret' stores.
 * `_type` - Indicates how to try to parse this value. If no type is provided then the raw value returned from the source is used (usually a string). This value is given to the underlying resolver to make decisions. Some resolvers (as is the case with included Consul and Vault resolvers) may choose to ignore the `_type` property.
 * `_nullable` - Indicates that the value may be missing. In this case if someone calls `get` for a nullable key `null` will be returned as the expected value of the key. Usually if they value is not found an error is raised.
