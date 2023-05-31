@@ -23,8 +23,6 @@ setTimeout(() => {
         'curl http://localhost:8211/client-token',
     ).toString()
 
-    console.log(`Token: ${token}`)
-
     function rootDir(): string {
         if (os.platform() === 'win32') {
             return process.cwd().split(path.sep)[0]
