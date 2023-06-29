@@ -113,6 +113,9 @@ export class DynamicConfig implements IDynamicConfig {
      * @param key The key to look up. Dot notation may be used to access nested properties.
      */
     public async get<T = any>(key?: string): Promise<T> {
+        const err: any = {}
+        Error.captureStackTrace(err)
+        console.log('get: ', err.stack)
         return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
             const error = ConfigUtils.getErrorForKey(key, this.errorMap)
 
@@ -164,6 +167,9 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public watch<T>(key: string): IVariable<T> {
+        const err: any = {}
+        Error.captureStackTrace(err)
+        console.log('watch: ', err.stack)
         const normalizedKey: string = Utils.normalizePath(key)
 
         if (this.observerMap.has(key)) {
@@ -301,6 +307,9 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public async getRemoteValue<T>(key: string, type?: ObjectType): Promise<T> {
+        const err: any = {}
+        Error.captureStackTrace(err)
+        console.log('getRemoteValue: ', err.stack)
         // get source for key
         const source: ISource = await this.source(key)
 
@@ -367,6 +376,9 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public async source(key: string): Promise<ISource> {
+        const err: any = {}
+        Error.captureStackTrace(err)
+        console.log('source: ', err.stack)
         const error = ConfigUtils.getErrorForKey(key, this.errorMap)
 
         if (error) {
