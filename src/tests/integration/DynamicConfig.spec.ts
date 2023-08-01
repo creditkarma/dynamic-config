@@ -316,9 +316,7 @@ describe('DynamicConfig', () => {
                     'http://localhost:8510',
                 ])
 
-                const initialConfigValue = await dynamicConfig.get(
-                    'secret',
-                )
+                const initialConfigValue = await dynamicConfig.get('secret')
 
                 expect(initialConfigValue).to.equal('this is a secret')
 

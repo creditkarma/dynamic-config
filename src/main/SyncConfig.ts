@@ -1,10 +1,10 @@
-import { ConfigValue, IConfigStore, IRootConfigValue } from './types'
+import { ConfigValue, IConfigStore, IObjectConfigValue } from './types'
 import { ConfigUtils } from './utils'
 
 export class SyncConfig implements IConfigStore {
-    private config: IRootConfigValue
+    private config: IObjectConfigValue
 
-    constructor(config: IRootConfigValue) {
+    constructor(config: IObjectConfigValue) {
         this.config = config
     }
 

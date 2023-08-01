@@ -3,12 +3,7 @@ import * as Lab from '@hapi/lab'
 
 import { ConfigBuilder, ConfigUtils } from '../../../main/utils'
 
-import {
-    BaseConfigValue,
-    ConfigValue,
-    IRootConfigValue,
-    ISource,
-} from '../../../main/types'
+import { ConfigValue, IObjectConfigValue, ISource } from '../../../main/types'
 
 export const lab = Lab.script()
 
@@ -19,8 +14,8 @@ const before = lab.before
 describe('ConfigUtils', () => {
     describe('getConfigForKey', () => {
         it('should get specified value from root config', async () => {
-            const mockConfig: IRootConfigValue = {
-                type: 'root',
+            const mockConfig: ConfigValue = {
+                type: 'object',
                 properties: {
                     project: {
                         source: {
@@ -96,6 +91,11 @@ describe('ConfigUtils', () => {
                         nullable: false,
                     },
                 },
+                source: {
+                    type: 'local',
+                    name: 'development',
+                },
+                nullable: false,
                 watcher: null,
             }
 
@@ -144,7 +144,7 @@ describe('ConfigUtils', () => {
             type: 'local',
             name: 'default',
         }
-        let mockConfg: IRootConfigValue
+        let mockConfg: IObjectConfigValue
 
         before(async () => {
             mockConfg = ConfigBuilder.createConfigObject(mockSource, {
@@ -167,13 +167,15 @@ describe('ConfigUtils', () => {
         })
 
         it('should correctly set value for object', async () => {
-            const newValue: BaseConfigValue =
-                ConfigBuilder.buildBaseConfigValue(mockSource, 'fake-service')
-            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
+            const newValue: ConfigValue = ConfigBuilder.buildBaseConfigValue(
+                mockSource,
+                'fake-service',
+            )
+            const newConfig: IObjectConfigValue = ConfigUtils.setValueForKey(
                 'serviceName',
                 newValue,
                 mockConfg,
-            ) as IRootConfigValue
+            )
             const baseValue = ConfigUtils.getConfigForKey(
                 'serviceName',
                 newConfig,
@@ -188,13 +190,15 @@ describe('ConfigUtils', () => {
         })
 
         it('should correctly set value for object with nested key', async () => {
-            const newValue: BaseConfigValue =
-                ConfigBuilder.buildBaseConfigValue(mockSource, '123456')
-            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
+            const newValue: ConfigValue = ConfigBuilder.buildBaseConfigValue(
+                mockSource,
+                '123456',
+            )
+            const newConfig: ConfigValue = ConfigUtils.setValueForKey(
                 'database.username',
                 newValue,
                 mockConfg,
-            ) as IRootConfigValue
+            )
             const baseValue = ConfigUtils.getConfigForKey(
                 'database.username',
                 newConfig,
@@ -210,13 +214,15 @@ describe('ConfigUtils', () => {
         })
 
         it('should correctly set value for object with nested key', async () => {
-            const newValue: BaseConfigValue =
-                ConfigBuilder.buildBaseConfigValue(mockSource, '123456')
-            const newConfig: IRootConfigValue = ConfigUtils.setValueForKey(
+            const newValue: ConfigValue = ConfigBuilder.buildBaseConfigValue(
+                mockSource,
+                '123456',
+            )
+            const newConfig: ConfigValue = ConfigUtils.setValueForKey(
                 'database.username',
                 newValue,
                 mockConfg,
-            ) as IRootConfigValue
+            )
             const baseValue = ConfigUtils.getConfigForKey(
                 'database.username',
                 newConfig,
@@ -233,8 +239,12 @@ describe('ConfigUtils', () => {
     })
 
     describe('readConfigValue', () => {
-        const mockConfig: IRootConfigValue = {
-            type: 'root',
+        const mockConfig: ConfigValue = {
+            type: 'object',
+            source: {
+                type: 'local',
+                name: 'test',
+            },
             properties: {
                 'shard-map': {
                     source: {
@@ -290,9 +300,10 @@ describe('ConfigUtils', () => {
                 },
             },
             watcher: null,
+            nullable: false,
         }
 
-        const configValue: BaseConfigValue | null = ConfigUtils.getConfigForKey(
+        const configValue: ConfigValue | null = ConfigUtils.getConfigForKey(
             'shard-map',
             mockConfig,
         )

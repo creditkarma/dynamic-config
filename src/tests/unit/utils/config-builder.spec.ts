@@ -1,7 +1,7 @@
 import { expect } from '@hapi/code'
 import * as Lab from '@hapi/lab'
 
-import { IRootConfigValue } from '../../../main/types'
+import { ConfigValue } from '../../../main/types'
 
 import { ConfigBuilder } from '../../../main/utils'
 
@@ -17,7 +17,7 @@ function asJSON(obj: any): object {
 describe('ConfigBuilder', () => {
     describe('createConfigObject', () => {
         it('should build config for object', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+            const actual: ConfigValue = ConfigBuilder.createConfigObject(
                 {
                     type: 'local',
                     name: 'test',
@@ -32,8 +32,8 @@ describe('ConfigBuilder', () => {
                 },
             )
 
-            const expected: IRootConfigValue = {
-                type: 'root',
+            const expected: ConfigValue = {
+                type: 'object',
                 properties: {
                     protocol: {
                         source: {
@@ -96,6 +96,11 @@ describe('ConfigBuilder', () => {
                         nullable: false,
                     },
                 },
+                source: {
+                    type: 'local',
+                    name: 'test',
+                },
+                nullable: false,
                 watcher: null,
             }
 
@@ -103,7 +108,7 @@ describe('ConfigBuilder', () => {
         })
 
         it('should build config for an array', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+            const actual: ConfigValue = ConfigBuilder.createConfigObject(
                 {
                     type: 'local',
                     name: 'test',
@@ -119,8 +124,13 @@ describe('ConfigBuilder', () => {
                 },
             )
 
-            const expected: IRootConfigValue = {
-                type: 'root',
+            const expected: ConfigValue = {
+                type: 'object',
+                source: {
+                    type: 'local',
+                    name: 'test',
+                },
+                nullable: false,
                 properties: {
                     'shard-map': {
                         source: {
@@ -182,7 +192,7 @@ describe('ConfigBuilder', () => {
         })
 
         it('should build config with nested keys', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+            const actual: ConfigValue = ConfigBuilder.createConfigObject(
                 {
                     type: 'local',
                     name: 'test',
@@ -195,8 +205,13 @@ describe('ConfigBuilder', () => {
                 },
             )
 
-            const expected: IRootConfigValue = {
-                type: 'root',
+            const expected: ConfigValue = {
+                type: 'object',
+                source: {
+                    type: 'local',
+                    name: 'test',
+                },
+                nullable: false,
                 properties: {
                     server: {
                         source: {
@@ -237,7 +252,7 @@ describe('ConfigBuilder', () => {
         })
 
         it('should build config with promised values', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+            const actual: ConfigValue = ConfigBuilder.createConfigObject(
                 {
                     type: 'local',
                     name: 'test',
@@ -250,8 +265,13 @@ describe('ConfigBuilder', () => {
                 },
             )
 
-            const expected: IRootConfigValue = {
-                type: 'root',
+            const expected: ConfigValue = {
+                type: 'object',
+                source: {
+                    type: 'local',
+                    name: 'test',
+                },
+                nullable: false,
                 properties: {
                     server: {
                         source: {
@@ -292,7 +312,7 @@ describe('ConfigBuilder', () => {
         })
 
         it('should build config with placeholder values', async () => {
-            const actual: IRootConfigValue = ConfigBuilder.createConfigObject(
+            const actual: ConfigValue = ConfigBuilder.createConfigObject(
                 {
                     type: 'local',
                     name: 'test',
@@ -312,8 +332,13 @@ describe('ConfigBuilder', () => {
                 },
             )
 
-            const expected: IRootConfigValue = {
-                type: 'root',
+            const expected: ConfigValue = {
+                type: 'object',
+                source: {
+                    type: 'local',
+                    name: 'test',
+                },
+                nullable: false,
                 properties: {
                     server: {
                         source: {

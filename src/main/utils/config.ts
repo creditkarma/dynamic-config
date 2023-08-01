@@ -5,7 +5,6 @@ import { deepMap } from './object'
 import { objectMatchesSchema } from './json'
 
 import {
-    BaseConfigValue,
     ConfigItems,
     ConfigValue,
     IArrayConfigValue,
@@ -16,7 +15,6 @@ import {
     IObjectConfigValue,
     IRemoteResolver,
     IResolvedPlaceholder,
-    IRootConfigValue,
     ITranslator,
     KeyPath,
     ObjectType,
@@ -33,8 +31,13 @@ import { defaultLogger as logger } from '../logger'
 
 import { InvalidConfigValue } from '../errors'
 
-export const emptyRootConfig = (): IRootConfigValue => ({
-    type: 'root',
+export const emptyRootConfig = (): IObjectConfigValue => ({
+    type: 'object',
+    source: {
+        type: 'local',
+        name: 'default',
+    },
+    nullable: false,
     properties: {},
     watcher: null,
 })
@@ -194,9 +197,9 @@ export function isConfigPlaceholder(obj: any): obj is IConfigPlaceholder {
 }
 
 function newConfigValue(
-    oldValue: BaseConfigValue,
-    newValue: BaseConfigValue,
-): BaseConfigValue {
+    oldValue: ConfigValue,
+    newValue: ConfigValue,
+): ConfigValue {
     switch (newValue.type) {
         case 'array':
             return {
@@ -223,16 +226,16 @@ function newConfigValue(
                 value: newValue.value,
                 watcher: oldValue.watcher,
                 nullable: newValue.nullable,
-            } as BaseConfigValue
+            } as ConfigValue
     }
 }
 
 function setBaseConfigValueForKey(
     key: string,
-    newValue: BaseConfigValue,
-    oldValue: BaseConfigValue,
+    newValue: ConfigValue,
+    oldValue: ConfigValue,
     alertWatchers: boolean = false,
-): BaseConfigValue {
+): ConfigValue {
     const [head, ...tail] = Utils.splitKey(key)
 
     if (oldValue.type === 'object') {
@@ -286,7 +289,7 @@ function setBaseConfigValueForKey(
             items: oldValue.items.reduce(
                 (
                     acc: ConfigItems,
-                    nextValue: BaseConfigValue,
+                    nextValue: ConfigValue,
                     index: number,
                 ): ConfigItems => {
                     if (index === headIndex) {
@@ -346,80 +349,76 @@ function setBaseConfigValueForKey(
     }
 }
 
-function setRootConfigValueForKey(
-    key: string,
-    newValue: BaseConfigValue,
-    oldValue: IRootConfigValue,
-    alertWatchers: boolean = false,
-): IRootConfigValue {
-    const [head, ...tail] = Utils.splitKey(key)
+// function setRootConfigValueForKey(
+//     key: string,
+//     newValue: IObjectConfigValue,
+//     oldValue: IObjectConfigValue,
+//     alertWatchers: boolean = false,
+// ): ConfigValue {
+//     const [head, ...tail] = Utils.splitKey(key)
 
-    const returnValue: IRootConfigValue = {
-        type: 'root',
-        properties: Object.keys(oldValue.properties).reduce(
-            (acc: IConfigProperties, next: string): IConfigProperties => {
-                const oldValueAtKey = oldValue.properties[next]
-                if (next === head) {
-                    if (tail.length > 0) {
-                        acc[next] = setBaseConfigValueForKey(
-                            tail.join('.'),
-                            newValue,
-                            oldValueAtKey,
-                            alertWatchers,
-                        )
-                    } else {
-                        acc[next] = newConfigValue(oldValueAtKey, newValue)
-                        acc[next].watcher = oldValueAtKey.watcher
+//     const returnValue: ConfigValue = {
+//         type: 'object',
+//         source: {
+//             type: 'local',
+//             name: 'default',
+//         },
+//         properties: Object.keys(oldValue.properties).reduce(
+//             (acc: IConfigProperties, next: string): IConfigProperties => {
+//                 const oldValueAtKey = oldValue.properties[next]
+//                 if (next === head) {
+//                     if (tail.length > 0) {
+//                         acc[next] = setBaseConfigValueForKey(
+//                             tail.join('.'),
+//                             newValue,
+//                             oldValueAtKey,
+//                             alertWatchers,
+//                         )
+//                     } else {
+//                         acc[next] = newConfigValue(oldValueAtKey, newValue)
+//                         acc[next].watcher = oldValueAtKey.watcher
 
-                        if (alertWatchers && oldValueAtKey.watcher) {
-                            oldValueAtKey.watcher(
-                                undefined,
-                                readConfigValue(newValue),
-                            )
-                        }
-                    }
-                } else {
-                    acc[next] = oldValueAtKey
-                }
+//                         if (alertWatchers && oldValueAtKey.watcher) {
+//                             oldValueAtKey.watcher(
+//                                 undefined,
+//                                 readConfigValue(newValue),
+//                             )
+//                         }
+//                     }
+//                 } else {
+//                     acc[next] = oldValueAtKey
+//                 }
 
-                return acc
-            },
-            {},
-        ),
-        watcher: oldValue.watcher,
-    }
+//                 return acc
+//             },
+//             {},
+//         ),
+//         nullable: false,
+//         watcher: oldValue.watcher,
+//     }
 
-    if (alertWatchers && returnValue.watcher) {
-        returnValue.watcher(undefined, readConfigValue(returnValue))
-    }
+//     if (alertWatchers && returnValue.watcher) {
+//         returnValue.watcher(undefined, readConfigValue(returnValue))
+//     }
 
-    return returnValue
-}
+//     return returnValue
+// }
 
 export function setValueForKey<T extends ConfigValue>(
     key: string,
-    newValue: BaseConfigValue,
+    newValue: ConfigValue,
     oldConfig: T,
     alertWatchers: boolean = false,
 ): T {
-    if (oldConfig.type === 'root') {
-        return setRootConfigValueForKey(
-            key,
-            newValue,
-            oldConfig,
-            alertWatchers,
-        ) as T
-    } else {
-        return setBaseConfigValueForKey(
-            key,
-            newValue,
-            oldConfig,
-            alertWatchers,
-        ) as T
-    }
+    return setBaseConfigValueForKey(
+        key,
+        newValue,
+        oldConfig,
+        alertWatchers,
+    ) as T
 }
 
-function buildObjectValue(obj: IObjectConfigValue | IRootConfigValue): any {
+function buildObjectValue(obj: IObjectConfigValue): any {
     const objectValue: any = {}
 
     for (const key of Object.keys(obj.properties)) {
@@ -434,13 +433,12 @@ export function readConfigValue(obj: ConfigValue | null): any {
         return null
     } else {
         switch (obj.type) {
-            case 'root':
             case 'object':
                 return buildObjectValue(obj)
 
             case 'array':
                 return obj.items.reduce(
-                    (acc: Array<any>, next: BaseConfigValue) => {
+                    (acc: Array<any>, next: ConfigValue) => {
                         acc.push(readConfigValue(next))
                         return acc
                     },
@@ -469,7 +467,7 @@ export function readConfigValue(obj: ConfigValue | null): any {
 function getValueFromConfigValue(
     key: string,
     obj: ConfigValue,
-): BaseConfigValue | null {
+): ConfigValue | null {
     if (Utils.isPrimitive(obj) || Utils.isNothing(obj)) {
         return null
     } else {
@@ -507,8 +505,8 @@ function getValueFromConfigValue(
 
 export function getConfigForKey(
     key: string,
-    obj: IRootConfigValue,
-): BaseConfigValue | null {
+    obj: IObjectConfigValue,
+): ConfigValue | null {
     if (Utils.isPrimitive(obj) || Utils.isNothing(obj)) {
         return null
     } else {

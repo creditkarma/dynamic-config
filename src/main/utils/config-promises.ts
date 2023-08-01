@@ -1,9 +1,4 @@
-import {
-    BaseConfigValue,
-    ConfigValue,
-    ObjectUpdate,
-    PromisedUpdate,
-} from '../types'
+import { ConfigValue, ObjectUpdate, PromisedUpdate } from '../types'
 
 import * as ConfigUtils from './config'
 import * as ConfigBuilder from './config-builder'
@@ -13,25 +8,25 @@ import * as ConfigBuilder from './config-builder'
  * The second value is the in-order index of this Promise so that promises are applied in
  * the same order in which they occur in the object
  */
-type PromiseUpdate = [BaseConfigValue, number]
+type PromiseUpdate = [ConfigValue, number]
 
 /**
  * Recursively traverses an object, looking for keys with Promised values and returns a Promise of
  * the object with all nested Promises resolved.
  */
 export async function valuesForPromises(
-    promises: Array<Promise<BaseConfigValue>>,
-): Promise<Array<BaseConfigValue>> {
+    promises: Array<Promise<ConfigValue>>,
+): Promise<Array<ConfigValue>> {
     return Promise.all(
-        promises.map((next: Promise<BaseConfigValue>, index: number) => {
+        promises.map((next: Promise<ConfigValue>, index: number) => {
             return resolveAtIndex(next, index)
         }),
-    ).then((values: Array<PromiseUpdate>): Array<BaseConfigValue> => {
+    ).then((values: Array<PromiseUpdate>): Array<ConfigValue> => {
         return processValues(values)
     })
 }
 
-function processValues(values: Array<PromiseUpdate>): Array<BaseConfigValue> {
+function processValues(values: Array<PromiseUpdate>): Array<ConfigValue> {
     return values
         .sort((a: PromiseUpdate, b: PromiseUpdate) => {
             if (a[1] < b[1]) {
@@ -46,11 +41,11 @@ function processValues(values: Array<PromiseUpdate>): Array<BaseConfigValue> {
 }
 
 function resolveAtIndex(
-    promise: Promise<BaseConfigValue>,
+    promise: Promise<ConfigValue>,
     index: number,
 ): Promise<PromiseUpdate> {
     return new Promise((resolve, reject) => {
-        promise.then((val: BaseConfigValue) => {
+        promise.then((val: ConfigValue) => {
             return resolve([val, index])
         })
     })
@@ -75,12 +70,12 @@ async function handleUnresolved(
     const paths: Array<string> = unresolved.map((next: PromisedUpdate) =>
         next[0].join('.'),
     )
-    const promises: Array<Promise<BaseConfigValue>> = unresolved.map(
+    const promises: Array<Promise<ConfigValue>> = unresolved.map(
         (next: PromisedUpdate) => next[1],
     )
     const resolvedPromises: Array<ConfigValue> = await Promise.all(
-        promises.map((next: Promise<BaseConfigValue>) => {
-            return next.then((val: BaseConfigValue) => {
+        promises.map((next: Promise<ConfigValue>) => {
+            return next.then((val: ConfigValue) => {
                 const nested: Array<PromisedUpdate> =
                     collectUnresolvedPromises(val)
                 if (nested.length > 0) {
@@ -95,7 +90,7 @@ async function handleUnresolved(
     const newObj: ConfigValue = resolvedPromises.reduce(
         (
             acc: ConfigValue,
-            next: BaseConfigValue,
+            next: ConfigValue,
             currentIndex: number,
         ): ConfigValue => {
             return ConfigUtils.setValueForKey(paths[currentIndex], next, acc)
@@ -131,7 +126,7 @@ function collectUnresolvedPromises(
         ])
 
         return updates
-    } else if (configValue.type === 'object' || configValue.type === 'root') {
+    } else if (configValue.type === 'object') {
         for (const key of Object.keys(configValue.properties)) {
             const value = configValue.properties[key]
             const newPath: Array<string> = [...path, key]
@@ -153,7 +148,7 @@ export async function resolveConfigPromises(
                 ConfigBuilder.buildBaseConfigValue(configValue.source, val),
             )
         })
-    } else if (configValue.type === 'object' || configValue.type === 'root') {
+    } else if (configValue.type === 'object') {
         const unresolved: Array<ObjectUpdate> =
             collectUnresolvedPromises(configValue)
         return handleUnresolved(unresolved, configValue)

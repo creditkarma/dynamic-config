@@ -1,12 +1,12 @@
 import { isObject, isPrimitiveType } from './basic'
 
 import {
-    BaseConfigValue,
+    ConfigValue,
     IConfigProperties,
     IInvalidConfigValue,
     INullConfigValue,
+    IObjectConfigValue,
     IResolvedPlaceholder,
-    IRootConfigValue,
     ISource,
 } from '../types'
 
@@ -48,7 +48,7 @@ export function buildBaseConfigValue(
     source: ISource,
     obj: any,
     nullable: boolean = false,
-): BaseConfigValue {
+): ConfigValue {
     const objType = typeof obj
 
     if (obj instanceof Promise) {
@@ -71,7 +71,7 @@ export function buildBaseConfigValue(
         return {
             source,
             type: 'array',
-            items: obj.reduce((acc: Array<BaseConfigValue>, next: any) => {
+            items: obj.reduce((acc: Array<ConfigValue>, next: any) => {
                 acc.push(
                     buildBaseConfigValue(
                         {
@@ -132,10 +132,12 @@ export function buildBaseConfigValue(
 export function createConfigObject(
     source: ISource,
     obj: any,
-): IRootConfigValue {
+): IObjectConfigValue {
     if (isObject(obj)) {
-        const configObj: IRootConfigValue = {
-            type: 'root',
+        const configObj: IObjectConfigValue = {
+            type: 'object',
+            source,
+            nullable: false,
             properties: {},
             watcher: null,
         }

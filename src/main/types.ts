@@ -161,9 +161,7 @@ export interface IBaseConfigValue extends IConfigValue {
     nullable: boolean
 }
 
-export type ConfigValue = IRootConfigValue | BaseConfigValue
-
-export type BaseConfigValue =
+export type ConfigValue =
     | IObjectConfigValue
     | IArrayConfigValue
     | IPrimitiveConfigValue
@@ -173,15 +171,10 @@ export type BaseConfigValue =
     | IInvalidConfigValue
 
 export interface IConfigProperties {
-    [name: string]: BaseConfigValue
+    [name: string]: ConfigValue
 }
 
-export type ConfigItems = Array<BaseConfigValue>
-
-export interface IRootConfigValue extends IConfigValue {
-    type: 'root'
-    properties: IConfigProperties
-}
+export type ConfigItems = Array<ConfigValue>
 
 export interface IObjectConfigValue extends IBaseConfigValue {
     type: 'object'
@@ -261,7 +254,7 @@ export type KeyPath = Array<string>
 
 export type ObjectUpdate = [KeyPath, Promise<any>]
 
-export type PromisedUpdate = [KeyPath, Promise<BaseConfigValue>]
+export type PromisedUpdate = [KeyPath, Promise<ConfigValue>]
 
 // SCHEMA TYPES
 

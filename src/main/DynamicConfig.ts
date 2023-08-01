@@ -18,17 +18,16 @@ import * as errors from './errors'
 import { envResolver, packageResolver, processResolver } from './resolvers'
 
 import {
-    BaseConfigValue,
     ConfigValue,
     IConfigOptions,
     IDynamicConfig,
     ILoadedFile,
     INamedResolvers,
+    IObjectConfigValue,
     IRemoteOptions,
     IRemoteResolver,
     IResolvedPlaceholder,
     IResolvers,
-    IRootConfigValue,
     ISchemaMap,
     ISource,
     ITranslator,
@@ -48,7 +47,7 @@ export class DynamicConfig implements IDynamicConfig {
     private configLoader: ConfigLoader
     private remoteOptions: IRemoteOptions
 
-    private promisedConfig: Promise<IRootConfigValue> | null
+    private promisedConfig: Promise<IObjectConfigValue> | null
     private initializedResolvers: Array<string>
 
     private resolvers: IResolvers
@@ -113,7 +112,7 @@ export class DynamicConfig implements IDynamicConfig {
      * @param key The key to look up. Dot notation may be used to access nested properties.
      */
     public async get<T = any>(key?: string): Promise<T> {
-        return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
+        return this.getConfig().then((resolvedConfig: IObjectConfigValue) => {
             const error = ConfigUtils.getErrorForKey(key, this.errorMap)
 
             if (error) {
@@ -171,9 +170,9 @@ export class DynamicConfig implements IDynamicConfig {
         } else {
             const observer = new Observer<T>((sink: ValueSink<T>) => {
                 this.getConfig().then(
-                    (resolvedConfig: IRootConfigValue) => {
+                    (resolvedConfig: IObjectConfigValue) => {
                         try {
-                            const initialRawValue: BaseConfigValue | null =
+                            const initialRawValue: ConfigValue | null =
                                 ConfigUtils.getConfigForKey(
                                     normalizedKey,
                                     resolvedConfig,
@@ -212,7 +211,7 @@ export class DynamicConfig implements IDynamicConfig {
                                             if (err !== undefined) {
                                                 sink(err)
                                             } else {
-                                                const updatedRawValue: BaseConfigValue =
+                                                const updatedRawValue: ConfigValue =
                                                     ConfigBuilder.buildBaseConfigValue(
                                                         initialRawValue.source,
                                                         val,
@@ -221,7 +220,7 @@ export class DynamicConfig implements IDynamicConfig {
                                                     updatedRawValue,
                                                 ).then(
                                                     (
-                                                        updatedResolvedValue: BaseConfigValue,
+                                                        updatedResolvedValue: ConfigValue,
                                                     ) => {
                                                         if (
                                                             initialRawValue.type !==
@@ -238,7 +237,7 @@ export class DynamicConfig implements IDynamicConfig {
                                                                 updatedResolvedValue,
                                                                 resolvedConfig,
                                                                 true,
-                                                            ) as IRootConfigValue,
+                                                            ),
                                                         )
                                                     },
                                                     (
@@ -310,7 +309,7 @@ export class DynamicConfig implements IDynamicConfig {
         }
 
         // get the current config (the cached version, that is)
-        const currentConfig: IRootConfigValue = await this.getConfig()
+        const currentConfig: ConfigValue = await this.getConfig()
 
         // get new remote value for key
         const remoteValue: T = await this.getValueFromResolver<T>(
@@ -330,7 +329,7 @@ export class DynamicConfig implements IDynamicConfig {
          build the normalized key path for the refreshed value to live at.
          *note*: this is **required** to format the new value into a shape consumable by `setConfig()`.
          */
-        const builtValue: BaseConfigValue = ConfigBuilder.buildBaseConfigValue(
+        const builtValue: ConfigValue = ConfigBuilder.buildBaseConfigValue(
             source,
             translatedValue,
         )
@@ -341,7 +340,7 @@ export class DynamicConfig implements IDynamicConfig {
         // create shape of new config
         const newConfig = ConfigUtils.setValueForKey(
             normalizedKey,
-            resolvedValue as BaseConfigValue,
+            resolvedValue,
             currentConfig,
             true,
         )
@@ -373,23 +372,28 @@ export class DynamicConfig implements IDynamicConfig {
             throw error
         } else {
             const normalizedKey = Utils.normalizePath(key)
-            return this.getConfig().then((resolvedConfig: IRootConfigValue) => {
-                const value: BaseConfigValue | null =
-                    ConfigUtils.getConfigForKey(normalizedKey, resolvedConfig)
+            return this.getConfig().then(
+                (resolvedConfig: IObjectConfigValue) => {
+                    const value: ConfigValue | null =
+                        ConfigUtils.getConfigForKey(
+                            normalizedKey,
+                            resolvedConfig,
+                        )
 
-                if (value !== null) {
-                    return value.source
-                } else {
-                    throw new errors.DynamicConfigMissingKey(key)
-                }
-            })
+                    if (value !== null) {
+                        return value.source
+                    } else {
+                        throw new errors.DynamicConfigMissingKey(key)
+                    }
+                },
+            )
         }
     }
 
     private buildDefaultForPlaceholder(
         placeholder: IResolvedPlaceholder,
         err?: errors.DynamicConfigError,
-    ): BaseConfigValue {
+    ): ConfigValue {
         if (placeholder.default !== undefined) {
             if (err !== undefined) {
                 logger.warn(
@@ -438,7 +442,7 @@ export class DynamicConfig implements IDynamicConfig {
 
     private async getRemotePlaceholder(
         placeholder: IResolvedPlaceholder,
-    ): Promise<BaseConfigValue> {
+    ): Promise<ConfigValue> {
         const resolver: IRemoteResolver | undefined =
             this.resolversByName[placeholder.resolver.name]
 
@@ -495,7 +499,7 @@ export class DynamicConfig implements IDynamicConfig {
                         return this.replaceConfigPlaceholders(
                             val,
                             whitelist,
-                        ) as Promise<BaseConfigValue>
+                        ) as Promise<ConfigValue>
                     },
                 ),
             ])
@@ -520,7 +524,7 @@ export class DynamicConfig implements IDynamicConfig {
     ): Array<PromisedUpdate> {
         if (configValue.type === 'array') {
             configValue.items.forEach(
-                (oldValue: BaseConfigValue, index: number) => {
+                (oldValue: ConfigValue, index: number) => {
                     const newPath: KeyPath = [...path, `${index}`]
                     this.appendUpdatesForObject(
                         oldValue,
@@ -532,12 +536,9 @@ export class DynamicConfig implements IDynamicConfig {
             )
 
             return updates
-        } else if (
-            configValue.type === 'object' ||
-            configValue.type === 'root'
-        ) {
+        } else if (configValue.type === 'object') {
             for (const key of Object.keys(configValue.properties)) {
-                const objValue: BaseConfigValue = configValue.properties[key]
+                const objValue: ConfigValue = configValue.properties[key]
                 const newPath: KeyPath = [...path, key]
                 this.appendUpdatesForObject(
                     objValue,
@@ -568,14 +569,12 @@ export class DynamicConfig implements IDynamicConfig {
         const paths: Array<string> = unresolved.map((next: PromisedUpdate) =>
             next[0].join('.'),
         )
-        const promises: Array<Promise<BaseConfigValue>> = unresolved.map(
+        const promises: Array<Promise<ConfigValue>> = unresolved.map(
             (next: PromisedUpdate) => next[1],
         )
-        const resolvedPromises: Array<BaseConfigValue> = await Promise.all(
-            promises,
-        )
+        const resolvedPromises: Array<ConfigValue> = await Promise.all(promises)
         const newObj: ConfigValue = resolvedPromises.reduce(
-            (acc: ConfigValue, next: BaseConfigValue, currentIndex: number) => {
+            (acc: ConfigValue, next: ConfigValue, currentIndex: number) => {
                 return ConfigUtils.setValueForKey(
                     paths[currentIndex],
                     next,
@@ -588,21 +587,20 @@ export class DynamicConfig implements IDynamicConfig {
         return ConfigPromises.resolveConfigPromises(newObj) as Promise<T>
     }
 
-    private async loadConfigs(): Promise<IRootConfigValue> {
+    private async loadConfigs(): Promise<IObjectConfigValue> {
         const defaultConfigFile: ILoadedFile =
             await this.configLoader.loadDefault()
-        const defaultConfig: IRootConfigValue =
-            ConfigBuilder.createConfigObject(
-                {
-                    type: 'local',
-                    name: 'default',
-                },
-                this.translator(defaultConfigFile.config),
-            )
+        const defaultConfig: ConfigValue = ConfigBuilder.createConfigObject(
+            {
+                type: 'local',
+                name: 'default',
+            },
+            this.translator(defaultConfigFile.config),
+        )
 
         const envConfigFile: ILoadedFile =
             await this.configLoader.loadEnvironment()
-        const envConfig: IRootConfigValue = ConfigBuilder.createConfigObject(
+        const envConfig: ConfigValue = ConfigBuilder.createConfigObject(
             {
                 type: 'local',
                 name: envConfigFile.name,
@@ -610,7 +608,7 @@ export class DynamicConfig implements IDynamicConfig {
             this.translator(envConfigFile.config),
         )
 
-        const localConfig: IRootConfigValue = ObjectUtils.overlayObjects(
+        const localConfig: IObjectConfigValue = ObjectUtils.overlayObjects(
             defaultConfig,
             envConfig,
         )
@@ -618,18 +616,17 @@ export class DynamicConfig implements IDynamicConfig {
         return await this.initializeResolvers(localConfig)
     }
 
-    private setConfig(resolvedConfig: IRootConfigValue): void {
+    private setConfig(resolvedConfig: IObjectConfigValue): void {
         this.promisedConfig = Promise.resolve(resolvedConfig)
     }
 
-    private getConfig(): Promise<IRootConfigValue> {
+    private getConfig(): Promise<IObjectConfigValue> {
         if (this.promisedConfig === null) {
             this.promisedConfig = this.loadConfigs().then(
-                async (loadedConfigs: IRootConfigValue) => {
-                    const resolvedConfig =
-                        (await this.replaceConfigPlaceholders(
-                            loadedConfigs,
-                        )) as IRootConfigValue
+                async (loadedConfigs: IObjectConfigValue) => {
+                    const resolvedConfig = await this.replaceConfigPlaceholders(
+                        loadedConfigs,
+                    )
                     this.setConfig(resolvedConfig)
                     return resolvedConfig
                 },
@@ -640,8 +637,8 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     private async initializeResolvers(
-        currentConfig: IRootConfigValue,
-    ): Promise<IRootConfigValue> {
+        currentConfig: IObjectConfigValue,
+    ): Promise<IObjectConfigValue> {
         const allResolvers: Array<IRemoteResolver> = [
             this.resolvers.remote,
             this.resolvers.secret,
@@ -652,8 +649,8 @@ export class DynamicConfig implements IDynamicConfig {
         return this.replaceConfigPlaceholders(
             currentConfig,
             this.initializedResolvers,
-        ).then((initialConfig: IRootConfigValue) => {
-            const loadNextConfig = async (): Promise<IRootConfigValue> => {
+        ).then((initialConfig: IObjectConfigValue) => {
+            const loadNextConfig = async (): Promise<IObjectConfigValue> => {
                 if (index < numResolvers) {
                     const nextResolver: IRemoteResolver = allResolvers[index]
                     const configStore = new SyncConfig(initialConfig)
@@ -661,7 +658,7 @@ export class DynamicConfig implements IDynamicConfig {
                         configStore,
                         this.remoteOptions[nextResolver.name],
                     )
-                    const mergedConfig: IRootConfigValue =
+                    const mergedConfig: ConfigValue =
                         ConfigBuilder.createConfigObject(
                             {
                                 type: nextResolver.type,
@@ -671,11 +668,11 @@ export class DynamicConfig implements IDynamicConfig {
                         )
                     this.initializedResolvers.push(nextResolver.name)
 
-                    const resolvedConfig: IRootConfigValue =
-                        (await this.replaceConfigPlaceholders(
+                    const resolvedConfig: ConfigValue =
+                        await this.replaceConfigPlaceholders(
                             mergedConfig,
                             this.initializedResolvers,
-                        )) as IRootConfigValue
+                        )
 
                     initialConfig = ObjectUtils.overlayObjects(
                         initialConfig,
@@ -727,7 +724,7 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     private getResolverForValue(
-        value: BaseConfigValue,
+        value: ConfigValue,
     ): IRemoteResolver | undefined {
         return this.resolversByName[value.source.name]
     }
