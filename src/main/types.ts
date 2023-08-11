@@ -74,6 +74,7 @@ export interface IFileLoader {
 export interface ILoadedFile {
     name: string
     config: object
+    extends?: ReadonlyArray<string>
 }
 
 // RESOLVER TYPES

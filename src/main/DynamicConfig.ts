@@ -589,6 +589,23 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     private async loadConfigs(): Promise<IRootConfigValue> {
+        const envConfigFile: ILoadedFile =
+            await this.configLoader.loadEnvironment()
+
+        console.log({ envConfigFile })
+
+        const envConfig: IRootConfigValue = ConfigBuilder.createConfigObject(
+            {
+                type: 'local',
+                name: envConfigFile.name,
+            },
+            this.translator(envConfigFile.config),
+        )
+
+        if (Array.isArray(envConfigFile.extends)) {
+            return await this.initializeResolvers(envConfig)
+        }
+
         const defaultConfigFile: ILoadedFile =
             await this.configLoader.loadDefault()
         const defaultConfig: IRootConfigValue =
@@ -599,16 +616,6 @@ export class DynamicConfig implements IDynamicConfig {
                 },
                 this.translator(defaultConfigFile.config),
             )
-
-        const envConfigFile: ILoadedFile =
-            await this.configLoader.loadEnvironment()
-        const envConfig: IRootConfigValue = ConfigBuilder.createConfigObject(
-            {
-                type: 'local',
-                name: envConfigFile.name,
-            },
-            this.translator(envConfigFile.config),
-        )
 
         const localConfig: IRootConfigValue = ObjectUtils.overlayObjects(
             defaultConfig,

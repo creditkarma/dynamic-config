@@ -1,0 +1,6 @@
+{
+    "extends": [
+        "./database.json",
+        "./services.json"
+    ]
+}

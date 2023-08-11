@@ -71,6 +71,10 @@ export function isObject(obj: any): obj is object {
     return obj !== null && !Array.isArray(obj) && typeof obj === 'object'
 }
 
+export function isStringArray(obj: any): obj is Array<string> {
+    return Array.isArray(obj) && obj.every((val) => typeof val === 'string')
+}
+
 export interface IArrayKey {
     key: string
     index: number
