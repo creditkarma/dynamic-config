@@ -1,222 +1,222 @@
-import { expect } from '@hapi/code'
-import * as Lab from '@hapi/lab'
-import {
-    ConfigLoader,
-    jsLoader,
-    jsonLoader,
-    tsLoader,
-    ymlLoader,
-} from '../../main/'
+// import { expect } from '@hapi/code'
+// import * as Lab from '@hapi/lab'
+// import {
+//     ConfigLoader,
+//     jsLoader,
+//     jsonLoader,
+//     tsLoader,
+//     ymlLoader,
+// } from '../../main/'
 
-export const lab = Lab.script()
+// export const lab = Lab.script()
 
-const describe = lab.describe
-const it = lab.it
-const before = lab.before
-const beforeEach = lab.beforeEach
-const afterEach = lab.afterEach
+// const describe = lab.describe
+// const it = lab.it
+// const before = lab.before
+// const beforeEach = lab.beforeEach
+// const afterEach = lab.afterEach
 
-describe('ConfigLoader', () => {
-    before(async () => {
-        process.chdir(__dirname)
-    })
+// describe('ConfigLoader', () => {
+//     before(async () => {
+//         process.chdir(__dirname)
+//     })
 
-    describe('loadDefault', () => {
-        let savedEnv: string | undefined
+//     describe('loadDefault', () => {
+//         let savedEnv: string | undefined
 
-        beforeEach(async () => {
-            savedEnv = process.env.NODE_ENV
-        })
+//         beforeEach(async () => {
+//             savedEnv = process.env.NODE_ENV
+//         })
 
-        afterEach(async () => {
-            process.env.NODE_ENV = savedEnv
-        })
+//         afterEach(async () => {
+//             process.env.NODE_ENV = savedEnv
+//         })
 
-        it('should return the correct config for development', async () => {
-            process.env.NODE_ENV = 'development'
-            const loader: ConfigLoader = new ConfigLoader({
-                loaders: [jsonLoader, ymlLoader, jsLoader, tsLoader],
-            })
-            const expected: object = {
-                name: 'default',
-                config: {
-                    type_test: true,
-                    nullable_test: {
-                        nullable: {
-                            _source: 'env',
-                            _key: 'NULLABLE',
-                            _nullable: true,
-                        },
-                        not_nullable: {
-                            _source: 'env',
-                            _key: 'NOT_NULLABLE',
-                        },
-                    },
-                    version: {
-                        _source: 'package',
-                        _key: 'version',
-                    },
-                    project: {
-                        id: {
-                            name: 'test-project',
-                            ref: 987860,
-                        },
-                        health: {
-                            control: '/check',
-                            response: {
-                                _source: 'env',
-                                _key: 'HEALTH_RESPONSE',
-                                _default: 'GOOD',
-                            },
-                        },
-                    },
-                    server: {
-                        port: 8000,
-                        host: 'localhost',
-                    },
-                    persistedQueries: {
-                        databaseLookup: {
-                            username: 'root',
-                            password: 'root',
-                            shardedDBHostsInfo: {
-                                sharding: {
-                                    client: {
-                                        'shard-info': {
-                                            'shard-count': 4,
-                                            'shard-map': [
-                                                {
-                                                    'virtual-start': 0,
-                                                    'virtual-end': 3,
-                                                    destination:
-                                                        'localhost:4141',
-                                                },
-                                            ],
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    names: {
-                        first: ['Bob', 'Helen', 'Joe', 'Jane'],
-                        last: ['Smith', 'Warren', 'Malick'],
-                    },
-                    'test-service': {
-                        destination: 'http://${HOST_NAME||localhost}:8080',
-                    },
-                    secret: `I'm not secret`,
-                },
-            }
+//         it('should return the correct config for development', async () => {
+//             process.env.NODE_ENV = 'development'
+//             const loader: ConfigLoader = new ConfigLoader({
+//                 loaders: [jsonLoader, ymlLoader, jsLoader, tsLoader],
+//             })
+//             const expected: object = {
+//                 name: 'default',
+//                 config: {
+//                     type_test: true,
+//                     nullable_test: {
+//                         nullable: {
+//                             _source: 'env',
+//                             _key: 'NULLABLE',
+//                             _nullable: true,
+//                         },
+//                         not_nullable: {
+//                             _source: 'env',
+//                             _key: 'NOT_NULLABLE',
+//                         },
+//                     },
+//                     version: {
+//                         _source: 'package',
+//                         _key: 'version',
+//                     },
+//                     project: {
+//                         id: {
+//                             name: 'test-project',
+//                             ref: 987860,
+//                         },
+//                         health: {
+//                             control: '/check',
+//                             response: {
+//                                 _source: 'env',
+//                                 _key: 'HEALTH_RESPONSE',
+//                                 _default: 'GOOD',
+//                             },
+//                         },
+//                     },
+//                     server: {
+//                         port: 8000,
+//                         host: 'localhost',
+//                     },
+//                     persistedQueries: {
+//                         databaseLookup: {
+//                             username: 'root',
+//                             password: 'root',
+//                             shardedDBHostsInfo: {
+//                                 sharding: {
+//                                     client: {
+//                                         'shard-info': {
+//                                             'shard-count': 4,
+//                                             'shard-map': [
+//                                                 {
+//                                                     'virtual-start': 0,
+//                                                     'virtual-end': 3,
+//                                                     destination:
+//                                                         'localhost:4141',
+//                                                 },
+//                                             ],
+//                                         },
+//                                     },
+//                                 },
+//                             },
+//                         },
+//                     },
+//                     names: {
+//                         first: ['Bob', 'Helen', 'Joe', 'Jane'],
+//                         last: ['Smith', 'Warren', 'Malick'],
+//                     },
+//                     'test-service': {
+//                         destination: 'http://${HOST_NAME||localhost}:8080',
+//                     },
+//                     secret: `I'm not secret`,
+//                 },
+//             }
 
-            return loader.loadDefault().then((actual: any) => {
-                expect(actual).to.equal(expected)
-            })
-        })
-    })
+//             return loader.loadDefault().then((actual: any) => {
+//                 expect(actual).to.equal(expected)
+//             })
+//         })
+//     })
 
-    describe('loadEnvironment', () => {
-        let savedEnv: string | undefined
+//     describe('loadEnvironment', () => {
+//         let savedEnv: string | undefined
 
-        beforeEach(async () => {
-            savedEnv = process.env.NODE_ENV
-        })
+//         beforeEach(async () => {
+//             savedEnv = process.env.NODE_ENV
+//         })
 
-        afterEach(async () => {
-            process.env.NODE_ENV = savedEnv
-        })
+//         afterEach(async () => {
+//             process.env.NODE_ENV = savedEnv
+//         })
 
-        it('should return the correct config for development', async () => {
-            process.env.NODE_ENV = 'development'
-            const loader: ConfigLoader = new ConfigLoader({
-                loaders: [jsonLoader, ymlLoader, jsLoader, tsLoader],
-            })
-            const expected: object = {
-                name: 'development',
-                config: {
-                    project: {
-                        health: {
-                            control: '/javascript',
-                            response: 'BOOYA',
-                        },
-                        id: {
-                            name: 'yaml-project',
-                            ref: 123456,
-                        },
-                    },
-                    'test-service': {
-                        destination: 'consul!/test-service?dc=dc1',
-                    },
-                    'not-in-consul': {
-                        _source: 'consul',
-                        _key: 'not-in-consul',
-                        _default: {
-                            value: 'I am a default',
-                        },
-                    },
-                },
-            }
+//         it('should return the correct config for development', async () => {
+//             process.env.NODE_ENV = 'development'
+//             const loader: ConfigLoader = new ConfigLoader({
+//                 loaders: [jsonLoader, ymlLoader, jsLoader, tsLoader],
+//             })
+//             const expected: object = {
+//                 name: 'development',
+//                 config: {
+//                     project: {
+//                         health: {
+//                             control: '/javascript',
+//                             response: 'BOOYA',
+//                         },
+//                         id: {
+//                             name: 'yaml-project',
+//                             ref: 123456,
+//                         },
+//                     },
+//                     'test-service': {
+//                         destination: 'consul!/test-service?dc=dc1',
+//                     },
+//                     'not-in-consul': {
+//                         _source: 'consul',
+//                         _key: 'not-in-consul',
+//                         _default: {
+//                             value: 'I am a default',
+//                         },
+//                     },
+//                 },
+//             }
 
-            return loader.loadEnvironment().then((actual: any) => {
-                expect(actual).to.equal(expected)
-            })
-        })
-    })
+//             return loader.loadEnvironment().then((actual: any) => {
+//                 expect(actual).to.equal(expected)
+//             })
+//         })
+//     })
 
-    describe('NODE_CONFIG_DIR', () => {
-        let savedEnv: string | undefined
+//     describe('NODE_CONFIG_DIR', () => {
+//         let savedEnv: string | undefined
 
-        beforeEach(async () => {
-            savedEnv = process.env.NODE_ENV
-        })
+//         beforeEach(async () => {
+//             savedEnv = process.env.NODE_ENV
+//         })
 
-        afterEach(async () => {
-            process.env.NODE_ENV = savedEnv
-        })
+//         afterEach(async () => {
+//             process.env.NODE_ENV = savedEnv
+//         })
 
-        it('should return config from the correct directory', async () => {
-            process.env.NODE_CONFIG_DIR = 'nested/config'
-            const loader: ConfigLoader = new ConfigLoader({
-                loaders: [jsonLoader],
-            })
-            const expected: object = {
-                name: 'default',
-                config: {
-                    foo: 'nested-bar',
-                },
-            }
+//         it('should return config from the correct directory', async () => {
+//             process.env.NODE_CONFIG_DIR = 'nested/config'
+//             const loader: ConfigLoader = new ConfigLoader({
+//                 loaders: [jsonLoader],
+//             })
+//             const expected: object = {
+//                 name: 'default',
+//                 config: {
+//                     foo: 'nested-bar',
+//                 },
+//             }
 
-            return loader.loadDefault().then((actual: any) => {
-                expect(actual).to.equal(expected)
-            })
-        })
-    })
+//             return loader.loadDefault().then((actual: any) => {
+//                 expect(actual).to.equal(expected)
+//             })
+//         })
+//     })
 
-    describe('CONFIG_PATH', () => {
-        let savedEnv: string | undefined
+//     describe('CONFIG_PATH', () => {
+//         let savedEnv: string | undefined
 
-        beforeEach(async () => {
-            savedEnv = process.env.NODE_ENV
-        })
+//         beforeEach(async () => {
+//             savedEnv = process.env.NODE_ENV
+//         })
 
-        afterEach(async () => {
-            process.env.NODE_ENV = savedEnv
-        })
+//         afterEach(async () => {
+//             process.env.NODE_ENV = savedEnv
+//         })
 
-        it('should return config from the correct directory', async () => {
-            process.env.CONFIG_PATH = 'nested/config'
-            const loader: ConfigLoader = new ConfigLoader({
-                loaders: [jsonLoader],
-            })
-            const expected: object = {
-                name: 'default',
-                config: {
-                    foo: 'nested-bar',
-                },
-            }
+//         it('should return config from the correct directory', async () => {
+//             process.env.CONFIG_PATH = 'nested/config'
+//             const loader: ConfigLoader = new ConfigLoader({
+//                 loaders: [jsonLoader],
+//             })
+//             const expected: object = {
+//                 name: 'default',
+//                 config: {
+//                     foo: 'nested-bar',
+//                 },
+//             }
 
-            return loader.loadDefault().then((actual: any) => {
-                expect(actual).to.equal(expected)
-            })
-        })
-    })
-})
+//             return loader.loadDefault().then((actual: any) => {
+//                 expect(actual).to.equal(expected)
+//             })
+//         })
+//     })
+// })

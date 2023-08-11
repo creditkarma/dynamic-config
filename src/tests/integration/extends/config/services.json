@@ -1,0 +1,8 @@
+{
+    "services": {
+        "user-service": {
+            "host": "user-service",
+            "port": 8080
+        }
+    }
+}

@@ -9,6 +9,7 @@ export const enum DynamicConfigErrorType {
     DynamicConfigInvalidResolver = 'DynamicConfigInvalidResolver',
     DynamicConfigInvalidType = 'DynamicConfigInvalidType',
     DynamicConfigMissingDefault = 'DynamicConfigMissingDefault',
+    DynamicConfigMissingLoader = 'DynamicConfigMissingLoader',
     UnknownError = 'UnkownError',
     HVNotConfigured = 'HVNotConfigured',
     HVFailed = 'HVFailed',
@@ -27,6 +28,7 @@ export type DynamicConfigError =
     | DynamicConfigMissingKey
     | DynamicConfigInvalidObject
     | DynamicConfigInvalidResolver
+    | DynamicConfigMissingLoader
     | HVNotConfigured
     | HVFailed
     | ConsulFailed
@@ -65,6 +67,13 @@ export class DynamicConfigMissingKey extends Error {
     public readonly type = DynamicConfigErrorType.DynamicConfigMissingKey
     constructor(key: string) {
         super(`Unable to find value for key[${key}].`)
+    }
+}
+
+export class DynamicConfigMissingLoader extends Error {
+    public readonly type = DynamicConfigErrorType.DynamicConfigMissingLoader
+    constructor(type: string) {
+        super(`No loader for file type[${type}].`)
     }
 }
 
