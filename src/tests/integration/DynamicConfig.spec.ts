@@ -316,9 +316,7 @@ describe('DynamicConfig', () => {
                     'http://localhost:8510',
                 ])
 
-                const initialConfigValue = await dynamicConfig.get(
-                    'secret',
-                )
+                const initialConfigValue = await dynamicConfig.get('secret')
 
                 expect(initialConfigValue).to.equal('this is a secret')
 
@@ -1791,13 +1789,6 @@ describe('DynamicConfig', () => {
     })
 
     describe('When using mock config', () => {
-        const dynamicConfig: DynamicConfig = new DynamicConfig({
-            configEnv: 'test',
-            configPath: path.resolve(__dirname, './config'),
-            loaders: [jsonLoader],
-            translators: [envTranslator],
-        })
-
         before(async () => {
             process.env.NOT_NULLABLE = 'NOT_NULLABLE'
         })
@@ -1806,8 +1797,15 @@ describe('DynamicConfig', () => {
             delete process.env.NOT_NULLABLE
         })
 
-        describe('get', () => {
-            it('should return the mock values', async () => {
+        describe('injectMockConfig', () => {
+            it('should successfully inject mock config', async () => {
+                const dynamicConfig: DynamicConfig = new DynamicConfig({
+                    configEnv: 'test',
+                    configPath: path.resolve(__dirname, './config'),
+                    loaders: [jsonLoader],
+                    translators: [envTranslator],
+                })
+
                 dynamicConfig.injectMockConfig({
                     serviceName: 'mock-service',
                     clients: {
@@ -1885,6 +1883,19 @@ describe('DynamicConfig', () => {
                     type_test: true,
                     version: '2.0.1',
                 })
+            })
+
+            it(`should throw if not 'test' or 'development' environment`, async () => {
+                const dynamicConfig: DynamicConfig = new DynamicConfig({
+                    configEnv: 'production',
+                    configPath: path.resolve(__dirname, './config'),
+                    loaders: [jsonLoader],
+                    translators: [envTranslator],
+                })
+
+                expect(() => {
+                    dynamicConfig.injectMockConfig({})
+                }).to.throw()
             })
         })
     })

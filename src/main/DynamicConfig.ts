@@ -110,7 +110,7 @@ export class DynamicConfig implements IDynamicConfig {
         }
     }
 
-    private validateMockEnvironment(): void {
+    private assertMockEnvironment(): void {
         if (this.configEnv !== 'test' && this.configEnv !== 'development') {
             throw new Error(
                 `Config mocks are only enabled for 'test' and 'development' environments.`,
@@ -119,7 +119,7 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public injectMockConfig(obj: unknown): void {
-        this.validateMockEnvironment()
+        this.assertMockEnvironment()
 
         const mockConfig: IRootConfigValue = ConfigBuilder.createConfigObject(
             {
@@ -133,7 +133,7 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     public resetMockConfig(): void {
-        this.validateMockEnvironment()
+        this.assertMockEnvironment()
         this.mockConfig = null
     }
 
