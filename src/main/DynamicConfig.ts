@@ -56,6 +56,8 @@ export class DynamicConfig implements IDynamicConfig {
     private translator: ITranslator
     private schemas: ISchemaMap
     private errorMap: errors.IConfigErrorMap
+    private configEnv: string | undefined
+    private mockConfig: IRootConfigValue | null
 
     /**
      * The observerMap is a cache of the Observer for a specified key. There is no need to create
@@ -74,8 +76,10 @@ export class DynamicConfig implements IDynamicConfig {
     }: IConfigOptions = {}) {
         this.errorMap = {}
         this.promisedConfig = null
+        this.mockConfig = null
         this.schemas = schemas
         this.translator = ConfigUtils.makeTranslator(translators)
+        this.configEnv = configEnv
         this.configLoader = new ConfigLoader({
             loaders,
             configPath,
@@ -104,6 +108,33 @@ export class DynamicConfig implements IDynamicConfig {
         if (resolvers.secret !== undefined) {
             this.register(resolvers.secret)
         }
+    }
+
+    private validateMockEnvironment(): void {
+        if (this.configEnv !== 'test' && this.configEnv !== 'development') {
+            throw new Error(
+                `Config mocks are only enabled for 'test' and 'development' environments.`,
+            )
+        }
+    }
+
+    public injectMockConfig(obj: unknown): void {
+        this.validateMockEnvironment()
+
+        const mockConfig: IRootConfigValue = ConfigBuilder.createConfigObject(
+            {
+                type: 'local',
+                name: 'mock',
+            },
+            obj,
+        )
+
+        this.mockConfig = mockConfig
+    }
+
+    public resetMockConfig(): void {
+        this.validateMockEnvironment()
+        this.mockConfig = null
     }
 
     /**
@@ -623,6 +654,10 @@ export class DynamicConfig implements IDynamicConfig {
     }
 
     private getConfig(): Promise<IRootConfigValue> {
+        if (this.mockConfig != null) {
+            return Promise.resolve(this.mockConfig)
+        }
+
         if (this.promisedConfig === null) {
             this.promisedConfig = this.loadConfigs().then(
                 async (loadedConfigs: IRootConfigValue) => {
