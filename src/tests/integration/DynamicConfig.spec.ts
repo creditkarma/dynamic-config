@@ -316,9 +316,7 @@ describe('DynamicConfig', () => {
                     'http://localhost:8510',
                 ])
 
-                const initialConfigValue = await dynamicConfig.get(
-                    'secret',
-                )
+                const initialConfigValue = await dynamicConfig.get('secret')
 
                 expect(initialConfigValue).to.equal('this is a secret')
 
@@ -1786,6 +1784,118 @@ describe('DynamicConfig', () => {
                         )
                     },
                 )
+            })
+        })
+    })
+
+    describe('When using mock config', () => {
+        before(async () => {
+            process.env.NOT_NULLABLE = 'NOT_NULLABLE'
+        })
+
+        after(async () => {
+            delete process.env.NOT_NULLABLE
+        })
+
+        describe('injectMockConfig', () => {
+            it('should successfully inject mock config', async () => {
+                const dynamicConfig: DynamicConfig = new DynamicConfig({
+                    configEnv: 'test',
+                    configPath: path.resolve(__dirname, './config'),
+                    loaders: [jsonLoader],
+                    translators: [envTranslator],
+                })
+
+                dynamicConfig.injectMockConfig({
+                    serviceName: 'mock-service',
+                    clients: {
+                        'foo-service': {
+                            host: 'localhost',
+                            port: 8080,
+                        },
+                    },
+                })
+
+                const clients = await dynamicConfig.get('clients')
+                const serviceName = await dynamicConfig.get('serviceName')
+
+                expect(clients).to.equal({
+                    'foo-service': {
+                        host: 'localhost',
+                        port: 8080,
+                    },
+                })
+
+                expect(serviceName).to.equal('mock-service')
+
+                dynamicConfig.resetMockConfig()
+
+                expect(await dynamicConfig.get()).to.equal({
+                    'test-service': {
+                        destination: 'http://localhost:8080',
+                    },
+                    names: {
+                        first: ['Bob', 'Helen', 'Joe', 'Jane'],
+                        last: ['Smith', 'Warren', 'Malick'],
+                    },
+                    nullable_test: {
+                        not_nullable: 'NOT_NULLABLE',
+                        nullable: null,
+                    },
+                    persistedQueries: {
+                        databaseLookup: {
+                            password: 'root',
+                            shardedDBHostsInfo: {
+                                sharding: {
+                                    client: {
+                                        'shard-info': {
+                                            'shard-count': 4,
+                                            'shard-map': [
+                                                {
+                                                    'virtual-end': 3,
+                                                    'virtual-start': 0,
+                                                    destination:
+                                                        'localhost:4141',
+                                                },
+                                            ],
+                                        },
+                                    },
+                                },
+                            },
+                            username: 'root',
+                        },
+                    },
+                    project: {
+                        health: {
+                            control: '/control',
+                            response: 'PASS',
+                        },
+                        id: {
+                            name: 'test-project',
+                            ref: 987860,
+                        },
+                    },
+                    secret: "I'm not secret",
+                    server: {
+                        host: 'localhost',
+                        port: 8000,
+                    },
+                    type_test: true,
+                    version: '2.0.1',
+                })
+            })
+
+            it(`should throw if not 'test' or 'development' environment`, async () => {
+                const dynamicConfig: DynamicConfig = new DynamicConfig({
+                    configEnv: 'production',
+                    configPath: path.resolve(__dirname, './config'),
+                    loaders: [jsonLoader],
+                    translators: [envTranslator],
+                })
+
+                expect(() => {
+                    dynamicConfig.injectMockConfig({})
+                }).to.throw()
             })
         })
     })

@@ -16,9 +16,9 @@
     "scripts": {
         "clean": "rimraf dist/",
         "clean:all": "rimraf dist/ node_modules/ package-lock.json",
-        "lint": "eslint --fix './src/**/*.ts'",
-        "format": "prettier --write 'src/**/*.ts'",
-        "build": "npm run clean && npm run lint && npm run format && tsc",
+        "lint": "eslint './src/**/*.ts'",
+        "lint:fix": "eslint --fix './src/**/*.ts'",
+        "build": "npm run clean && tsc",
         "docker": "docker-compose up --force-recreate -d",
         "docker:kill": "docker-compose kill",
         "precopy-test-config": "rimraf dist/tests/integration/config",
